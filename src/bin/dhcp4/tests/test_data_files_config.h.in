@@ -1,0 +1,9 @@
+// Copyright (C) 2013-2015 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/// @brief Path to dhcp4 source dir so tests against the dhcp4.spec file
+/// can find it reliably.
+#define DHCP4_SRC_DIR "@abs_top_srcdir@/src/bin/dhcp4"

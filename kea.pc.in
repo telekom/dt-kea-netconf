@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: kea
+Description: DHCP server library
+Version: @PACKAGE_VERSION@
+Requires:
+Cflags: -I${includedir}/include
+Libs: -L${libdir}/lib -lkea-asiodns.a -lkea-asiolink.a -lkea-cc.a -lkea-cfgclient.a -lkea-cql.a -lkea-cryptolink.a -lkea-database.a -lkea-dhcp++.a -lkea-dhcp_ddns.a -lkea-dhcpsrv.a -lkea-dns++.a -lkea-eval.a -lkea-exceptions.a -lkea-hooks.a -lkea-http.a -lkea-log.a -lkea-process.a -lkea-stats.a -lkea-threads.a -lkea-util-io.a -lkea-util.a -lkea-yang.a

@@ -1,0 +1,477 @@
+module dhcpv6-server-stats-augment {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:dhcpv6-server-stats-augment";
+  prefix dhcpv6-server-stats-augment;
+
+  import ietf-dhcpv6-server {
+    prefix ietf-dhcpv6-server;
+  }
+
+  organization
+    "Qualitance";
+  contact
+    "paul.dumitru@qualitance.com";
+  description
+    "This YANG module defines message stats augments for the
+     IETF DHCPv6 server functionality.";
+
+  revision 2020-08-12 {
+    description
+      "Initial version";
+  }
+
+  grouping extra-message-stats {
+    leaf advertise-received-count {
+      type uint32;
+      config false;
+      description
+        "Number of Advertise (12) messages
+         received.";
+    }
+
+    leaf dhcpv4-query-received-count {
+      type uint32;
+      config false;
+      description
+        "Number of DHCPV4-Query (13) messages
+         received.";
+    }
+
+    leaf dhcpv4-response-received-count {
+      type uint32;
+      config false;
+      description
+        "Number of DHCPV4-Response (14) messages
+         received.";
+    }
+
+    leaf dhcpv4-response-sent-count {
+      type uint32;
+      config false;
+      description
+        "Number of DHCPV4-Response (15) messages
+         sent.";
+    }
+
+    leaf parse-failed-count {
+      type uint32;
+      config false;
+      description
+        "Number of parse failed (16) messages
+         received.";
+    }
+
+    leaf receive-drop-count {
+      type uint32;
+      config false;
+      description
+        "Number of dropped (17) messages
+         received.";
+    }
+
+    leaf received-count {
+      type uint32;
+      config false;
+      description
+        "Number of received (18) messages.";
+    }
+
+    leaf reply-received-count {
+      type uint32;
+      config false;
+      description
+        "Number of reply (19) messages
+         received.";
+    }
+
+    leaf sent-count {
+      type uint32;
+      config false;
+      description
+        "Number of sent (20) messages.";
+    }
+
+    leaf unknown-count {
+      type uint32;
+      config false;
+      description
+        "Number of unknown (21) messages
+         received.";
+    }
+
+    leaf advertise-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         advertise messages in microseconds";
+    }
+
+    leaf decline-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         decline messages in microseconds";
+    }
+
+    leaf dhcpv4-query-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         dhcpv4-query messages in microseconds";
+    }
+
+    leaf dhcpv4-response-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         dhcpv4-response messages in microseconds";
+    }
+
+    leaf infrequest-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         information-request messages in microseconds";
+    }
+
+    leaf rebind-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         rebind messages in microseconds";
+    }
+
+    leaf mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         messages in microseconds";
+    }
+
+    leaf release-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         release messages in microseconds";
+    }
+
+    leaf renew-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         renew messages in microseconds";
+    }
+
+    leaf reply-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         reply messages in microseconds";
+    }
+
+    leaf request-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         request messages in microseconds";
+    }
+
+    leaf solicit-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         solicit messages in microseconds";
+    }
+
+    leaf unknown-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+      description
+        "The mean processing time of received
+         unknown messages in microseconds";
+    }
+
+    leaf mean-cpu-usage-per-packet {
+      type decimal64 {
+        fraction-digits 16;
+        range "0 .. 100";
+      }
+      units "percentage";
+      config false;
+      description
+        "The mean cpu usage of received
+         messages";
+    }
+
+    leaf mean-memory-usage-per-packet {
+      type uint64;
+      units "Megabytes";
+      config false;
+      description
+        "The mean memory usage of received
+         messages";
+    }
+
+    leaf kea-netconf-cpu-usage {
+      type decimal64 {
+        fraction-digits 16;
+        range "0 .. 100";
+      }
+      units "percentage";
+      config false;
+      description
+        "The mean cpu usage of received
+         messages";
+    }
+
+    leaf kea-netconf-memory-usage {
+      type uint64;
+      units "Megabytes";
+      config false;
+      description
+        "The mean memory usage of received
+         messages";
+    }
+
+    leaf kea-dhcp-cpu-usage {
+      type decimal64 {
+        fraction-digits 16;
+        range "0 .. 100";
+      }
+      units "percentage";
+      config false;
+      description
+        "The mean cpu usage of received
+         messages";
+    }
+
+    leaf kea-dhcp-memory-usage {
+      type uint64;
+      units "Megabytes";
+      config false;
+      description
+        "The mean memory usage of received
+         messages";
+    }
+  }
+
+  grouping cassandra-stats {
+    leaf INSERT_LEASE6-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf UPDATE_LEASE6-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf DELETE_LEASE6-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_EXPIRE-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_ADDR-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_DUID-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_DUID_IAID-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_DUID_IAID_SUBID-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_LIMIT-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_PAGE-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_SUBID-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf GET_LEASE6_HOSTNAME-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf ALL_LEASE6_STATS-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf SUBNET_LEASE6_STATS-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf SUBNET_RANGE_LEASE6_STATS-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf INSERT_LOCK6-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf DELETE_LOCK6-mean-processing-time {
+      type uint64;
+      units "microseconds";
+      config false;
+    }
+
+    leaf INSERT_LEASE6-count {
+      type uint64;
+      config false;
+    }
+
+    leaf UPDATE_LEASE6-count {
+      type uint64;
+      config false;
+    }
+
+    leaf DELETE_LEASE6-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_EXPIRE-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_ADDR-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_DUID-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_DUID_IAID-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_DUID_IAID_SUBID-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_LIMIT-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_PAGE-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_SUBID-count {
+      type uint64;
+      config false;
+    }
+
+    leaf GET_LEASE6_HOSTNAME-count {
+      type uint64;
+      config false;
+    }
+
+    leaf ALL_LEASE6_STATS-count {
+      type uint64;
+      config false;
+    }
+
+    leaf SUBNET_LEASE6_STATS-count {
+      type uint64;
+      config false;
+    }
+
+    leaf SUBNET_RANGE_LEASE6_STATS-count {
+      type uint64;
+      config false;
+    }
+
+    leaf INSERT_LOCK6-count {
+      type uint64;
+      config false;
+    }
+
+    leaf DELETE_LOCK6-count {
+      type uint64;
+      config false;
+    }
+  }
+
+  augment "/ietf-dhcpv6-server:dhcpv6-server/ietf-dhcpv6-server:network-ranges" {
+    uses extra-message-stats;
+
+    uses cassandra-stats;
+  }
+}

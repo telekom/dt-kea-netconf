@@ -1,0 +1,48 @@
+#!/bin/sh
+
+prefix=@prefix@
+# Include utilities. Use installed version if available and
+# use build version if it isn't.
+if [ -e @datarootdir@/@PACKAGE_NAME@/scripts/admin-utils.sh ]; then
+    . @datarootdir@/@PACKAGE_NAME@/scripts/admin-utils.sh
+else
+    . @abs_top_builddir@/src/bin/admin/admin-utils.sh
+fi
+
+VERSION=`mysql_version "$@"`
+
+if [ "$VERSION" != "8.2" ]; then
+    printf "This script upgrades 8.2 to 9.0. Reported version is $VERSION. Skipping upgrade.\n"
+    exit 0
+fi
+
+mysql "$@" <<EOF
+
+# Create hostname index for host reservations
+CREATE INDEX hosts_by_hostname ON hosts (hostname);
+
+# Move to lower case hostnames in lease4 table.
+UPDATE lease4 SET hostname = LOWER(hostname)
+WHERE BINARY LOWER(hostname) != hostname;
+
+# Move to lower case hostnames in lease6 table.
+UPDATE lease6 SET hostname = LOWER(hostname)
+WHERE BINARY LOWER(hostname) != hostname;
+
+# Create hostname index for lease4
+CREATE INDEX lease4_by_hostname ON lease4 (hostname);
+
+# Create hostname index for lease6
+CREATE INDEX lease6_by_hostname ON lease6 (hostname);
+
+# Update the schema version number
+UPDATE schema_version
+SET version = '9', minor = '0';
+
+# This line concludes database upgrade to version 9.0.
+
+EOF
+
+RESULT=$?
+
+exit $?

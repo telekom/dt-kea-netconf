@@ -1,0 +1,176 @@
+before_script:
+  - sudo -E add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo -E apt-get update -qq
+  - sudo -E apt-get install -y -qq autoconf autoconf-archive bison build-essential clang clang-tidy cmake default-jre docbook-xsl doxygen elinks flex git graphviz gcc g++ gcc-7 gcc-8 gcc-9 g++-7 g++-8 g++-9 libavl-dev libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libev-dev liblog4cplus-dev libmariadbclient-dev libpcre3-dev libpq-dev libprotobuf-c-dev libssh-dev libssl-dev libtool libuv1-dev lighttpd lua5.2 make pkg-config postgresql postgresql-server-dev-all protobuf-c-compiler python-dev python3-pip shellcheck software-properties-common swig unifdef unp valgrind xsltproc
+  - sudo -E apt-get dist-upgrade -y -qq
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 7
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
+  - pip3 install sphinx sphinx_rtd_theme
+
+stages:
+  - stage
+
+variables:
+  SOURCE: "/home/keatest/dt-kea/${CI_COMMIT_REF_NAME}"
+  ARTIFACT: "/${CI_PROJECT_DIR}/artifact"
+  PREFIX: "/opt/dt-kea"
+  DATASTAX_CASSANDRA_CONFIG_SH: "./tools/cql_config"
+  CASSANDRA_CPP_DRIVER: "/opt/dt-cpp-driver"
+  DT_KEA_TOOLS: "/home/keatest/dt-kea-tools/develop"
+  BENCHMARK: "/home/keatest/benchmark"
+  GTEST: "/home/keatest/googletest"
+  LIBREDBLACK: "/home/keatest/libredblack"
+  LIBREDBLACK_PREFIX: "/opt/libredblack"
+  LIBYANG: "/home/keatest/libyang"
+  LIBYANG_PREFIX: "/opt/libyang"
+  SPDLOG: "/home/keatest/spdlog"
+  SYSREPO: "/home/keatest/sysrepo"
+  SYSREPO_PREFIX: "/opt/sysrepo"
+  LD_LIBRARY_PATH: "${LD_LIBRARY_PATH}:${LIBYANG_PREFIX}/lib:${SYSREPO_PREFIX}/lib"
+
+# Disabled warnings:
+# SC2039 - complains about local var: In POSIX sh, 'local' is undefined.
+  SHELLCHECK_OPTS: "--exclude=SC2039"
+
+
+stage:
+  stage: stage
+  script:
+    # Only run for develop.
+    - if [[ "${CI_COMMIT_REF_NAME}" != 'develop' ]]; then exit 0; fi
+
+    # Cleanup
+    # - find "$(dirname "${SOURCE}")" -mindepth 1 -maxdepth 1 -type d -not -name '.' -printf '%T@ %p\n' | sort -V | head -n -3 | cut -d ' ' -f 2 | xargs -I{} bash -c 'rm -rf {}'
+    - sudo -E rm -rf "${PREFIX}"
+    - sudo -E systemctl stop cassandra mysql postgresql || true
+    - docker stop $(docker ps -q) || true
+    - docker image rm $(docker image ls --format='{{.ID}}') || true
+    - mkdir -p "${SOURCE}"
+
+    # Download cassandra for cqlsh binary.
+    - pushd /opt
+    - version='4.0-alpha4'
+    - if test ! -e "/opt/apache-cassandra-${version}"; then "${DT_KEA_TOOLS}/scripts/download-cassandra" 4.0-alpha4; unp "./apache-cassandra-${version}-bin.tar.gz"; fi
+    - rm -rf /opt/cassandra
+    - ln -s "/opt/apache-cassandra-${version}" /opt/cassandra
+    - export PATH="${PATH}:/opt/cassandra/bin"
+    - popd
+
+    # Dependencies
+    ## Googletest
+    - git clone 'https://github.com/google/googletest' "${GTEST}" || true
+    - pushd "${GTEST}"
+    - git pull
+    - mkdir -p ./build
+    - pushd ./build
+    - test -f Makefile || cmake ..
+    - make -j "$(grep -Fc processor < /proc/cpuinfo)"
+    - popd
+    - popd
+    ## Google Benchmark
+    - git clone 'https://github.com/google/benchmark' "${BENCHMARK}" || true
+    - pushd "${BENCHMARK}"
+    - test -e ./googletest || ln -s "${GTEST}" ./googletest
+    - git pull
+    - mkdir -p ./build
+    - pushd ./build
+    - test -f Makefile || cmake ..
+    - make -j "$(grep -Fc processor < /proc/cpuinfo)"
+    - popd
+    - popd
+    ## libyang
+    - git clone 'https://github.com/CESNET/libyang.git' "${LIBYANG}" || true
+    - pushd "${LIBYANG}"
+    - git pull
+    - mkdir -p ./build
+    - pushd ./build
+    - cmake .. -DCMAKE_INSTALL_PREFIX="${LIBYANG_PREFIX}" -DGEN_CPP_BINDINGS=1 -DGEN_LANGUAGE_BINDINGS=1
+    - make -j "$(grep -Fc processor < /proc/cpuinfo)"
+    - sudo -E make install
+    - popd
+    - popd
+    ## Sysrepo
+    - git clone 'https://github.com/sysrepo/sysrepo.git' "${SYSREPO}" || true
+    - pushd "${SYSREPO}"
+    - git pull
+    - mkdir -p ./build
+    - pushd ./build
+    - cmake .. -DCMAKE_C_FLAGS='-coverage -Wall' -DCMAKE_INSTALL_PREFIX="${SYSREPO_PREFIX}" -DCMAKE_PREFIX_PATH=/opt -DGEN_CPP_BINDINGS=ON -DGEN_LANGUAGE_BINDINGS=ON -DLIBYANG_CPP_INCLUDE_DIR="${LIBYANG_PREFIX}/include" -DLIBYANG_CPP_LIBRARY="${LIBYANG_PREFIX}/lib/libyang-cpp.so" -DLIBYANG_INCLUDE_DIR="${LIBYANG_PREFIX}/include" -DLIBYANG_LIBRARY="${LIBYANG_PREFIX}/lib/libyang.so" -DREPO_PATH=/opt/sysrepo-repository
+    - make -j "$(grep -Fc processor < /proc/cpuinfo)"
+    - sudo -E make install
+    - popd
+    - popd
+    ## spdlog
+    - git clone 'https://github.com/gabime/spdlog.git' "${SPDLOG}" || true
+    - pushd "${SPDLOG}"
+    - git pull
+    - mkdir -p ./build
+    - pushd ./build
+    - cmake ..
+    - make -j "$(grep -Fc processor < /proc/cpuinfo)"
+    - sudo -E make install
+    - popd
+    - popd
+
+    # Build
+    - rsync --verbose --progress --human-readable --compress --archive --hard-links --one-file-system --acls --xattrs --update "${CI_PROJECT_DIR}/" "${SOURCE}/"
+    - pushd "${SOURCE}"
+    - cp './tools/sysrepo_config_defines.sh.sample' './tools/sysrepo_config_defines.sh'
+    - sed -i "s#LIBREDBLACK_PATH=.*#LIBREDBLACK_PATH=\"${LIBREDBLACK_PREFIX}\"#g;s#LIBYANG_PATH=.*#LIBYANG_PATH=\"${LIBYANG_PREFIX}\"#g;s#SYSREPO_PATH=.*#SYSREPO_PATH=\"${SYSREPO_PREFIX}\"#g;" ./tools/sysrepo_config_defines.sh
+    - test -f configure || autoreconf -f -i
+    - cp './tools/cql_config_defines.sh.sample' './tools/cql_config_defines.sh'
+    - sed -i "s#CPP_DRIVER_PATH=.*#CPP_DRIVER_PATH=\"${CASSANDRA_CPP_DRIVER}\"#g" './tools/cql_config_defines.sh'
+    - test -f Makefile || ./configure --with-mysql --with-pgsql --with-cql="${DATASTAX_CASSANDRA_CONFIG_SH}" --with-gtest-source="${GTEST}" --with-benchmark-source="${BENCHMARK}" --with-sysrepo='./tools/sysrepo_config' --prefix="${PREFIX}" --enable-generate-docs --enable-debug --enable-perfdhcp --enable-shell -without-werror CXXFLAGS='-O0 -g3 -ggdb'
+    - make -j "$(grep -Fc processor < /proc/cpuinfo)"
+    - sudo -E make install
+    - chmod +x './src/bin/admin/kea-admin'
+    - chmod +x './src/bin/keactrl/keactrl'
+    - popd
+
+    # Test
+    - pushd "${SOURCE}"
+    - sudo -E systemctl start docker
+    - timeout 5m "${DT_KEA_TOOLS}/scripts/docker/start-all"
+    - sudo -E mkdir -p ${SYSREPO_PREFIX}/build/repository/yang
+    - pushd ./src/share/yang/modules
+    - for file in $(find . -mindepth 1 -maxdepth 1 -type f -name '*.yang'); do "${SYSREPO_PREFIX}/bin/sysrepoctl" -u "$(cut -d '/' -f '2-' <<< "${file}" | cut -d '@' -f 1)" || true; "${SYSREPO_PREFIX}/bin/sysrepoctl" -i "${file}" -s "${SYSREPO_PREFIX}/build/repository/yang" -s . || true; done
+    - popd
+
+    - make check |& tee ./unit-tests-report.txt
+    - sudo -E mkdir -p "${PREFIX}"
+    - sudo -E cp ./unit-tests-report.txt "${PREFIX}"
+    - popd
+
+    # clang-tidy
+    # - pushd "${SOURCE}"
+    # - make clang-tidy |& tee ./clang-tidy-report.txt
+    # - sudo -E mkdir -p "${PREFIX}"
+    # - sudo -E cp ./clang-tidy-report.txt "${PREFIX}"
+    # - popd
+
+    # shellcheck
+    - SCRIPTS="src/bin/keactrl/keactrl.in "
+    - SCRIPTS+="src/bin/admin/kea-admin.in "
+    - SCRIPTS+="src/bin/admin/admin-utils.sh "
+    - SCRIPTS+="tools/cql_config "
+    - SCRIPTS+="tools/sysrepo_config "
+    - shellcheck ${SCRIPTS} ${SHELLCHECK_OPTS}
+
+    # Artifacts
+    - rm -rf "${ARTIFACT}" || true
+    - sudo -E cp -rf "${PREFIX}" "${ARTIFACT}"
+    - sudo -E chown -R keatest:keatest "${ARTIFACT}"
+
+    # Cleanup
+    - sudo -E systemctl stop cassandra mysql postgresql || true
+    - docker stop $(docker ps -q) || true
+    - docker image rm $(docker image ls --format='{{.ID}}') || true
+
+  # The files which are to be made available in GitLab
+  artifacts:
+    paths:
+      - "${ARTIFACT}"

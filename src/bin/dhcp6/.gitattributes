@@ -1,0 +1,8 @@
+/dhcp6_messages.cc  merge=ours
+/dhcp6_messages.h   merge=ours
+/dhcp6_lexer.cc     diff=nodiff merge=ours
+/dhcp6_parser.cc    diff=nodiff merge=ours
+/dhcp6_parser.h     diff=nodiff merge=ours
+/location.hh        diff=nodiff merge=ours
+/position.hh        diff=nodiff merge=ours
+/stack.hh           diff=nodiff merge=ours

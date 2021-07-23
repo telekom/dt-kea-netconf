@@ -1,0 +1,155 @@
+// Copyright (C) 2012-2020 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/**
+ * @mainpage Kea Developer's Guide
+ *
+ * Welcome to the Kea Developer's Guide. This documentation is addressed at
+ * either existing or prospective Kea developers and contributors, and
+ * provides information needed to extend and maintain Kea source code.
+
+ * If you wish to write hook code - the code that is loaded by Kea at
+ * run-time and modifies its behavior,  you should read the section
+ * @ref hooksdgDevelopersGuide.
+ *
+ * Kea maintenance information is divided into a number of sections.
+ * Information on DHCP-specific topics can be found
+ * in the @ref dhcpMaintenanceGuide.  General topics are discussed in
+ * @ref miscellaneousTopics.
+ *
+ * If you are a user or system administrator, rather than software engineer,
+ * you should read the
+ * <a href="https://kb.isc.org/docs/kea-administrator-reference-manual">Kea
+ * Administrator Reference Manual</a> instead. If you are using a beta or
+ * development version of Kea, the
+ * <a href="https://kea.readthedocs.io/">
+ * development version of the manual</a> is recommended.
+ *
+ * Regardless of your field of expertise, you are encouraged to visit the
+ * <a href="https://gitlab.isc.org/isc-projects/kea/wikis/home">Kea wikipage (https://gitlab.isc.org/isc-projects/kea/wikis/home)</a>
+ *
+ * @section contrib Contributor's Guide
+ * - @subpage contributorGuide - This page describes the process of sending
+ * a patch to ISC and what happens next. Please read it if you are considering
+ * sending us any code.
+ *
+ * @section buildingKeaWithUnitTests Building Kea with Unit tests
+ * - @subpage unitTests
+ *   - @subpage unitTestsEnvironmentVariables
+ *   - @subpage unitTestsSanitizers
+ *   - @subpage unitTestsDatabaseConfig
+ *   - @subpage unitTestsSysrepo
+ *
+ * @section performance Performance
+ * - @subpage benchmarks
+ *
+ * @section hooksFramework Hooks Framework
+ * - @subpage hooksdgDevelopersGuide
+ * - @subpage dhcpv4Hooks
+ * - @subpage dhcpv6Hooks
+ * - @subpage agentHooks
+ * - @subpage hooksComponentDeveloperGuide
+ * - @subpage hooksmgMaintenanceGuide
+ * - @subpage libdhcp_ha
+ * - @subpage libdhcp_user_chk
+ * - @subpage libdhcp_lease_cmds
+ * - @subpage libdhcp_stat_cmds
+ *
+ * @section dhcpMaintenanceGuide DHCP Maintenance Guide
+ * - @subpage dhcp4
+ *   - @subpage dhcpv4ConfigParser
+ *   - @subpage dhcpv4ConfigInherit
+ *   - @subpage dhcpv4OptionsParse
+ *   - @subpage dhcpv4DDNSIntegration
+ *   - @subpage dhcpv4Classifier
+ *   - @subpage dhcpv4ConfigBackend
+ *   - @subpage dhcpv4SignalBasedReconfiguration
+ *   - @subpage dhcpv4Other
+ *   - @subpage dhcpv4o6Dhcp4
+ * - @subpage dhcp6
+ *   - @subpage dhcpv6ConfigParser
+ *   - @subpage dhcpv6ConfigInherit
+ *   - @subpage dhcpv6DDNSIntegration
+ *   - @subpage dhcpv6OptionsParse
+ *   - @subpage dhcpv6Classifier
+ *   - @subpage dhcpv6ConfigBackend
+ *   - @subpage dhcpv6SignalBasedReconfiguration
+ *   - @subpage dhcpv6Other
+ *   - @subpage dhcpv4o6Dhcp6
+ * - @subpage congestionHandling
+ * - @subpage d2
+ *   - @subpage d2ProcessDerivation
+ *   - @subpage d2ConfigMgt
+ *   - @subpage d2NCRReceipt
+ *   - @subpage d2DDNSUpdateExecution
+ *   - @subpage d2EventLoop
+ *   - @subpage d2TransDetail
+ *   - @subpage d2StateModel
+ *   - @subpage d2TransExecExample
+ * - @subpage controlAgent
+ *   - @subpage ctrlAgentHttp
+ *   - @subpage ctrlAgentCreatingResponse
+ *   - @subpage ctrlAgentCommandMgr
+ *   - @subpage CtrlAgentSecurity
+ * - @subpage lfc
+ *   - @subpage lfcProcessing
+ *   - @subpage lfcFiles
+ * - @subpage ctrlSocket
+ *   - @subpage ctrlSocketOverview
+ *   - @subpage ctrlSocketClient
+ *   - @subpage ctrlSocketImpl
+ *   - @subpage ctrlSocketConnections
+ * - @subpage dhcpDatabaseBackends
+ * - @subpage configBackend
+ *   - @subpage configBackendJSONDesign
+ * - @subpage perfdhcpInternals
+ *
+ * @section libraries Kea libraries
+ * - @subpage libutil
+ * - @subpage libasiolink
+ * - @subpage libcc
+ * - @subpage libdatabase
+ * - @subpage libdhcp
+ *   - @subpage libdhcpIntro
+ *   - @subpage libdhcpRelay
+ *   - @subpage libdhcpIfaceMgr
+ *   - @subpage libdhcpPktFilter
+ *   - @subpage libdhcpPktFilter6
+ *   - @subpage libdhcpErrorLogging
+ * - @subpage libstats
+ * - @subpage libdhcp_ddns
+ * - @subpage libdhcpsrv
+ *   - @subpage leasemgr
+ *   - @subpage cfgmgr
+ *   - @subpage hostmgr
+ *   - @subpage optionsConfig
+ *   - @subpage allocengine
+ *   - @subpage timerManager
+ *   - @subpage leaseReclamationRoutine
+ *   - @subpage subnetSelect
+ *   - @subpage dhcp4o6Ipc
+ * - @subpage libeval
+ * - @subpage libprocess
+ *   - @subpage cpl
+ *   - @subpage cplSignals
+ * - @subpage libyang
+ * - @subpage libhttp
+ *
+ * @section miscellaneousTopics Miscellaneous Topics
+ * - @subpage terminology
+ * - @subpage parser
+ * - @subpage logKeaLogging
+ *   - @subpage logBasicIdeas
+ *   - @subpage logDeveloperUse
+ *   - @subpage logNotes
+ * - @subpage LoggingApi
+ * - @subpage SocketSessionUtility
+ * - @subpage fuzzer
+ * - @subpage crossCompile
+ * - @subpage docs
+ * - <a href="./doxygen-error.log">Documentation warnings and errors</a>
+ *
+ */

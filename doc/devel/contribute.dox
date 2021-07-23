@@ -1,0 +1,16 @@
+// Copyright (C) 2013-2019 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/**
+
+ @page contributorGuide Kea Contributor's Guide
+
+The Contributor's Guide has been moved to a stand alone document.
+See CONTRIBUTORS.md in the top level sources or:
+
+Link: https://gitlab.isc.org/isc-projects/kea/blob/master/CONTRIBUTING.md
+
+*/

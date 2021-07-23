@@ -1,0 +1,499 @@
+// Copyright (C) 2013-2019 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/**
+ @page dhcpv6Hooks The Hooks API for the DHCPv6 Server
+
+ @section dhcpv6HooksIntroduction Introduction
+ Kea features an API (the "Hooks" API) that allows user-written code to
+ be integrated into Kea and called at specific points in its processing.
+ An overview of the API and a tutorial for writing such code can be found in
+ the @ref hooksdgDevelopersGuide. It also includes information how hooks
+ framework can be used to implement additional control commands for the
+ DHCPv6 server. Information for Kea maintainers can be found in the
+ @ref hooksComponentDeveloperGuide.
+
+ This manual is more specialized and is aimed at developers of hook
+ code for the DHCPv6 server. It describes each hook point, what the callouts
+ attached to the hook are able to do, and the arguments passed to the
+ callouts.  Each entry in this manual has the following information:
+
+ - Name of the hook point.
+ - Arguments for the callout.  As well as the argument name and data type, the
+   information includes the direction, which can be one of:
+   - @b in - the server passes values to the callout but ignored any data
+     returned.
+   - @b out - the callout is expected to set this value.
+   - <b>in/out</b> - the server passes a value to the callout and uses whatever
+     value the callout sends back.  Note that the callout may choose not to
+     do any modification, in which case the server will use whatever value
+     it sent to the callout.
+ - Description of the hook. This explains where in the processing the hook
+   is located, the possible actions a callout attached to this hook could take,
+   and a description of the data passed to the callouts.
+ - Next step status: the action taken by the server when a callout chooses to set
+    status to specified value. Actions not listed explicitly are not supported.
+   If a callout sets status to unsupported value, this specific value will be
+   ignored and treated as if the status was CONTINUE.
+
+@section dhcpv6HooksHookPoints Hooks in the DHCPv6 Server
+
+The following list is roughly ordered by appearance of specific hook points during
+packet processing, but the exact order depends on the actual processing. Hook points
+that are not specific to packet processing (e.g. lease expiration) will be added
+to the end of this list.
+
+ @subsection dhcp6HooksDhcpv6SrvConfigured dhcp6_srv_configured
+ - @b Arguments:
+   - name: @b io_context, type: isc::asiolink::IOServicePtr, direction: <b>in</b>
+   - name: @b network_state, type: isc::dhcp::NetworkStatePtr, direction: <b>in</b>
+   - name: @b json_config, type: isc::data::ElementPtr, direction: <b>in</b>
+   - name: @b server_config, type: isc::dhcp::SrvConfigPtr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server has completed
+   its (re)configuration. The server provides received and parsed configuration
+   structures to the hook library. It also provides a pointer to the IOService
+   object which is used by the server to run asynchronous operations. The hooks
+   libraries can use this IOService object to schedule asynchronous tasks which
+   are triggered by the DHCP server's main loop. The hook library should hold the
+   provided pointer until the library is unloaded. The NetworkState object
+   provides access to the DHCP service state of the server and allows for
+   enabling and disabling the DHCP service from the hooks libraries.
+
+ - <b>Next step status</b>: Status codes retured by the callouts installed on
+   this hook point are ignored.
+
+ @subsection dhcpv6HooksCb6Update cb6_updated
+ - @b Arguments:
+   - name: audit_entries, type isc::db::AuditEntryCollectionPtr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server has completed
+   a configuration update using the Config Backend. The server provides
+   the audit entries as a never null pointer to a not empty collection
+   copied from the update apply method argument.
+
+ - <b>Next step status</b>: Status codes retured by the callouts installed on
+   this hook point are ignored.
+
+ @subsection dhcpv6HooksBuffer6Receive buffer6_receive
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when an incoming DHCPv6
+   packet is received and the data stored in a buffer. The sole argument
+   "query6" contains a pointer to an @c isc::dhcp::Pkt6 object that contains
+   the received information stored in the data_ field. Basic information
+   like protocol, source/destination addresses and ports are set, but
+   the contents of the buffer have not yet been parsed.  That means that
+   the @c options_ field (that will eventually contain a list of objects
+   representing the received options) is empty, so none of the methods
+   that operate on it (e.g., getOption()) will work. The primary purpose
+   of this early call is to offer the ability to modify incoming packets
+   in their raw form. Unless you need to access to the raw data, it is
+   usually better to install your callout on the "pkt6_receive" hook point.
+
+ - <b>Next step status</b>: If any callout sets the status to DROP, the server
+   will drop the packet and start processing the next one.
+   If any callout sets the status to SKIP, the
+   server will assume that the callout parsed the buffer and added the
+   necessary option objects to the @c options_ field; the server will not
+   do any parsing. If the callout sets the skip flag but does not parse
+   the buffer, the server will most probably drop the packet due to
+   the absence of mandatory options. If you want to drop the packet,
+   see the description of the skip flag in the "pkt6_receive" hook point.
+
+ @subsection dhcpv6HooksPkt6Receive pkt6_receive
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when an incoming DHCPv6
+   packet is received and its content is parsed. The sole argument
+   "query6" contains a pointer to an @c isc::dhcp::Pkt6 object that contains
+   all information regarding incoming packet, including its source and
+   destination addresses, the interface over which it was received, a list
+   of all options present within and relay information.  All fields of
+   the "query6" object can be modified at this time, except data_. (data_
+   contains the incoming packet as raw buffer. By the time this hook is
+   reached, that information has already been parsed and is available though
+   other fields in the Pkt6 object.  For this reason, modification of the
+   @c data_ field would have no effect.)
+
+ - <b>Next step status</b>: If any callout sets the status to SKIP or DROP, the server will
+   drop the packet and start processing the next one.  The reason for the drop
+   will be logged if logging is set to the appropriate debug level.
+
+@subsection dhcpv6HooksSubnet6Select subnet6_select
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+   - name: @b subnet6, type: isc::dhcp::Subnet6Ptr, direction: <b>in/out</b>
+   - name: @b subnet6collection, type: const isc::dhcp::Subnet6Collection *, direction: <b>in</b>
+
+ - @b Description: This callout is executed when a subnet is being
+   selected for the incoming packet. All parameters, addresses and
+   prefixes will be assigned from that subnet. A callout can select a
+   different subnet if it wishes so, the list of all subnets currently
+   configured being provided as "subnet6collection". The list itself must
+   not be modified.
+
+ - <b>Next step status</b>: If any callout installed on "subnet6_select" sets
+   the status to DROP, the server will drop the packet and start processing
+   the next one. If any callout installed on "subnet6_select"
+   sets the status to SKIP, the server will not select any subnet. Packet processing
+   will continue, but will be severely limited.
+
+@subsection dhcpv6HooksHost6Identifier host6_identifier
+
+ - @b Arguments:
+   - name: @b query6, type isc::dhcp::Pkt6Ptr, direction: <b>in</b>
+   - name: @b id_type, type isc::dhcp::Host::IdentifierType, direction: <b>in/out</b>
+   - name: @b id_value, type std::vector<uint8_t>, direction: <b>out</b>
+
+ - @b Description: this callout is executed only if flexible identifiers are
+   enabled, i.e. host-reservation-identifiers contain 'flex-id' value. This
+   callout enables external library to provide values for flexible identifiers.
+   To be able to use this feature, flex_id hook library is needed.
+
+ - <b>Next step status</b>: If a callout installed on the "host6_identifier" hook
+   point sets the next step status to value other than NEXT_STEP_CONTINUE, the
+   identifier will not be used.
+
+@subsection dhcpv6HooksLease6Select lease6_select
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in</b>
+   - name: @b subnet6, type: isc::dhcp::Subnet6Ptr, direction: <b>in</b>
+   - name: @b fake_allocation, type: bool, direction: <b>in</b>
+   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed after the server engine
+   has selected a lease for client's request but before the lease
+   has been inserted into the database. Any modifications made to the
+   "lease6" object will affect the lease's record in the database.
+   The callout should make sure that any modifications are sanity
+   checked as the server will use that data as is, with no further
+   checking.\n\n The server processes lease requests for SOLICIT and
+   REQUEST in a very similar way. The major difference is that
+   for SOLICIT the lease is only selected; it is not inserted into
+   the database.  The callouts can distinguish between the SOLICIT and
+   REQUEST by checking the value of the "fake_allocation" flag: a value
+   of true means that the lease won't be inserted into the database
+   (SOLICIT case), a value of false means that it will (REQUEST).
+
+ - <b>Next step status</b>: If any callout installed on "lease6_select"
+   sets the status to SKIP, the server will not assign that particular lease.
+   Packet processing will continue and the client may get other addresses
+   or prefixes if it requested more than one address and/or prefix.
+
+@subsection dhcpv6HooksLease6Renew lease6_renew
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::PktPtr, direction: <b>in</b>
+   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+   - name: @b ia_na, type: isc::dhcp::Option6IAPtr direction: <b>in/out</b>
+   - name: @b ia_pd, type: isc::dhcp::Option6IAPtr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when the server engine is
+   about to renew an existing lease. The client's request is provided as
+   the "query6" argument and the existing lease with the appropriate fields
+   already modified is given in the "lease6" argument. The remaining two
+   arguments, "ia_na" and "ia_pd", are mutually exclusive and they provide
+   pointers to the IA_NA or IA_PD option which will be sent back to the
+   client. Callouts installed on the "lease6_renew" may modify the content of
+   the "lease6" object. Care should be taken however, as that modified
+   information will be written to the database without any further
+   checking. \n\n Although the envisaged usage assumes modification of T1,
+   T2, preferred and valid lifetimes only, other parameters associated
+   with the lease may be modified as well. The only exception is the @c addr_
+   field, which must not be modified as it is used by the database to
+   select the existing lease to be updated. Care should also be taken to
+   modify the "ia_na" and "ia_pd" arguments to match any changes in the
+   "lease6" argument. If a client sends more than one IA (IA_NA/IA_PD)
+   option, callouts will be called separately for each IA instance. The
+   callout will be called only when the update is valid, i.e. conditions
+   such as an invalid addresses or invalid iaid renewal attempts will
+   not trigger this hook point.
+
+ - <b>Next step status</b>: If any callout installed on "lease6_renew"
+   sets the status to SKIP, the server will not renew the lease. Under these
+   circumstances, the callout should modify the "ia_na" or "ia_pd"
+   argument to reflect this fact; otherwise the client will think the
+   lease was renewed and continue to operate under this assumption.
+
+@subsection dhcpv6HooksLease6Rebind lease6_rebind
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::PktPtr, direction: <b>in</b>
+   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+   - name: @b ia_na, type: isc::dhcp::Option6IAPtr direction: <b>in/out</b>
+   - name: @b ia_pd, type: isc::dhcp::Option6IAPtr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when the server engine is
+   about to rebind an existing lease. The client's request is provided as
+   the "query6" argument and the existing lease with the appropriate fields
+   already modified is given in the "lease6" argument. The remaining two
+   arguments, "ia_na" and "ia_pd", are mutually exclusive and they provide
+   pointers to the IA_NA or IA_PD option which will be sent back to the
+   client. Callouts installed on the "lease6_renew" may modify the content of
+   the "lease6" object. Care should be taken however, as that modified
+   information will be written to the database without any further
+   checking. \n\n Although the envisaged usage assumes modification of T1,
+   T2, preferred and valid lifetimes only, other parameters associated
+   with the lease may be modified as well. The only exception is the @c addr_
+   field, which must not be modified as it is used by the database to
+   select the existing lease to be updated. Care should also be taken to
+   modify the "ia_na" and "ia_pd" arguments to match any changes in the
+   "lease6" argument. If a client sends more than one IA (IA_NA/IA_PD)
+   option, callouts will be called separately for each IA instance. The
+   callout will be called only when the update is valid, i.e. conditions
+   such as an invalid addresses or invalid iaid renewal attempts will
+   not trigger this hook point.
+
+ - <b>Next step status</b>: If any callout installed on "lease6_rebind"
+   sets the status to SKIP, the server will not rebind the lease. Under these
+   circumstances, the callout should modify the "ia_na" or "ia_pd"
+   argument to reflect this fact; otherwise the client will think the
+   lease was rebound and continue to operate under this assumption.
+
+@subsection dhcpv6HooksLease6Decline lease6_decline
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::PktPtr, direction: <b>in</b>
+   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when the server engine is
+   about to decline an existing lease. The client's DECLINE is provided as
+   the "query6" argument and the existing lease with the appropriate fields
+   already modified is given in the "lease6" argument. The lease contains
+   the lease before it is being declined.
+
+ - <b>Next step status</b>: If any callout installed on "lease6_decline"
+   sets the status to SKIP, the server will not decline the lease, but will
+   continue processing the packet as if it did. It will send the response
+   that the lease was declined, but the actual database will not be
+   updated. If any callout installed sets the status to DROP, the packet
+   processing will be aborted, the lease will not be declined and the
+   server will not send a response.
+
+@subsection dhcpv6HooksLease6Release lease6_release
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::PktPtr, direction: <b>in</b>
+   - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when the server engine is
+   about to release an existing lease. The client's request is provided
+   as the "query6" argument and the existing lease is given in the "lease6"
+   argument.  Although the "lease6" structure may be modified, it doesn't
+   make sense to do so as it will be destroyed immediately the callouts
+   finish execution.
+
+ - <b>Next step status</b>: If any callout installed on "lease6_release"
+   sets the status to SKIP or DROP, the server will not delete the lease, which will
+   remain in the database until it expires. However, the server will send out
+   the response back to the client as if it did.
+
+@subsection dhcpv6Leases6Committed leases6_committed
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in</b>
+   - name: @b leases6, type: isc::dhcp::Leases6CollectionPtr, direction: <b>in</b>
+   - name: @b deleted_leases6, type: isc::dhcp::Leases6CollectionPtr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server has
+   applied all lease changes as a result of DHCP message
+   processing. This includes writing new lease into the database,
+   releasing an old lease for this client or declining a lease. This
+   callout is executed only for the DHCP client messages which may
+   cause lease changes, i.e. SOLICIT with Rapid Commit option included
+   and when Rapid Commit is enabled, REQUEST, RENEW, REBIND, RELEASE and
+   DECLINE. This callout is not executed for SOLICIT without Rapid Commit,
+   CONFIRM and INFORMATION REQUEST.  If the callouts are executed as a result of
+   REQUEST or RENEW message, it is possible that both leases
+   collections hold leases to be handled. This is the case when the
+   new lease allocation replaces an existing lease for the client. The
+   "deleted_leases6" object will hold a previous lease instance and
+   the "leases6" object will hold the new lease for this client. The
+   callouts should be prepared to handle such situation. When the
+   callout is executed as a result RELEASE or DECLINE, the callout
+   will typically receive one or more leases in the "deleted_leases6"
+   object.  Both leases collections are always provided to the callouts,
+   even though they may sometimes be empty.
+
+ - <b>Next step status</b>: If any callout installed on the "leases6_committed"
+   sets the next step action to DROP the server will drop the processed query.
+   If it sets the next step action to PARK, the server will park the processed
+   packet (hold packet processing) until the hook libraries explicitly unpark
+   the packet after they are done performing asynchronous operations.
+
+
+@subsection dhcpv6HooksPkt6Send pkt6_send
+
+ - @b Arguments:
+   - name: @b query6, type: isc::dhcp::Pkt6Ptr, direction: <b>in</b>
+   - name: @b response6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when server's response
+   is about to be sent back to the client. The sole argument "response6"
+   contains a pointer to an @c isc::dhcp::Pkt6 object that contains the
+   packet, with set source and destination addresses, interface over which
+   it will be send, list of all options and relay information.  All fields
+   of the "response6" object can be modified at this time.  It should be
+   noted that unless the callout sets the skip flag (see below), anything
+   placed in the @c buffer_out_ field will be overwritten when the callout
+   returns. (buffer_out_ is scratch space used for constructing the packet.)
+
+ - <b>Next step status</b>: If any callout sets the status to SKIP, the server
+   will assume that the callout did pack the "transaction-id", "message type"
+   and option objects into the @c buffer_out_ field and will skip packing part.
+   Note that if the callout sets skip flag, but did not prepare the
+   output buffer, the server will send a zero sized message that will be
+   ignored by the client. If any callout sets the status to DROP,
+   the server will drop the prepared response.
+
+@subsection dhcpv6HooksBuffer6Send buffer6_send
+
+ - @b Arguments:
+   - name: @b response6, type: isc::dhcp::Pkt6Ptr, direction: <b>in/out</b>
+
+ - @b Description: This callout is executed when server's response is
+   assembled into binary form and is about to be sent back to the
+   client. The sole argument "response6" contains a pointer to an
+   @c isc::dhcp::Pkt6 object that contains the packet, with set source and
+   destination addresses, interface over which it will be sent, list of
+   all options and relay information. All options are already encoded
+   in @c buffer_out_ field. It doesn't make sense to modify anything but the
+   contents of buffer_out_ at this time (although if it is a requirement
+   to modify that data, it will probably be found easier to modify the
+   option objects in a callout attached to the "pkt6_send" hook).
+
+ - <b>Next step status</b>: If any callout sets the status to SKIP or DROP, the server
+   will drop this response packet. However, the original request packet
+   from a client has been processed, so server's state has most likely changed
+   (e.g. lease was allocated). Setting this flag merely stops the change
+   being communicated to the client.
+
+@subsection dhcpv6HooksLease6Expire lease6_expire
+
+- @b Arguments:
+  - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in/out</b>
+  - name: @b remove_lease, type: bool, direction: <b>in</b>
+
+- @b Description: this callout is executed for each expired lease when
+  the server performs reclamation of the expired leases. During this
+  process the server executes "lease6_expire" callout, removes the DNS
+  records associated with this lease and finally removes the lease from
+  the database or updates its status to "expired-reclaimed". The "lease6"
+  argument contains the pointer to the lease being reclaimed. The second
+  argument "remove_lease" indicates if the reclaimed leases should be
+  removed from the lease database (if true), or their state should be
+  set to "expired-reclaimed" in the lease database. This argument
+  is only used by the callout if it takes responsibility for the lease
+  reclamation, i.e. it sets the "skip" flag to "true".  The "remove_lease"
+  argument is set to "true" if the "flush-reclaimed-timer-wait-time" is
+  set to 0 in the server configuration file.
+
+- <b>Next step status</b>: if the callout sets the status to SKIP, the server
+  will assume that the callout has fully reclaimed the lease, i.e.
+  performed the DNS update and updated the lease in the database. The
+  server will not perform any further actions on the lease for which the
+  skip flag has been set. It is important to note that if the callout
+  sets this flag but fails to reclaim the lease in the database, the
+  reclamation routine will repeatedly process this lease in subsequent
+  runs. Therefore, the implementors of this callout must make sure that
+  skip flag is only set when the lease has been actually reclaimed in the
+  database by the callout.
+
+@subsection dhcpv6HooksLease6Recover lease6_recover
+
+- @b Arguments:
+  - name: @b lease6, type: isc::dhcp::Lease6Ptr, direction: <b>in</b>
+
+- @b Description: this callout is executed for each declined lease that
+  has expired (was put aside for the duration of decline-probation-period)
+  and is being recovered. The lease has already been stripped
+  from any client identifying information when it was put into declined
+  state. In principle the callouts can modify the lease in this hook,
+  but it makes little sense. There's no useful data in the lease, except
+  the IPv6 address (which must not be modified).
+
+- <b>Next step status</b>: if the callout sets the next step action to SKIP,
+  the server will skip the lease recovery. In other words, it will keep
+  the lease as is. This is not recommended in general, as the declined
+  expired leases will remain in the database and their recovery will
+  be attempted during the next reclaim cycle.
+
+@subsection dhcpv6HooksCommandProcessed command_processed
+
+ - @b Arguments:
+   - name: @b name, type: std::string, direction: <b>in</b>
+   - name: @b arguments type: isc::data::ElementPtr, direction: <b>in</b>
+   - name: @b response, type: isc::data::ElementPtr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed after the DHCPv6 server receives
+   and processes a control command over the command channel (typically unix domain socket).
+   The "name" argument is the name of the command processed.
+   The "arguments" argument is a pointer to the parsed JSON structure
+   containing the command's input arguments.  The "response" argument
+   is the parsed JSON stucture containing the response generated by
+   the command processing.
+
+ - <b>Next step status</b>: Not applicable, it's value will be ignored.
+
+@section dhcpv6HooksOptionsAccess Accessing DHCPv6 Options within a Packet
+When the server constructs a response message to a client it includes
+DHCP options configured for this client in a response message. Apart
+from the dynamically created options, such as IA_NA or ClientFQDN, it
+typically includes many options specified in the server configuration
+and held within the configuration structures by @c CfgMgr. Option
+instances are created once, during server configuration, and the
+@c CfgMgr holds pointers to those instances until the next server
+reconfiguration.
+
+When the server includes an option in a response message it copies
+a pointer to the instance of this option, rather than entire option.
+This ensures the good performance of response message creation. However,
+it also implies that any modification to the option carried in the
+DHCP response will affect an instance of this option in the server
+configuration structures. This is obviously not desired as it would
+affect all subsequent DHCP transactions involving this option. The
+DHCP server code avoids modifying the options included in the messages
+so it is possible to ensure good performance without a risk of
+accidentally modifying server configuration. The situation is
+different with hooks libraries which purpose is, in many cases,
+to modify values of options inserted by the server.
+
+Thus, @c Pkt class provides a mechanism to return a copy of an
+option to a caller (e.g. a callout), rather than an instance
+shared with the @c CfgMgr. This mechanism is enabled for all instances
+of @c Pkt6 passed to the callouts, i.e. "query6" and "response6"
+arguments. It is also automatically disabled when the callout
+returns the control back to the server.
+
+At every hook point, where the server passes an instance of a packet
+to the callouts, the server calls
+@c isc::dhcp::Pkt6::setCopyRetrievedOptions (true)
+to force copying options retrieved by @c isc::dhcp::Pkt6::getOption,
+@c isc::dhcp::Pkt6::getOptions, @c isc::dhcp::Pkt6::getRelayOption
+and @c isc::dhcp::Pkt6::getAnyRelayOption within callouts. The copied
+option replaces an original option within the packet and any
+modification to the option content by the callout would only affect
+the option instance associated with the packet.
+
+On the other hand, copying each retrieved option may be expensive.
+If performance of a hook library is a concern, it is possible for the
+hook library to disable copying retrieved options by calling
+@c isc::dhcp::Pkt6::setCopyRetrievedOptions (false) within a callout.
+In this case however, the hook library implementer must be aware that
+any modification of the option instance would affect the server
+configuration and may disrupt server's operation. Thus, disabling
+copying of retrieved options is not recommended unless the hook
+library is not intended to modify configured options carried
+within a packet.
+
+*/

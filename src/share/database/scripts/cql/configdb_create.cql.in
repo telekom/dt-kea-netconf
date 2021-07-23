@@ -1,0 +1,160 @@
+-- (C) 2020 Deutsche Telekom AG.
+--
+-- Deutsche Telekom AG and all other contributors /
+-- copyright owners license this file to you under the Apache
+-- License, Version 2.0 (the "License"); you may not use this
+-- file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+-- http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing,
+-- software distributed under the License is distributed on an
+-- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+-- KIND, either express or implied. See the License for the
+-- specific language governing permissions and limitations
+-- under the License.
+
+-- This is the Kea schema specification for Cassandra CQL.
+--
+-- The schema is reasonably portable (with the exception of the engine
+-- specification, which is Cassandra CQL-specific).  Minor changes might be needed for
+-- other databases.
+--
+-- To create the schema, either type the command:
+--
+-- cqlsh -u <user> -p <password> -k <database> -f configdb_create.cql
+--
+-- ... at the command prompt, or log in to the CQL database and at the "cqlsh>"
+-- prompt, issue the command:
+--
+-- SOURCE configdb_create.cql
+--
+-- This script is also called from kea-admin, see kea-admin db-init cql
+--
+-- Over time, Kea database schema will evolve. Each version is marked with
+-- major.minor version. This file is organized sequentially, i.e. database
+-- is initialized to 1.0, then upgraded to 2.0 etc. This may be somewhat
+-- sub-optimal, but it ensues consistency with upgrade scripts. (It is much
+-- easier to maintain init and upgrade scripts if they look the same).
+-- Since initialization is done only once, it's performance is not an issue.
+
+-- This line starts database upgrade to version 1.0.
+
+--------------------------------------------------------------------------------
+--------------------------------- DHCPv4 space ---------------------------------
+--------------------------------------------------------------------------------
+CREATE TABLE server_configuration4 (
+    id SMALLINT,
+    configuration VARCHAR,
+    timestamp BIGINT,
+    PRIMARY KEY ((id))
+);
+
+CREATE TABLE subnet4 (
+    id INT,
+    renew_timer BIGINT,
+    rebind_timer BIGINT,
+    valid_lifetime BIGINT,
+    option_data_list VARCHAR,
+    pools_list VARCHAR,
+    subnet VARCHAR,
+    interface VARCHAR,
+    interface_id VARCHAR,
+    rapid_commit TINYINT,
+    client_class VARCHAR,
+    require_client_classes VARCHAR,
+    reservations VARCHAR,
+    reservation_mode TINYINT,
+    relay VARCHAR,
+    allocation_type TINYINT,
+    user_context VARCHAR,
+    match_client_id TINYINT,
+    next_server VARCHAR,
+    server_hostname VARCHAR,
+    boot_file_name VARCHAR,
+    subnet_4o6_interface VARCHAR,
+    subnet_4o6_interface_id VARCHAR,
+    subnet_4o6_subnet VARCHAR,
+    subnet_v4_psid_offset TINYINT,
+    subnet_v4_psid_len TINYINT,
+    subnet_v4_excluded_psids VARCHAR,
+    PRIMARY KEY ((subnet))
+);
+
+
+--------------------------------------------------------------------------------
+--------------------------------- DHCPv6 space ---------------------------------
+--------------------------------------------------------------------------------
+CREATE TABLE server_configuration6 (
+    id SMALLINT,
+    configuration VARCHAR,
+    timestamp BIGINT,
+    PRIMARY KEY ((id))
+);
+
+CREATE TABLE subnet6 (
+    id INT,
+    renew_timer BIGINT,
+    rebind_timer BIGINT,
+    valid_lifetime BIGINT,
+    option_data_list VARCHAR,
+    pools_list VARCHAR,
+    subnet VARCHAR,
+    interface VARCHAR,
+    interface_id VARCHAR,
+    rapid_commit TINYINT,
+    client_class VARCHAR,
+    require_client_classes VARCHAR,
+    reservations VARCHAR,
+    reservation_mode TINYINT,
+    relay VARCHAR,
+    allocation_type TINYINT,
+    user_context VARCHAR,
+    pd_pools_list VARCHAR,
+    preferred_lifetime BIGINT,
+    PRIMARY KEY ((subnet))
+);
+
+
+--------------------------------------------------------------------------------
+--------------------------------- Common space ---------------------------------
+--------------------------------------------------------------------------------
+-- Finally, the version of the schema.  We start at 1.0 during development.
+-- This table is only modified during schema upgrades.  For historical reasons
+-- (related to the names of the columns in the BIND 10 DNS database file), the
+-- first column is called "version" and not "major".
+CREATE TABLE config_schema_version (
+    key VARCHAR,
+    version INT,
+    minor INT,
+    PRIMARY KEY ((key))
+);
+
+INSERT INTO config_schema_version (key, version, minor) VALUES ('version', 1, 0);
+
+-- This line concludes database upgrade to version 1.0
+
+-- This line starts database upgrade to version 2.0
+
+-- Add timestamp for check-and-set.
+ALTER TABLE subnet4 ADD timestamp BIGINT;
+ALTER TABLE subnet6 ADD timestamp BIGINT;
+
+UPDATE config_schema_version
+    SET version = 2, minor = 0
+    WHERE key = 'version';
+
+-- This line concludes database upgrade to version 2.0
+
+-- This line starts database upgrade to version 3.0
+
+-- Add network topology.
+ALTER TABLE subnet6 ADD network_topology VARCHAR;
+ALTER TABLE subnet6 ADD network_topology_timestamp BIGINT;
+
+UPDATE config_schema_version
+    SET version = 3, minor = 0
+    WHERE key = 'version';
+
+-- This line concludes database upgrade to version 3.0

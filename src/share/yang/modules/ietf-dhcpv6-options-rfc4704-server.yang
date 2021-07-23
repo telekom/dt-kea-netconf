@@ -1,0 +1,59 @@
+module ietf-dhcpv6-options-rfc4704 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc4704-server";
+  prefix rfc4704-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC3319 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping client-fqdn-option-group {
+    container client-fqdn-option {
+      description
+        "OPTION_CLIENT_FQDN (39) DHCPv6 Client FQDN Option";
+      reference
+        "RFC4704: The Dynamic Host Configuration Protocol for IPv6
+         (DHCPv6) Client Fully Qualified Domain Name (FQDN) Option";
+      leaf server-initiate-update {
+        type boolean;
+        description
+          "server initiate";
+      }
+
+      leaf client-initiate-update {
+        type boolean;
+        description
+          "client initiate";
+      }
+
+      leaf modify-name-from-cli {
+        type boolean;
+        description
+          "modify by client";
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses client-fqdn-option-group;
+  }
+}

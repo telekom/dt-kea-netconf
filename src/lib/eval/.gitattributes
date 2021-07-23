@@ -1,0 +1,8 @@
+/eval_messages.cc   merge=ours
+/eval_messages.h    merge=ours
+/lexer.cc           diff=nodiff merge=ours
+/location.hh        diff=nodiff merge=ours
+/parser.cc          diff=nodiff merge=ours
+/parser.h           diff=nodiff merge=ours
+/position.hh        diff=nodiff merge=ours
+/stack.hh           diff=nodiff merge=ours

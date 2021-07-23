@@ -1,0 +1,2 @@
+SUBDIRS = mysql pgsql cql
+

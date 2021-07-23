@@ -1,0 +1,59 @@
+module ietf-dhcpv6-options-rfc4075 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc4075-server";
+  prefix rfc4075-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC3319 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping sntp-server-option-group {
+    container sntp-server-option {
+      description
+        "OPTION_SNTP_SERVERS (31) Simple Network Time Protocol
+         (SNTP) Servers Option";
+      reference
+        "RFC4075: Simple Network Time Protocol (SNTP) Configuration
+         Option for DHCPv6";
+      list sntp-server {
+        key "sntp-serv-id";
+        description
+          "List of SNTP server addresses.";
+        leaf sntp-serv-id {
+          type uint8;
+          description
+            "SNTP server id";
+        }
+
+        leaf sntp-serv-addr {
+          type inet:ipv6-address;
+          description
+            "SNTP server address.";
+        }
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses sntp-server-option-group;
+  }
+}

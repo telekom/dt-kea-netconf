@@ -1,0 +1,95 @@
+module kea-augments-to-ietf-dhcpv6-server {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:kea-augments-to-ietf-dhcpv6-server";
+  prefix kea-augments-to-ietf-dhcpv6-server;
+
+  import ietf-dhcpv6-server {
+    prefix ietf-dhcpv6-server;
+  }
+
+  import kea-dhcp6-server {
+    prefix kea-dhcp6-server;
+  }
+
+  import kea-dhcp-types {
+    prefix kea-dhcp-types;
+  }
+
+  import kea-types {
+    prefix kea-types;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "andrei.pavel@qualitance.com
+     paul.dumitru@qualitance.com";
+  description
+    "This YANG module defines augmentations for the ietf-dhcpv6-server
+     module. These augmentations are present in kea-dhcp6-server module
+     and in doing this we are trying to achieve as close to
+     a lossless conversion between the models as possible.";
+
+  revision 2020-08-13 {
+    description
+      "Initial version";
+  }
+
+  grouping ungrouped-nodes {
+    leaf-list relay-supplied-options {
+      type string;
+      description
+        "Relay supplied options.";
+    }
+
+    leaf-list mac-sources {
+      type string;
+      description
+        "MAC address sources.";
+    }
+
+    leaf-list host-reservation-identifiers {
+      type kea-dhcp6-server:host-identifier-type;
+      description
+        "Host reservation identifiers.";
+    }
+  }
+
+  grouping server-augmentations {
+    uses ungrouped-nodes;
+
+    uses kea-dhcp6-server:client-classes;
+
+    uses kea-dhcp-types:databases;
+
+    uses kea-dhcp-types:hooks-libraries;
+
+    uses kea-dhcp-types:interfaces-config;
+
+    uses kea-types:loggers;
+
+    uses kea-dhcp-types:config-control;
+
+    uses kea-dhcp-types:server-tag;
+
+    uses kea-dhcp-types:dhcp-queue-control;
+
+    uses kea-dhcp-types:expired-leases-processing;
+
+    uses kea-dhcp-types:dhcp4o6-port;
+
+    uses kea-dhcp-types:hostname-char-set;
+
+    uses kea-dhcp-types:hostname-char-replacement;
+
+    uses kea-dhcp-types:dhcp-ddns;
+
+    uses kea-dhcp-types:sanity-checks;
+
+    uses kea-dhcp-types:reservation-mode;
+  }
+
+  augment "/ietf-dhcpv6-server:dhcpv6-server/ietf-dhcpv6-server:vendor-config" {
+    uses server-augmentations;
+  }
+}

@@ -1,0 +1,7 @@
+/memfile_tests.sh
+/mysql_tests.sh
+/pgsql_tests.sh
+/cql_tests.sh
+/dhcpdb_create_1.0.cql
+/dhcpdb_create_1.0.mysql
+/dhcpdb_create_1.0.pgsql

@@ -1,0 +1,6 @@
+/alloc_engine_messages.cc   merge=ours
+/alloc_engine_messages.h    merge=ours
+/dhcpsrv_messages.cc        merge=ours
+/dhcpsrv_messages.h         merge=ours
+/hosts_messages.cc          merge=ours
+/hosts_messages.h           merge=ours

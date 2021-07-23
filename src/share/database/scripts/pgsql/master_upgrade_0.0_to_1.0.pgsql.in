@@ -1,0 +1,73 @@
+-- (C) 2020 Deutsche Telekom AG.
+--
+-- Deutsche Telekom AG and all other contributors /
+-- copyright owners license this file to you under the Apache
+-- License, Version 2.0 (the "License"); you may not use this
+-- file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+-- http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing,
+-- software distributed under the License is distributed on an
+-- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+-- KIND, either express or implied. See the License for the
+-- specific language governing permissions and limitations
+-- under the License.
+
+-- This is the Kea DHCP schema specification for PostgreSQL.
+--
+-- The schema is reasonably portable (with the exception of some field types
+-- specification, which are PostgreSQL-specific).  Minor changes might be needed
+-- for other databases.
+--
+-- To create the schema, either type the command:
+--
+-- psql -U <user> -W <password> <database> < master_upgrade_0.0_to_1.0.pgsql
+--
+-- ... at the command prompt, or log in to the PostgreSQL database and at the "postgres=#"
+-- prompt, issue the command:
+--
+-- @master_upgrade_0.0_to_1.0.pgsql
+
+-- Start a single transaction for the entire script.
+START TRANSACTION;
+
+-- Table structure for DHCPv4 server configuration
+DROP TABLE IF EXISTS server_configuration4;
+CREATE TABLE server_configuration4 (
+  instance_id VARCHAR(128) NOT NULL,
+  timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+  server_config BYTEA NOT NULL,
+  config_database BYTEA NOT NULL,
+  config_database_name VARCHAR(128) NOT NULL,
+  PRIMARY KEY (instance_id)
+);
+
+-- Table structure for DHCPv6 server configuration
+DROP TABLE IF EXISTS server_configuration6;
+CREATE TABLE server_configuration6 (
+  instance_id VARCHAR(128) NOT NULL,
+  timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+  server_config BYTEA NOT NULL,
+  config_database BYTEA NOT NULL,
+  config_database_name VARCHAR(128) NOT NULL,
+  PRIMARY KEY (instance_id)
+);
+
+-- Finally, the version of the schema.  We start at 0.1 during development.
+-- This table is only modified during schema upgrades.  For historical reasons
+-- (related to the names of the columns in the BIND 10 DNS database file), the
+-- first column is called "version" and not "major".
+DROP TABLE IF EXISTS master_schema_version;;
+CREATE TABLE master_schema_version (
+  version INT PRIMARY KEY NOT NULL,
+  minor INT
+);
+
+-- Set 1.0 schema version.
+INSERT INTO master_schema_version VALUES (1, 0);
+-- Schema 1.0 specification ends here.
+
+-- Commit the script transaction.
+COMMIT;

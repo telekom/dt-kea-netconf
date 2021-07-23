@@ -1,0 +1,933 @@
+# Copyright (C) 2012-2020 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+$NAMESPACE isc::dhcp
+
+% DHCP4_ACTIVATE_INTERFACE activating interface %1
+This message is printed when DHCPv4 server enabled an interface to be used
+to receive DHCPv4 traffic. IPv4 socket on this interface will be opened once
+Interface Manager starts up procedure of opening sockets.
+
+% DHCP4_ALREADY_RUNNING %1 already running? %2
+This is an error message that occurs when the DHCPv4 server encounters
+a pre-existing PID file which contains the PID of a running process.
+This most likely indicates an attempt to start a second instance of
+the server using the same configuration file.  It is possible, though
+unlikely that the PID file is a remnant left behind by a server crash or
+power failure and the PID it contains refers to a process other than
+the server.  In such an event, it would be necessary to manually remove
+the PID file.  The first argument is the DHCPv4 process name, the
+second contains the PID and PID file.
+
+% DHCP4_BUFFER_RECEIVED received buffer from %1:%2 to %3:%4 over interface %5
+This debug message is logged when the server has received a packet
+over the socket. When the message is logged the contents of the received
+packet hasn't been parsed yet. The only available information is the
+interface and the source and destination IPv4 addresses/ports.
+
+% DHCP4_BUFFER_RECEIVE_FAIL error on attempt to receive packet: %1
+The DHCPv4 server tried to receive a packet but an error
+occurred during this attempt. The reason for the error is included in
+the message.
+
+% DHCP4_BUFFER_UNPACK parsing buffer received from %1 to %2 over interface %3, localAddr=[%2], remoteAddr=[%1]
+This debug message is issued when the server starts parsing the received
+buffer holding the DHCPv4 message. The arguments specify the source and
+destination IPv4 addresses as well as the interface over which the buffer has
+been received.
+
+% DHCP4_BUFFER_WAIT_SIGNAL signal received while waiting for next packet, next waiting signal is %1
+This debug message is issued when the server was waiting for the
+packet, but the wait has been interrupted by the signal received
+by the process. The signal will be handled before the server starts
+waiting for next packets. The argument specifies the next signal to
+be handled by the server.
+
+% DHCP4_CB_ON_DEMAND_FETCH_UPDATES_FAIL error on demand attempt to fetch configuration updates from the configuration backend(s): %1
+This error message is issued when the server attempted to fetch
+configuration updates from the database and this on demand attempt failed.
+The sole argument which is returned to the config-backend-pull command
+caller too contains the reason for failure.
+
+% DHCP4_CB_PERIODIC_FETCH_UPDATES_FAIL error on periodic attempt to fetch configuration updates from the configuration backend(s): %1
+This error message is issued when the server attempted to fetch
+configuration updates from the database and this periodic attempt failed.
+The server will re-try according to the configured value of the
+config-fetch-wait-time parameter. The sole argument contains the
+reason for failure.
+
+% DHCP4_CB_PERIODIC_FETCH_UPDATES_RETRIES_EXHAUSTED maximum number of configuration fetch attempts: 10, has been exhausted without success
+This error indicates that the server has made a number of unsuccessful
+periodic attempts to fetch configuration updates from a configuration backend.
+The server will continue to operate but won't make any further attempts
+to fetch configuration updates. The administrator must fix the configuration
+in the database and reload (or restart) the server.
+
+% DHCP4_CLASS_ASSIGNED %1: client packet has been assigned to the following class(es): %2
+This debug message informs that incoming packet has been assigned to specified
+class or classes. This is a normal behavior and indicates successful operation.
+The first argument specifies the client and transaction identification
+information. The second argument includes all classes to which the
+packet has been assigned.
+
+% DHCP4_CLASS_UNCONFIGURED %1: client packet belongs to an unconfigured class: %2
+This debug message informs that incoming packet belongs to a class
+which cannot be found in the configuration. Either a hook written
+before the classification was added to Kea is used, or class naming is
+inconsistent.
+
+% DHCP4_CLASS_UNDEFINED required class %1 has no definition
+This debug message informs that a class is listed for required evaluation but
+has no definition.
+
+% DHCP4_CLASS_UNTESTABLE required class %1 has no test expression
+This debug message informs that a class was listed for required evaluation but
+its definition does not include a test expression to evaluate.
+
+% DHCP4_CLIENTID_IGNORED_FOR_LEASES %1: not using client identifier for lease allocation for subnet %2
+This debug message is issued when the server is processing the DHCPv4 message
+for which client identifier will not be used when allocating new lease or
+renewing existing lease. The server is explicitly configured to not use
+client identifier to lookup existing leases for the client and will not
+record client identifier in the lease database. This mode of operation
+is useful when clients don't use stable client identifiers, e.g. multi
+stage booting. The first argument includes the client and transaction
+identification information. The second argument specifies the identifier
+of the subnet where the client is connected and for which this mode of
+operation is configured on the server.
+
+% DHCP4_CLIENT_FQDN_DATA %1: Client sent FQDN option: %2
+This debug message includes the detailed information extracted from the
+Client FQDN option sent in the query. The first argument includes the
+client and transaction identification information. The second argument
+specifies the detailed information about the FQDN option received
+by the server.
+
+% DHCP4_CLIENT_FQDN_PROCESS %1: processing Client FQDN option
+This debug message is issued when the server starts processing the Client
+FQDN option sent in the client's query. The argument includes the
+client and transaction identification information.
+
+% DHCP4_CLIENT_HOSTNAME_DATA %1: client sent Hostname option: %2
+This debug message includes the detailed information extracted from the
+Hostname option sent in the query. The first argument includes the
+client and transaction identification information. The second argument
+specifies the hostname carried in the Hostname option sent by the
+client.
+
+% DHCP4_CLIENT_HOSTNAME_MALFORMED %1: client hostname option malformed: %2
+This debug message is issued when the DHCP server was unable to process the
+the hostname option sent by the client because the content is malformed.
+The first argument includes the client and transaction identification
+information. The second argument contains a description of the data error.
+
+% DHCP4_CLIENT_HOSTNAME_PROCESS %1: processing client's Hostname option
+This debug message is issued when the server starts processing the Hostname
+option sent in the client's query. The argument includes the client and
+transaction identification information.
+
+% DHCP4_CLIENT_NAME_PROC_FAIL %1: failed to process the fqdn or hostname sent by a client: %2
+This debug message is issued when the DHCP server was unable to process the
+FQDN or Hostname option sent by a client. This is likely because the client's
+name was malformed or due to internal server error. The first argument
+contains the client and transaction identification information. The
+second argument holds the detailed description of the error.
+
+% DHCP4_COMMAND_RECEIVED received command %1, arguments: %2
+A debug message listing the command (and possible arguments) received
+from the Kea control system by the DHCPv4 server.
+
+% DHCP4_CONFIG_COMPLETE DHCPv4 server has completed configuration: %1
+This is an informational message announcing the successful processing of a
+new configuration. It is output during server startup, and when an updated
+configuration is committed by the administrator.  Additional information
+may be provided.
+
+% DHCP4_CONFIG_FETCH Fetching configuration data from config backends.
+This is an informational message emitted when the DHCPv4 server about to begin
+retrieving configuration data from one or more configuration backends.
+
+% DHCP4_CONFIG_LOAD_FAIL configuration error using file: %1, reason: %2
+This error message indicates that the DHCPv4 configuration has failed.
+If this is an initial configuration (during server's startup) the server
+will fail to start. If this is a dynamic reconfiguration attempt the
+server will continue to use an old configuration.
+
+% DHCP4_CONFIG_MERGED Configuration backend data has been merged.
+This is an informational message emitted when the DHCPv4 server has
+successfully merged configuration data retrieved from its configuration
+backends into the current configuration.
+
+% DHCP4_CONFIG_NEW_SUBNET a new subnet has been added to configuration: %1
+This is an informational message reporting that the configuration has
+been extended to include the specified IPv4 subnet.
+
+% DHCP4_CONFIG_OPTION_DUPLICATE multiple options with the code %1 added to the subnet %2
+This warning message is issued on an attempt to configure multiple options
+with the same option code for a particular subnet. Adding multiple options
+is uncommon for DHCPv4, but is not prohibited.
+
+% DHCP4_CONFIG_PACKET_QUEUE DHCPv4 packet queue info after configuration: %1
+This informational message is emitted during DHCPv4 server configuration,
+immediately after configuring the DHCPv4 packet queue.  The information
+shown depends upon the packet queue type selected.
+
+% DHCP4_CONFIG_RECEIVED received configuration %1
+A debug message listing the configuration received by the DHCPv4 server.
+The source of that configuration depends on used configuration backend.
+
+% DHCP4_CONFIG_START DHCPv4 server is processing the following configuration: %1
+This is a debug message that is issued every time the server receives a
+configuration. That happens at start up and also when a server configuration
+change is committed by the administrator.
+
+% DHCP4_CONFIG_UNRECOVERABLE_ERROR DHCPv4 server new configuration failed with an error which cannot be recovered
+This fatal error message is issued when a new configuration raised an error
+which cannot be recovered. A correct configuration must be applied as soon
+as possible as the server is no longer working.
+The configuration can be fixed in several ways. If the control channel
+is open, config-set with a valid configuration can be
+used. Alternatively, the original config file on disk could be fixed
+and SIGHUP signal could be sent (or the config-reload command
+issued). Finally, the server could be restarted completely.
+
+% DHCP4_CONFIG_UNSUPPORTED_OBJECT DHCPv4 server configuration includes an unsupported object: %1
+This error message is issued when the configuration includes an unsupported
+object (i.e. a top level element).
+
+% DHCP4_CONFIG_UPDATE updated configuration received: %1
+A debug message indicating that the DHCPv4 server has received an
+updated configuration from the Kea configuration system.
+
+% DHCP4_DB_RECONNECT_ATTEMPT_FAILED database reconnect failed: %1
+An error message indicating that an attempt to reconnect to the lease and/or
+host data bases has failed.  This occurs after connectivity to either one
+has been lost and an automatic attempt to reconnect has failed.
+
+% DHCP4_DB_RECONNECT_ATTEMPT_SCHEDULE scheduling attempt %1 of %2 in %3 milliseconds
+An informational message indicating that the server is scheduling the next
+attempt to reconnect to its lease and/or host databases.  This occurs when the
+server has lost databse connectivity and is attempting to reconnect
+automatically.
+
+% DHCP4_DB_RECONNECT_DISABLED database reconnect is disabled: max-reconnect-tries %1, reconnect-wait-time %2
+This is an informational message indicating that connectivity to either the
+lease or host database or both and that automatic reconnect is not enabled.
+
+% DHCP4_DB_RECONNECT_NO_DB_CTL unexpected error in database reconnect
+This is an error message indicating a programmatic error that should not
+occur. It will prohibit the server from attempting to reconnect to its
+databases if connectivy is lost, and the server will exit. This error
+should be reported.
+
+% DHCP4_DB_RECONNECT_RETRIES_EXHAUSTED maximum number of database reconnect attempts: %1, has been exhausted without success, server is shutting down!
+This error indicates that the server is shutting down after failing to reconnect to
+the lease and/or host database(s) after making the maximum configured number
+of reconnect attempts.  Loss of connectivity is typically a network or database
+server issue.
+
+% DHCP4_DDNS_REQUEST_SEND_FAILED failed sending a request to kea-dhcp-ddns, error: %1,  ncr: %2
+This error message indicates that DHCP4 server attempted to send a DDNS
+update request to the DHCP-DDNS server.  This is most likely a configuration or
+networking error.
+
+% DHCP4_DEACTIVATE_INTERFACE deactivate interface %1
+This message is printed when DHCPv4 server disables an interface from being
+used to receive DHCPv4 traffic. Sockets on this interface will not be opened
+by the Interface Manager until interface is enabled.
+
+% DHCP4_DECLINE_FAIL %1: error on decline lease for address %2: %3
+This error message indicates that the software failed to deline a
+lease from the lease database due to an error during a database
+operation. The first argument includes the client and the transaction
+identification information. The second argument holds the IPv4 address
+which decline was attempted. The last one contains the reason for
+failure.
+
+% DHCP4_DECLINE_LEASE Received DHCPDECLINE for addr %1 from client %2. The lease will be unavailable for %3 seconds.
+This informational message is printed when a client received an address, but
+discovered that it is being used by some other device and notified the server by
+sending a DHCPDECLINE message. The server checked that this address really was
+leased to the client and marked this address as unusable for a certain
+amount of time. This message may indicate a misconfiguration in a network,
+as there is either a buggy client or more likely a device that is using an
+address that it is not supposed to. The server will fully recover from this
+situation, but if the underlying problem of a misconfigured or rogue device
+is not solved, this address may be declined again in the future.
+
+% DHCP4_DECLINE_LEASE_MISMATCH Received DHCPDECLINE for addr %1 from client %2, but the data doesn't match: received hwaddr: %3, lease hwaddr: %4, received client-id: %5, lease client-id: %6
+This informational message means that a client attempted to report his address
+as declined (i.e. used by unknown entity). The server has information about
+a lease for that address, but the client's hardware address or client identifier
+does not match the server's stored information. The client's request will be ignored.
+
+% DHCP4_DECLINE_LEASE_NOT_FOUND Received DHCPDECLINE for addr %1 from client %2, but no such lease found.
+This warning message indicates that a client reported that his address was
+detected as a duplicate (i.e. another device in the network is using this address).
+However, the server does not have a record for this address. This may indicate
+a client's error or a server's purged database.
+
+% DHCP4_DEFERRED_OPTION_MISSING can find deferred option code %1 in the query
+This debug message is printed when a deferred option cannot be found in
+the query.
+
+% DHCP4_DEFERRED_OPTION_UNPACK_FAIL An error unpacking the deferred option %1: %2
+A debug message issued when deferred unpacking of an option failed, making it
+to be left unpacked in the packet. The first argument is the option code,
+the second the error.
+
+% DHCP4_DEVELOPMENT_VERSION This software is a development branch of Kea. It is not recommended for production use.
+This warning message is displayed when the version is a development
+(vs stable) one: the second number of the version is odd.
+
+% DHCP4_DHCP4O6_BAD_PACKET received malformed DHCPv4o6 packet: %1
+A malformed DHCPv4o6 packet was received.
+
+% DHCP4_DHCP4O6_PACKET_RECEIVED received DHCPv4o6 packet from DHCPv4 server (type %1), msgtype=%1, for %2 on interface %3
+This debug message is printed when the server is receiving a DHCPv4o6
+from the DHCPv4 server over inter-process communication.
+
+% DHCP4_DHCP4O6_PACKET_SEND %1: trying to send packet %2 (type %3), msgtype=%3, to %4 port %5 on interface %6 encapsulating %7: %8 (type %9), msgtype=%9
+The arguments specify the client identification information (HW address
+and client identifier), DHCPv6 message name and type, source IPv6
+address and port, and interface name, DHCPv4 client identification,
+message name and type.
+
+% DHCP4_DHCP4O6_PACKET_SEND_FAIL %1: failed to send DHCPv4o6 packet: %2
+This error is output if the IPv4 DHCP server fails to send an
+DHCPv4o6 message to the IPv6 DHCP server. The reason for the
+error is included in the message.
+
+% DHCP4_DHCP4O6_RECEIVE_FAIL failed to receive DHCPv4o6: %1
+This debug message indicates the inter-process communication with the
+DHCPv6 server failed. The reason for the error is included in
+the message.
+
+% DHCP4_DHCP4O6_RECEIVING receiving DHCPv4o6 packet from DHCPv6 server
+This debug message is printed when the server is receiving a DHCPv4o6
+from the DHCPv4 server over inter-process communication socket.
+
+% DHCP4_DHCP4O6_RESPONSE_DATA %1: responding with packet %2 (type %3), msgtype=%3, packet details: %4
+A debug message including the detailed data about the packet being
+sent to the DHCPv6 server to be forwarded to the client. The first
+argument contains the client and the transaction identification
+information. The second and third argument contains the packet name
+and type respectively. The fourth argument contains detailed packet
+information.
+
+% DHCP4_DHCP4O6_NO_SADDR_OPTION DHCPv4o6 packet contains no OPTION_DHCP4O6_S46_SADDR
+Upon parsing the DHCPv4oDHCPv6 message received from the DHCPv6 server,
+OPTION_DHCP4O6_SADDR is not found.
+
+% DHCP4_DYNAMIC_RECONFIGURATION initiate server reconfiguration using file: %1, after receiving SIGHUP signal or config-reload command
+This is the info message logged when the DHCPv4 server starts reconfiguration
+as a result of receiving SIGHUP signal or config-reload command.
+
+% DHCP4_DYNAMIC_RECONFIGURATION_FAIL dynamic server reconfiguration failed with file: %1
+This is a fatal error message logged when the dynamic reconfiguration of the
+DHCP server failed.
+
+% DHCP4_EMPTY_HOSTNAME %1: received empty hostname from the client, skipping processing of this option
+This debug message is issued when the server received an empty Hostname option
+from a client. Server does not process empty Hostname options and therefore
+option is skipped. The argument holds the client and transaction identification
+information.
+
+% DHCP4_ERROR %1
+
+% DHCP4_FLEX_ID flexible identifier generated for incoming packet: %1
+This debug message is printed when host reservation type is set to flexible identifier
+and the expression specified in its configuration generated (was evaluated to)
+an identifier for incoming packet. This debug message is mainly intended as a
+debugging assistance for flexible identifier.
+
+% DHCP4_GENERATE_FQDN %1: client did not send a FQDN or hostname; FQDN will be be generated for the client
+This debug message is issued when the server did not receive a Hostname option
+from the client and hostname generation is enabled.  This provides a means to
+create DNS entries for unsophisticated clients.
+
+% DHCP4_HANDLE_SIGNAL_EXCEPTION An exception was thrown while handing signal: %1
+This error message is printed when an ISC or standard exception was raised during signal
+processing. This likely indicates a coding error and should be reported to ISC.
+
+% DHCP4_HOOKS_LIBS_RELOAD_FAIL reload of hooks libraries failed
+A "libreload" command was issued to reload the hooks libraries but for
+some reason the reload failed.  Other error messages issued from the
+hooks framework will indicate the nature of the problem.
+
+% DHCP4_HOOK_BUFFER_RCVD_DROP received buffer from %1 to %2 over interface %3 was dropped because a callout set the drop flag
+This debug message is printed when a callout installed on buffer4_receive
+hook point set the drop flag. For this particular hook point, the
+setting of the flag by a callout instructs the server to drop the packet.
+The arguments specify the source and destination IPv4 address as well as
+the name of the interface over which the buffer has been received.
+
+% DHCP4_HOOK_BUFFER_RCVD_SKIP received buffer from %1 to %2 over interface %3 is not parsed because a callout set the next step to SKIP.
+This debug message is printed when a callout installed on
+buffer4_receive hook point set the next step to SKIP. For this particular hook
+point, this value set by a callout instructs the server to
+not parse the buffer because it was already parsed by the hook. The
+arguments specify the source and destination IPv4 address as well as
+the name of the interface over which the buffer has been received.
+
+% DHCP4_HOOK_BUFFER_SEND_SKIP %1: prepared response is dropped because a callout set the next step to SKIP.
+This debug message is printed when a callout installed on buffer4_send
+hook point set the next step to SKIP. For this particular hook point, the
+SKIP value set by a callout instructs the server to drop the packet.
+Server completed all the processing (e.g. may have assigned, updated
+or released leases), but the response will not be send to the client.
+
+% DHCP4_HOOK_DECLINE_SKIP Decline4 hook callouts set status to DROP, ignoring packet.
+This message indicates that the server received DHCPDECLINE message, it was verified
+to be correct and matching server's lease information. The server called hooks
+for decline4 hook point and one of the callouts set next step status to DROP.
+The server will now abort processing of the packet as if it was never
+received. The lease will continue to be assigned to this client.
+
+% DHCP4_HOOK_LEASE4_RELEASE_SKIP %1: lease was not released because a callout set the next step to SKIP
+This debug message is printed when a callout installed on lease4_release
+hook point set the next step status to SKIP. For this particular hook point, the
+value set by a callout instructs the server to not release a lease.
+
+% DHCP4_HOOK_LEASES4_COMMITTED_DROP %1: packet is dropped, because a callout set the next step to DROP
+This debug message is printed when a callout installed on the leases4_committed
+hook point sets the next step to DROP.
+
+% DHCP4_HOOK_LEASES4_COMMITTED_PARK %1: packet is parked, because a callout set the next step to PARK
+This debug message is printed when a callout installed on the lease4_committed
+hook point sets the next step to PARK.
+
+% DHCP4_HOOK_PACKET_RCVD_SKIP %1: packet is dropped, because a callout set the next step to SKIP
+This debug message is printed when a callout installed on the pkt4_receive
+hook point sets the next step to SKIP. For this particular hook point, the
+value setting of the flag instructs the server to drop the packet.
+
+% DHCP4_HOOK_PACKET_SEND_DROP %1: prepared DHCPv4 response was not sent because a callout set the next ste to DROP
+This debug message is printed when a callout installed on the pkt4_send
+hook point set the next step to DROP. For this particular hook point, the setting
+of the value by a callout instructs the server to drop the packet. This
+effectively means that the client will not get any response, even though
+the server processed client's request and acted on it (e.g. possibly
+allocated a lease). The argument specifies the client and transaction
+identification information.
+
+% DHCP4_HOOK_PACKET_SEND_SKIP %1: prepared response is not sent, because a callout set the next stp to SKIP
+This debug message is printed when a callout installed on the pkt4_send
+hook point sets the next step to SKIP. For this particular hook point, this
+setting instructs the server to drop the packet. This means that
+the client will not get any response, even though the server processed
+client's request and acted on it (e.g. possibly allocated a lease).
+
+% DHCP4_HOOK_SUBNET4_SELECT_DROP %1: packet was dropped, because a callout set the next step to 'drop'
+This debug message is printed when a callout installed on the
+subnet4_select hook point sets the next step to 'drop' value. For this particular hook
+point, the setting to that value instructs the server to drop the received
+packet. The argument specifies the client and transaction identification
+information.
+
+% DHCP4_HOOK_SUBNET4_SELECT_SKIP %1: no subnet was selected, because a callout set the next skip flag
+This debug message is printed when a callout installed on the
+subnet4_select hook point sets the next step to SKIP value. For this particular hook
+point, the setting of the flag instructs the server not to choose a
+subnet, an action that severely limits further processing; the server
+will be only able to offer global options - no addresses will be assigned.
+The argument specifies the client and transaction identification
+information.
+
+% DHCP4_INFO %1
+
+% DHCP4_INFORM_DIRECT_REPLY %1: DHCPACK in reply to the DHCPINFORM will be sent directly to %2 over %3
+This debug message is issued when the DHCPACK will be sent directly to the
+client, rather than via a relay. The first argument contains the client
+and transaction identification information. The second argument contains
+the client's IPv4 address to which the response will be sent. The third
+argument contains the local interface name.
+
+% DHCP4_INIT_FAIL failed to initialize Kea server: %1
+The server has failed to initialize. This may be because the configuration
+was not successful, or it encountered any other critical error on startup.
+Attached error message provides more details about the issue.
+
+% DHCP4_INIT_REBOOT %1: client is in INIT-REBOOT state and requests address %2
+This informational message is issued when the client is in the INIT-REBOOT
+state and is requesting an IPv4 address it is using to be allocated for it.
+The first argument includes the client and transaction identification
+information. The second argument specifies the requested IPv4 address.
+
+% DHCP4_LEASE_ADVERT %1: lease %2 will be advertised
+This informational message indicates that the server has found the lease to be
+offered to the client. It is up to the client to choose one server out of
+those which offered leases and continue allocation with that server.
+The first argument specifies the client and the transaction identification
+information. The second argument specifies the IPv4 address to be offered.
+
+% DHCP4_LEASE_ALLOC %1: lease %2 has been allocated for %3 seconds
+This informational message indicates that the server successfully granted a
+lease in response to client's DHCPREQUEST message. The lease information will
+be sent to the client in the DHCPACK message. The first argument contains the
+client and the transaction identification information. The second argument
+contains the allocated IPv4 address. The third argument is the validity
+lifetime.
+
+% DHCP4_MULTI_THREADING_INFO enabled: %1, number of threads: %2, queue size: %3
+This is a message listing some information about the multi-threading parameters
+with which the server is running.
+
+% DHCP4_MULTI_THREADING_WARNING The multi-threading feature is experimental. Don't use in production environment.
+This is a message warning about the experimental multi-threading feature.
+
+% DHCP4_NCR_CREATE %1: DDNS updates enabled, therefore sending name change requests
+This debug message is issued when the server is starting to send
+name change requests to the D2 module to update records for the client
+in the DNS. This includes removal of old records and addition of the
+new records as required. Details of the name change requests will be
+logged in additional log entries. The argument includes the client
+and the transaction identification information.
+
+% DHCP4_NCR_CREATION_FAILED %1: failed to generate name change requests for DNS: %2
+This message indicates that server was unable to generate NameChangeRequests
+which should be sent to the kea-dhcp_ddns module to create
+new DNS records for the lease being acquired or to update existing records
+for the renewed lease. The first argument contains the client and transaction
+identification information. The second argument includes the reason for the
+failure.
+
+% DHCP4_NOT_RUNNING DHCPv4 server is not running
+A warning message is issued when an attempt is made to shut down the
+DHCPv4 server but it is not running.
+
+% DHCP4_NO_LEASE_INIT_REBOOT %1: no lease for address %2 requested by INIT-REBOOT client
+This debug message is issued when the client being in the INIT-REBOOT state
+requested an IPv4 address but this client is unknown. The server will not
+respond. The first argument includes the client and the transaction id
+identification information. The second argument includes the IPv4 address
+requested by the client.
+
+% DHCP4_NO_SOCKETS_OPEN no interface configured to listen to DHCP traffic
+This warning message is issued when current server configuration specifies
+no interfaces that server should listen on, or specified interfaces are not
+configured to receive the traffic.
+
+% DHCP4_OPEN_CONFIG_DB Opening configuration database: %1
+This message is printed when the DHCPv4 server is attempting to open a
+configuration database.  The database access string with password redacted
+is logged.
+
+% DHCP4_OPEN_SOCKET opening service sockets on port %1
+A debug message issued during startup, this indicates that the DHCPv4
+server is about to open sockets on the specified port.
+
+% DHCP4_OPEN_SOCKET_FAIL failed to open socket: %1
+A warning message issued when IfaceMgr fails to open and bind a socket. The reason
+for the failure is appended as an argument of the log message.
+
+% DHCP4_PACKET_DROP_0001 failed to parse packet from %1 to %2, received over interface %3, reason: %4
+The DHCPv4 server has received a packet that it is unable to
+interpret. The reason why the packet is invalid is included in the message.
+
+% DHCP4_PACKET_DROP_0002 %1, from interface %2: no suitable subnet configured for a direct client
+This info message is logged when received a message from a directly connected
+client but there is no suitable subnet configured for the interface on
+which this message has been received. The IPv4 address assigned on this
+interface must belong to one of the configured subnets. Otherwise
+received message is dropped.
+
+% DHCP4_PACKET_DROP_0003 %1, from interface %2: it contains a foreign server identifier
+This debug message is issued when received DHCPv4 message is dropped because
+it is addressed to a different server, i.e. a server identifier held by
+this message doesn't match the identifier used by our server. The arguments
+of this message hold the name of the transaction id and interface on which
+the message has been received.
+
+% DHCP4_PACKET_DROP_0004 %1, from interface %2: missing msg-type option
+This is a debug message informing that incoming DHCPv4 packet did not
+have mandatory DHCP message type option and thus was dropped. The
+arguments specify the client and transaction identification information,
+as well as the interface on which the message has been received.
+
+% DHCP4_PACKET_DROP_0005 %1: unrecognized type %2 in option 53
+This debug message indicates that the message type carried in DHCPv4 option
+53 is unrecognized by the server. The valid message types are listed
+on the IANA website: http://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xhtml#message-type-53.
+The message will not be processed by the server. The arguments specify
+the client and transaction identification information, as well as the
+received message type.
+
+% DHCP4_PACKET_DROP_0006 %1: unsupported DHCPv4 message type %2
+This debug message indicates that the message type carried in DHCPv4 option
+53 is valid but the message will not be processed by the server. This includes
+messages being normally sent by the server to the client, such as DHCPOFFER,
+DHCPACK, DHCPNAK etc. The first argument specifies the client and transaction
+identification information. The second argument specifies the message type.
+
+% DHCP4_PACKET_DROP_0007 %1: failed to process packet: %2
+This is a general catch-all message indicating that the processing of a
+received packet failed.  The reason is given in the message.  The server
+will not send a response but will instead ignore the packet. The first
+argument contains the client and transaction identification information.
+The second argument includes the details of the error.
+
+% DHCP4_PACKET_DROP_0008 %1: DHCP service is globally disabled
+This debug message is issued when a packet is dropped because the DHCP service
+has been temporarily disabled. This affects all received DHCP packets. The
+service may be enabled by the "dhcp-enable" control command or automatically
+after a specified amount of time since receiving "dhcp-disable" command.
+
+% DHCP4_PACKET_DROP_0009 %1: Option 53 missing (no DHCP message type), is this a BOOTP packet?
+This debug message is issued when a packet is dropped because it did contain
+option 53 and thus has no DHCP message type. The most likely explanation is
+that it was BOOTP packet.
+
+% DHCP4_PACKET_DROP_0010 dropped as member of the special class 'DROP': %1
+This debug message is emitted when an incoming packet was classified
+into the special class 'DROP' and dropped. The packet details are displayed.
+
+% DHCP4_PACKET_DROP_0011 dropped as sent by the same client than a packet being processed by another thread: dropped %1 by thread %2 as duplicate of %3 processed by %4
+Currently multi-threading processing avoids races between packets sent by
+a client using the same client id option by dropping new packets until
+processing is finished.
+Packet details and thread identifiers are included for both packets in
+this warning message.
+
+% DHCP4_PACKET_DROP_0012 dropped as sent by the same client than a packet being processed by another thread: dropped %1 by thread %2 as duplicate of %3 processed by %4
+Currently multi-threading processing avoids races between packets sent by
+a client using the same hardware address by dropping new packets until
+processing is finished.
+Packet details and thread identifiers are included for both packets in
+this warning message.
+
+% DHCP4_PACKET_NAK_0001 %1: failed to select a subnet for incoming packet, src %2, type %3
+This error message is output when a packet was received from a subnet
+for which the DHCPv4 server has not been configured. The most probable
+cause is a misconfiguration of the server. The first argument contains
+the client and transaction identification information. The second argument
+contains the source IPv4 address of the packet. The third argument contains
+the name of the received packet.
+
+% DHCP4_PACKET_NAK_0002 %1: invalid address %2 requested by INIT-REBOOT
+This debug message is issued when the client being in the INIT-REBOOT state
+requested an IPv4 address which is not assigned to him. The server will respond
+to this client with DHCPNAK. The first argument contains the client and
+the transaction identification information. The second arguments holds the
+IPv4 address requested by the client.
+
+% DHCP4_PACKET_NAK_0003 %1: failed to advertise a lease, client sent ciaddr %2, requested-ip-address %3
+This message indicates that the server has failed to offer a lease to
+the specified client after receiving a DISCOVER message from it. There are
+many possible reasons for such a failure. The first argument contains
+the client and the transaction identification information. The second
+argument contains the IPv4 address in the ciaddr field. The third
+argument contains the IPv4 address in the requested-ip-address option
+(if present).
+
+% DHCP4_PACKET_NAK_0004 %1: failed to grant a lease, client sent ciaddr %2, requested-ip-address %3
+This message indicates that the server failed to grant a lease to the
+specified client after receiving a REQUEST message from it.  There are many
+possible reasons for such a failure. Additional messages will indicate the
+reason. The first argument contains the client and the transaction
+identification information. The second argument contains the IPv4 address
+in the ciaddr field. The third argument contains the IPv4 address in the
+requested-ip-address option (if present).
+
+% DHCP4_PACKET_OPTIONS_SKIPPED An error unpacking an option, caused subsequent options to be skipped: %1
+A debug message issued when an option failed to unpack correctly, making it
+impossible to unpack the remaining options in the packet.  The server will
+server will still attempt to service the packet.
+
+% DHCP4_PACKET_OPTION_UNPACK_FAIL An error unpacking the option %1: %2
+A debug message issued when an option failed to unpack correctly, making it
+to be left unpacked in the packet. The first argument is the option code,
+the second the error.
+
+% DHCP4_PACKET_PACK %1: preparing on-wire format of the packet to be sent
+This debug message is issued when the server starts preparing the on-wire
+format of the packet to be sent back to the client. The argument specifies
+the client and the transaction identification information.
+
+% DHCP4_PACKET_PACK_FAIL %1: preparing on-wire-format of the packet to be sent failed %2
+This error message is issued when preparing an on-wire format of the packet
+has failed. The first argument identifies the client and the DHCP transaction.
+The second argument includes the error string.
+
+% DHCP4_PACKET_PROCESS_EXCEPTION exception occurred during packet processing
+This error message indicates that a non-standard exception was raised
+during packet processing that was not caught by other, more specific
+exception handlers. This packet will be dropped and the server will
+continue operation.
+
+% DHCP4_PACKET_PROCESS_FAIL processing of %1 message, msgtype=%1, received from %2 failed: %3, remoteAddr=[%2]
+This is a general catch-all message indicating that the processing of the
+specified packet type from the indicated address failed.  The reason is given in the
+message.  The server will not send a response but will instead ignore the packet.
+
+% DHCP4_PACKET_PROCESS_STD_EXCEPTION exception occurred during packet processing: %1
+This error message indicates that a standard exception was raised
+during packet processing that was not caught by other, more specific
+exception handlers. This packet will be dropped and the server will
+continue operation.
+
+% DHCP4_PACKET_QUEUE_FULL multi-threading packet queue is full
+A debug message noting that the multi-threading packet queue is full so
+the oldest packet of the queue was dropped to make room for the received one.
+
+% DHCP4_PACKET_RECEIVED %1: %2 (type %3), msgtype=%3, received from %4 to %5 on interface %6, localAddr=[%5], remoteAddr=[%4]
+A debug message noting that the server has received the specified type of
+packet on the specified interface. The first argument specifies the
+client and transaction identification information. The second and third
+argument specify the name of the DHCPv4 message and its numeric type
+respectively. The remaining arguments specify the source IPv4 address,
+destination IPv4 address and the name of the interface on which the
+message has been received.
+
+% DHCP4_PACKET_SEND %1: trying to send packet %2 (type %3), msgtype=%3, from %4:%5 to %6:%7 on interface %8, localAddr=[%4:%5], remoteAddr=[%6:%7]
+The arguments specify the client identification information (HW address
+and client identifier), DHCP message name and type, source IPv4
+address and port, destination IPv4 address and port and the
+interface name.
+
+This debug message is issued when the server is trying to send the
+response to the client. When the server is using an UDP socket
+to send the packet there are cases when this operation may be
+unsuccessful and no error message will be displayed. One such situation
+occurs when the server is unicasting the response to the 'ciaddr' of
+a DHCPINFORM message. This often requires broadcasting an ARP
+message to obtain the link layer address of the unicast destination.
+If broadcast ARP messages are blocked in the network, according to
+the firewall policy, the ARP message will not cause a response.
+Consequently, the response to the DHCPINFORM will not be sent.
+Since the ARP communication is under the OS control, Kea is not
+notified about the drop of the packet which it is trying to send
+and it has no means to display an error message.
+
+% DHCP4_PACKET_SEND_FAIL %1: failed to send DHCPv4 packet: %2
+This error is output if the DHCPv4 server fails to send an assembled
+DHCP message to a client. The first argument includes the client and
+the transaction identification information. The second argument includes
+the reason for failure.
+
+% DHCP4_PARSER_COMMIT_EXCEPTION parser failed to commit changes
+On receipt of message containing details to a change of the DHCPv4
+server configuration, a set of parsers were successfully created, but one
+of them failed to commit its changes due to a low-level system exception
+being raised.  Additional messages may be output indicating the reason.
+
+% DHCP4_PARSER_COMMIT_FAIL parser failed to commit changes: %1
+On receipt of message containing details to a change of the DHCPv4
+server configuration, a set of parsers were successfully created, but
+one of them failed to commit its changes.  The reason for the failure
+is given in the message.
+
+% DHCP4_PARSER_EXCEPTION failed to create or run parser for configuration element %1
+On receipt of message containing details to a change of its configuration,
+the DHCPv4 server failed to create a parser to decode the contents of
+the named configuration element, or the creation succeeded but the parsing
+actions and committal of changes failed.  The message has been output in
+response to a non-Kea exception being raised.  Additional messages
+may give further information.
+
+% DHCP4_PARSER_FAIL failed to create or run parser for configuration element %1: %2
+On receipt of message containing details to a change of its configuration,
+the DHCPv4 server failed to create a parser to decode the contents
+of the named configuration element, or the creation succeeded but the
+parsing actions and committal of changes failed.  The reason for the
+failure is given in the message.
+
+% DHCP4_POST_ALLOCATION_NAME_UPDATE_FAIL %1: failed to update hostname %2 in a lease after address allocation: %3
+This message indicates the failure when trying to update the lease and/or
+options in the server's response with the hostname generated by the server
+or reserved for the client belonging to a shared network. The latter is
+the case when the server dynamically switches to another subnet (than
+initially selected for allocation) from the same shared network.
+
+% DHCP4_QUERY_DATA %1, packet details: %2
+A debug message printing the details of the received packet. The first
+argument includes the client and the transaction identification
+information.
+
+% DHCP4_RECLAIM_EXPIRED_LEASES_FAIL failed to reclaim expired leases: %1
+This error message indicates that the reclaim expired leases operation failed
+and provides the cause of failure.
+
+% DHCP4_RELEASE %1: address %2 was released properly.
+This informational message indicates that an address was released properly. It
+is a normal operation during client shutdown. The first argument includes
+the client and transaction identification information. The second argument
+includes the released IPv4 address.
+
+% DHCP4_RELEASE_EXCEPTION %1: while trying to release address %2 an exception occurred: %3
+This message is output when an error was encountered during an attempt
+to process a DHCPRELEASE message. The error will not affect the client,
+which does not expect any response from the server for DHCPRELEASE
+messages. Depending on the nature of problem, it may affect future
+server operation. The first argument includes the client and the
+transaction identification information. The second argument
+includes the IPv4 address which release was attempted. The last
+argument includes the detailed error description.
+
+% DHCP4_RELEASE_FAIL %1: failed to remove lease for address %2
+This error message indicates that the software failed to remove a
+lease from the lease database. It is probably due to an error during a
+database operation: resolution will most likely require administrator
+intervention (e.g. check if DHCP process has sufficient privileges to
+update the database). It may also be triggered if a lease was manually
+removed from the database during RELEASE message processing. The
+first argument includes the client and the transaction identification
+information. The second argument holds the IPv4 address which release
+was attempted.
+
+% DHCP4_RELEASE_FAIL_NO_LEASE %1: client is trying to release non-existing lease %2
+This debug message is printed when client attempts to release a lease,
+but no such lease is known to the server. The first argument contains
+the client and transaction identification information. The second
+argument contains the IPv4 address which the client is trying to
+release.
+
+% DHCP4_RELEASE_FAIL_WRONG_CLIENT %1: client is trying to release the lease %2 which belongs to a different client
+This debug message is issued when a client is trying to release the
+lease for the address which is currently used by another client, i.e.
+the 'client identifier' or 'chaddr' doesn't match between the client
+and the lease. The first argument includes the client and the
+transaction identification information. The second argument specifies
+the leased address.
+
+% DHCP4_RESERVED_HOSTNAME_ASSIGNED %1: server assigned reserved hostname %2
+This debug message is issued when the server found a hostname reservation
+for a client and uses this reservation in a hostname option sent back
+to this client. The reserved hostname is qualified with a value
+of 'qualifying-suffix' parameter, if this parameter is specified.
+
+% DHCP4_RESPONSE_DATA %1: responding with packet %2 (type %3), msgtype=%3, packet details: %4
+A debug message including the detailed data about the packet being sent
+to the client. The first argument contains the client and the transaction
+identification information. The second and third argument contains the
+packet name and type respectively. The fourth argument contains detailed
+packet information.
+
+% DHCP4_RESPONSE_FQDN_DATA %1: including FQDN option in the server's response: %2
+This debug message is issued when the server is adding the Client FQDN
+option in its response to the client. The first argument includes the
+client and transaction identification information. The second argument
+includes the details of the FQDN option being included. Note that the
+name carried in the FQDN option may be modified by the server when
+the lease is acquired for the client.
+
+% DHCP4_RESPONSE_HOSTNAME_DATA %1: including Hostname option in the server's response: %2
+This debug message is issued when the server is adding the Hostname
+option in its response to the client. The first argument includes the
+client and transaction identification information. The second argument
+includes the details of the FQDN option being included. Note that the
+name carried in the Hostname option may be modified by the server when
+the lease is acquired for the client.
+
+% DHCP4_RESPONSE_HOSTNAME_GENERATE %1: server has generated hostname %2 for the client
+This debug message includes the auto-generated hostname which will be used
+for the client which message is processed. Hostnames may need to be generated
+when required by the server's configuration or when the client hasn't
+supplied its hostname. The first argument includes the client and the
+transaction identification information. The second argument holds the
+generated hostname.
+
+% DHCP4_SERVER_FAILED server failed: %1
+The DHCPv4 server has encountered a fatal error and is terminating.
+The reason for the failure is included in the message.
+
+% DHCP4_SHUTDOWN server shutdown
+The DHCPv4 server has terminated normally.
+
+% DHCP4_SHUTDOWN_REQUEST shutdown of server requested
+This debug message indicates that a shutdown of the DHCPv4 server has
+been requested via a call to the 'shutdown' method of the core Dhcpv4Srv
+object.
+
+% DHCP4_SRV_CONSTRUCT_ERROR error creating Dhcpv4Srv object, reason: %1
+This error message indicates that during startup, the construction of a
+core component within the DHCPv4 server (the Dhcpv4 server object)
+has failed.  As a result, the server will exit.  The reason for the
+failure is given within the message.
+
+% DHCP4_SRV_D2STOP_ERROR error stopping IO with DHCP_DDNS during shutdown: %1
+This error message indicates that during shutdown, an error occurred while
+stopping IO between the DHCPv4 server and the DHCP_DDNS server.  This is
+probably due to a programmatic error is not likely to impact either server
+upon restart.  The reason for the failure is given within the message.
+
+% DHCP4_SRV_DHCP4O6_ERROR error stopping IO with DHCPv4o6 during shutdown: %1
+This error message indicates that during shutdown, an error occurred while
+stopping IO between the DHCPv4 server and the DHCPv6o6 server.  This is
+probably due to a programmatic error is not likely to impact either server
+upon restart.  The reason for the failure is given within the message.
+
+% DHCP4_SRV_UNLOAD_LIBRARIES_ERROR error unloading hooks libraries during shutdown: %1
+This error message indicates that during shutdown, unloading hooks
+libraries failed to close them. If the list of libraries is empty it is
+a programmatic error in the server code. If it is not empty it could be
+a programmatic error in one of the hooks libraries which could lead to
+a crash during finalization.
+
+% DHCP4_STARTED Kea DHCPv4 server version %1 started
+This informational message indicates that the DHCPv4 server has
+processed all configuration information and is ready to process
+DHCPv4 packets.  The version is also printed.
+
+% DHCP4_STARTING Kea DHCPv4 server version %1 (%2) starting
+This informational message indicates that the DHCPv4 server has
+processed any command-line switches and is starting. The version
+is also printed.
+
+% DHCP4_START_INFO pid: %1, server port: %2, client port: %3, verbose: %4
+This is a debug message issued during the DHCPv4 server startup.
+It lists some information about the parameters with which the server
+is running.
+
+% DHCP4_SUBNET_DATA %1: the selected subnet details: %2
+This debug message includes the details of the subnet selected for
+the client. The first argument includes the client and the
+transaction identification information. The second arguments
+includes the subnet details.
+
+% DHCP4_SUBNET_DYNAMICALLY_CHANGED %1: changed selected subnet %2 to subnet %3 from shared network %4 for client assignments
+This debug message indicates that the server is using another subnet
+than initially selected for client assignments. This newly selected
+subnet belongs to the same shared network as the original subnet.
+Some reasons why the new subnet was selected include: address pool
+exhaustion in the original subnet or the fact that the new subnet
+includes some static reservations for this client.
+
+% DHCP4_SUBNET_SELECTED %1: the subnet with ID %2 was selected for client assignments
+This is a debug message noting the selection of a subnet to be used for
+address and option assignment. Subnet selection is one of the early
+steps in the processing of incoming client message. The first
+argument includes the client and the transaction identification
+information. The second argument holds the selected subnet id.
+
+% DHCP4_SUBNET_SELECTION_FAILED %1: failed to select subnet for the client
+This debug message indicates that the server failed to select the
+subnet for the client which has sent a message to the server.
+The server will not be able to offer any lease to the client and
+will drop its message if the received message was DHCPDISCOVER,
+and will send DHCPNAK if the received message was DHCPREQUEST.
+The argument includes the client and the transaction identification
+information.
+
+% DHCP4_TRANSACTION_FAILED transaction failed. error: %1
+The transaction failed with the error message.
+
+% DHCP4_FORCE_RELOAD_CONFIGURATION DHCPv4 force configuration reload.
+A force configuration reload event has been initiated.
+
+% DHCP4_SHARD_CONFIGURATION_CHANGED DHCPv4 shard configuration is different.
+A different shard configuration has been detected.
+
+% DHCP4_MASTER_CONFIGURATION_CHANGED DHCPv4 master configuration is different.
+A different master configuration has been detected.
+
+% DHCP4_TESTING_MODE_SEND_TO_SOURCE_ENABLED All packets will be send to source address of an incoming packet - use only for testing
+This message is printed then KEA_TEST_SEND_RESPONSES_TO_SOURCE
+environment variable is set. It's causing Kea to send packets to
+source address of incoming packet. Usable just in testing environment
+to simulate multiple subnet traffic from single source.
+
+% DHCP4_WARNING %1

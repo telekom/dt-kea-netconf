@@ -1,0 +1,99 @@
+-- Copyright (C) 2018-2019 Internet Systems Consortium, Inc. ("ISC")
+-- Copyright (C) 2020 Deutsche Telekom AG.
+--
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--                 https://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
+-- This is the Kea schema specification for Cassandra CQL.
+--
+-- The schema is reasonably portable (with the exception of the engine
+-- specification, which is Cassandra CQL-specific).  Minor changes might be needed for
+-- other databases.
+--
+-- To create the schema, either type the command:
+--
+-- cqlsh -u <user> -p <password> -k <database> -f dhcpdb_create.cql
+--
+-- ... at the command prompt, or log in to the CQL database and at the "cqlsh>"
+-- prompt, issue the command:
+--
+-- SOURCE dhcpdb_create.cql
+--
+-- This script is also called from kea-admin, see kea-admin db-init cql
+--
+-- Over time, Kea database schema will evolve. Each version is marked with
+-- major.minor version. This file is organized sequentially, i.e. database
+-- is initialized to 1.0, then upgraded to 2.0 etc. This may be somewhat
+-- sub-optimal, but it ensues consistency with upgrade scripts. (It is much
+-- easier to maintain init and upgrade scripts if they look the same).
+-- Since initialization is done only once, it's performance is not an issue.
+
+#ifdef CASSANDRA_DENORMALIZED_TABLES
+DROP TABLE IF EXISTS lease4_address;
+DROP TABLE IF EXISTS lease4_clientid_subnetid;
+DROP TABLE IF EXISTS lease4_hwaddr_subnetid;
+DROP TABLE IF EXISTS lease4_subnetid;
+#else  -- CASSANDRA_DENORMALIZED_TABLES
+DROP TABLE IF EXISTS lease4;
+#endif  -- CASSANDRA_DENORMALIZED_TABLES
+#ifdef CASSANDRA_DENORMALIZED_TABLES
+DROP TABLE IF EXISTS lease6_address_leasetype;
+DROP TABLE IF EXISTS lease6_duid_iaid_leasetype_subnetid;
+#else  -- CASSANDRA_DENORMALIZED_TABLES
+DROP TABLE IF EXISTS lease6;
+#endif -- CASSANDRA_DENORMALIZED_TABLES
+DROP TABLE IF EXISTS lease6_types;
+DROP TABLE IF EXISTS lease_hwaddr_source;
+DROP TABLE IF EXISTS lease_state;
+DROP TABLE IF EXISTS schema_version;
+DROP TABLE IF EXISTS hosts;
+DROP TABLE IF EXISTS dhcp4_options;
+DROP TABLE IF EXISTS dhcp6_options;
+DROP TABLE IF EXISTS host_identifier_type;
+DROP TABLE IF EXISTS dhcp_option_scope;
+DROP TABLE IF EXISTS logs;
+
+#ifdef CASSANDRA_DENORMALIZED_TABLES
+#else  -- CASSANDRA_DENORMALIZED_TABLES
+DROP INDEX IF EXISTS lease4index1;
+DROP INDEX IF EXISTS lease4index2;
+DROP INDEX IF EXISTS lease4index3;
+DROP INDEX IF EXISTS lease4index4;
+DROP INDEX IF EXISTS lease4index5;
+
+DROP INDEX IF EXISTS lease6index1;
+DROP INDEX IF EXISTS lease6index2;
+DROP INDEX IF EXISTS lease6index3;
+DROP INDEX IF EXISTS lease6index4;
+DROP INDEX IF EXISTS lease6index5;
+DROP INDEX IF EXISTS lease6index6;
+#endif  -- CASSANDRA_DENORMALIZED_TABLES
+
+DROP INDEX IF EXISTS hostsindex1;
+DROP INDEX IF EXISTS hostsindex2;
+DROP INDEX IF EXISTS hostsindex3;
+DROP INDEX IF EXISTS hostsindex4;
+DROP INDEX IF EXISTS hostsindex5;
+DROP INDEX IF EXISTS hostsindex6;
+DROP INDEX IF EXISTS hostsindex7;
+DROP INDEX IF EXISTS hostsindex8;
+DROP INDEX IF EXISTS hostsindex9;
+
+DROP INDEX IF EXISTS logsindex;
+
+#ifdef TERASTREAM_LOCK
+DROP TABLE IF EXISTS lock4;
+DROP INDEX IF EXISTS lock4index1;
+DROP TABLE IF EXISTS lock6;
+DROP INDEX IF EXISTS lock6index1;
+#endif  // TERASTREAM_LOCK

@@ -1,0 +1,62 @@
+module ietf-dhcpv6-options-rfc4833 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc4833-server";
+  prefix rfc4833-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC3319 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping posix-timezone-option {
+    container posix-timezone-option {
+      description
+        "OPTION_NEW_POSIX_TIMEZONE (41) Posix Timezone option";
+      reference
+        "RFC4833: Timezone Options for DHCP";
+      leaf tz-posix {
+        type string;
+        description
+          "TZ Posix IEEE 1003.1 String";
+      }
+    }
+  }
+
+  grouping tzdb-timezone-option {
+    container tzdb-timezone-option {
+      description
+        "OPTION_NEW_TZDB_TIMEZONE (42) Timezone Database option";
+      reference
+        "RFC4833: Timezone Options for DHCP";
+      leaf tz-database {
+        type string;
+        description
+          "Reference to the TZ Database";
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses tzdb-timezone-option;
+
+    uses posix-timezone-option;
+  }
+}

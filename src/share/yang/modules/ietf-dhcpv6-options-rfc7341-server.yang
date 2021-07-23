@@ -1,0 +1,36 @@
+module ietf-dhcpv6-options-rfc7341 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc7341-server";
+  prefix rfc7341-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC7341 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping xxxx-option-group {
+    container xxxx-option;
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses xxxx-option-group;
+  }
+}

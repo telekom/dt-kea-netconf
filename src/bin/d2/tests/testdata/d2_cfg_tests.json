@@ -1,0 +1,1509 @@
+# Copyright (C) 2014-2018 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+# File of DHCP-DDNS configuration permutation tests
+# Each test entry consists of:
+#
+# description - text describing the test (optional)
+# syntax-error - syntax error the JSON parsing should emit for this test
+#               defaults to "" = no error
+# logic-error - indicates whether a post-JSON parsing logic error should occur
+#               defaults to false
+# data {} - Configuration text to submit for parsing.
+#
+# The vast majority of the tests in this file are invalid and are expected
+# to fail either as a syntax error caught by the JSON parser or a logic error
+# caught during element processing. There are some that should succeed and are
+# used more or less as sanity checks.
+
+{ "test-list" : [
+#-----
+{
+# This test is a bit of sanity check for the "file of configs" test mechanism,
+# as well as validating this as the smallest config which makes writing
+# permutations easier.
+"description" : "D2 smallest, valid config",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+# Map should be supplied through setDefaults
+,{
+"description" : "D2 missing forward-ddns map",
+"data" :
+    {
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+# Map should be supplied through setDefaults
+,{
+"description" : "D2 missing reverse-ddns map",
+"data" :
+    {
+    "forward-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+
+#-----
+# Map should be supplied through setDefaults
+,{
+"description" : "D2 missing tsig-keys list",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {}
+    }
+}
+
+#-----
+,{
+"description" : "D2 unknown scalar",
+"syntax-error" : "<string>:1.3-16: got unexpected keyword \"bogus-scalar\" in DhcpDdns map.",
+"data" :
+    {
+    "bogus-scalar" : true,
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2 unknown map",
+"syntax-error" : "<string>:1.3-13: got unexpected keyword \"bogus-map\" in DhcpDdns map.",
+"data" :
+    {
+    "bogus-map" : {},
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2 unknown list",
+"syntax-error" : "<string>:1.3-14: got unexpected keyword \"bogus-list\" in DhcpDdns map.",
+"data" :
+    {
+    "bogus-list" : [],
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- D2Params Test
+
+#----- D2Params.ip-address
+,{
+"description" : "D2Params.ip-address: valid v4",
+"data" :
+    {
+    "ip-address" : "192.168.0.1",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.ip-address: valid v6",
+"data" :
+    {
+    "ip-address" : "2001:db8::1",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.ip-address invalid value",
+"logic-error" : "Failed to convert 'bogus' to address: Failed to convert string to address 'bogus': Invalid argument(<string>:1:39)",
+"data" :
+    {
+    "ip-address" : "bogus",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+#-----
+}
+
+#----- D2Params.port
+,{
+"description" : "D2Params.port, valid value",
+"data" :
+    {
+    "port" : 100,
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.port can't be 0",
+"syntax-error" : "<string>:1.33: port must be greater than zero but less than 65536",
+"data" :
+    {
+    "port" : 0,
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.port, non numeric",
+"syntax-error" : "<string>:1.33-39: syntax error, unexpected constant string, expecting integer",
+"data" :
+    {
+    "port" : "bogus",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- D2Params.dns-server-timeout
+,{
+"description" : "D2Params.dns-server-timeout, valid value",
+"data" :
+    {
+    "dns-server-timeout" : 1000,
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.dns-server-timeout can't be 0",
+"syntax-error" : "<string>:1.25: dns-server-timeout must be greater than zero",
+"data" :
+    {
+    "dns-server-timeout" : 0,
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.dns-server-timeout, non numeric",
+"syntax-error" : "<string>:1.25-31: syntax error, unexpected constant string, expecting integer",
+"data" :
+    {
+    "dns-server-timeout" : "bogus",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+#-----
+
+#----- D2Params.ncr-protocol
+,{
+"description" : "D2Params.ncr-protocol, valid UDP",
+"data" :
+    {
+    "ncr-protocol" : "UDP",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.ncr-protocol, unsupported TCP",
+"logic-error" : "ncr-protocol : TCP is not yet supported  (<string>:1:41)",
+"data" :
+    {
+    "ncr-protocol" : "TCP",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+
+#-----
+,{
+"description" : "D2Params.ncr-protocol, invalid value",
+"syntax-error" : "<string>:1.41-47: syntax error, unexpected constant string, expecting UDP or TCP",
+"data" :
+    {
+    "ncr-protocol" : "bogus",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+
+#----- D2Params.ncr-format tests
+
+,{
+"description" : "D2Params.ncr-format, valid JSON",
+"data" :
+    {
+    "ncr-format" : "JSON",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2Params.ncr-format, invalid value",
+"syntax-error" : "<string>:1.39-45: syntax error, unexpected constant string, expecting JSON",
+"data" :
+    {
+    "ncr-format" : "bogus",
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- TSIGKey Tests
+
+#-----
+,{
+# This test is a sanity check that valid TSIG entries work.
+"description" : "D2.tsig-keys, valid key",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, missing key name",
+"logic-error" : "missing parameter 'name' (<string>:1:62)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, blank key name",
+"syntax-error" : "<string>:1.95: TSIG key name cannot be blank",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, duplicate key name",
+"logic-error" : "Duplicate TSIG key name specified : first.key (<string>:1:185)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+            ,{
+            "name" : "first.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#----- D2.tsig-keys, algorithm tests
+
+,{
+"description" : "D2.tsig-keys, all valid algorithms",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            },
+            {
+            "name" : "d2.sha1.key",
+            "algorithm" : "HMAC-SHA1",
+            "secret" : "hRrp29wzUv3uzSNRLlY68w=="
+            },
+            {
+            "name" : "d2.sha224.key",
+            "algorithm" : "HMAC-SHA224",
+            "secret" : "bZEG7Ow8OgAUPfLWV3aAUQ=="
+            },
+            {
+            "name" : "d2.sha256.key",
+            "algorithm" : "hmac-sha256",
+            "secret" : "bjF4hYhTfQ5MX0siagelsw=="
+            },
+            {
+            "name" : "d2.sha384.key",
+            "algorithm" : "hmac-sha384",
+            "secret" : "Gwk53fvy3CmbupoI9TgigA=="
+            },
+            {
+            "name" : "d2.sha512.key",
+            "algorithm" : "hmac-sha512",
+            "secret" : "wP+5FqMnKXCxBWljU/BZAA=="
+            }
+        ]
+    }
+}
+
+#----- D2.tsig-keys, algorithm tests
+,{
+"description" : "D2.tsig-keys, missing algorithm",
+"logic-error" : "missing parameter 'algorithm' (<string>:1:62)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, blank algorithm",
+"syntax-error" : "<string>:1.75: TSIG key algorithm cannot be blank",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "algorithm" : "",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, invalid algorithm",
+"logic-error" : "tsig-key : Unknown TSIG Key algorithm: bogus (<string>:1:77)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "algorithm" : "bogus",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#----- D2.tsig-keys, digest-bits tests
+,{
+"description" : "D2.tsig-keys, all valid algorthims",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "digest-bits" : 80,
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            },
+            {
+            "name" : "d2.sha1.key",
+            "algorithm" : "HMAC-SHA1",
+            "digest-bits" : 80,
+            "secret" : "hRrp29wzUv3uzSNRLlY68w=="
+            },
+            {
+            "name" : "d2.sha224.key",
+            "algorithm" : "HMAC-SHA224",
+            "digest-bits" : 112,
+            "secret" : "bZEG7Ow8OgAUPfLWV3aAUQ=="
+            },
+            {
+            "name" : "d2.sha256.key",
+            "algorithm" : "hmac-sha256",
+            "digest-bits" : 128,
+            "secret" : "bjF4hYhTfQ5MX0siagelsw=="
+            },
+            {
+            "name" : "d2.sha384.key",
+            "algorithm" : "hmac-sha384",
+            "digest-bits" : 192,
+            "secret" : "Gwk53fvy3CmbupoI9TgigA=="
+            },
+            {
+            "name" : "d2.sha512.key",
+            "algorithm" : "hmac-sha512",
+            "digest-bits" : 256,
+            "secret" : "wP+5FqMnKXCxBWljU/BZAA=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, invalid digest-bits",
+"syntax-error" : "<string>:1.104-105: TSIG key digest-bits must either be zero or a positive, multiple of eight",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "digest-bits" : 84,
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, too small truncated HMAC-MD5",
+"logic-error" : "tsig-key: digest-bits too small :  (<string>:1:104)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "digest-bits" : 72,
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            },
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, too small truncated HMAC-SHA1",
+"logic-error" : "tsig-key: digest-bits too small :  (<string>:1:105)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.sha1.key",
+            "algorithm" : "HMAC-SHA1",
+            "digest-bits" : 72,
+            "secret" : "hRrp29wzUv3uzSNRLlY68w=="
+            },
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, too small truncated HMAC-SHA224",
+"logic-error" : "tsig-key: digest-bits too small :  (<string>:1:107)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.sha224.key",
+            "algorithm" : "HMAC-SHA224",
+            "digest-bits" : 104,
+            "secret" : "bZEG7Ow8OgAUPfLWV3aAUQ=="
+            },
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, too small truncated HMAC-SHA256",
+"logic-error" : "tsig-key: digest-bits too small :  (<string>:1:107)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.sha256.key",
+            "algorithm" : "hmac-sha256",
+            "digest-bits" : 120,
+            "secret" : "bjF4hYhTfQ5MX0siagelsw=="
+            },
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, too small truncated HMAC-SHA384",
+"logic-error" : "tsig-key: digest-bits too small :  (<string>:1:107)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.sha384.key",
+            "algorithm" : "hmac-sha384",
+            "digest-bits" : 184,
+            "secret" : "Gwk53fvy3CmbupoI9TgigA=="
+            },
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, too small truncated HMAC-SHA512",
+"logic-error" : "tsig-key: digest-bits too small :  (<string>:1:107)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.sha512.key",
+            "algorithm" : "hmac-sha512",
+            "digest-bits" : 248,
+            "secret" : "wP+5FqMnKXCxBWljU/BZAA=="
+            }
+        ]
+    }
+}
+
+#----- D2.tsig-keys, secret tests
+,{
+"description" : "D2.tsig-keys, missing secret",
+"logic-error" : "missing parameter 'secret' (<string>:1:62)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "algorithm" : "HMAC-MD5"
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, blank secret",
+"syntax-error" : "<string>:1.118: TSIG key secret cannot be blank",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : ""
+            }
+        ]
+    }
+}
+
+#-----
+,{
+"description" : "D2.tsig-keys, invalid secret",
+"logic-error" : "Cannot make TSIGKey: Incomplete input for base64: bogus (<string>:1:62)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "first.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "bogus"
+            }
+        ]
+    }
+}
+
+#----- D2.forward-ddns tests
+,{
+"description" : "D2.forward-ddns, valid, empty ddns-domains",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" : []
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#------
+,{
+"description" : "D2.forward-ddns, unknown parameter",
+"syntax-error" : "<string>:1.21-27: got unexpected keyword \"bogus\" in forward-ddns map.",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "bogus" : true,
+        "ddns-domains" : []
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#------
+,{
+"description" : "D2.forward-ddns, one valid, domain",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "key-name" : "d2.md5.key",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.1"
+                }
+            ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#------
+,{
+"description" : "D2.forward-ddns, duplicate domain",
+"logic-error" : "Duplicate domain specified:four.example.com. (<string>:1:184)",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.1"
+                }
+            ]
+            },
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.2"
+                }
+            ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.forward-ddns.dhcp-ddns  tests
+,{
+"description" : "D2.forward-ddns.dhcp-ddns, unknown parameter",
+"syntax-error" : "<string>:1.41-47: got unexpected keyword \"bogus\" in ddns-domains map.",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "bogus" : true
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.forward-ddns.dhcp-ddns.name tests
+,{
+"description" : "D2.forward-ddns.dhcp-ddns, empty domain",
+"syntax-error" : "<string>:1.42: syntax error, unexpected }",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns, blank name",
+"syntax-error" : "<string>:1.47: Ddns domain name cannot be blank",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : ""
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#------ "D2.forward-ddns.dhcp-ddns, key-name tests
+,{
+"description" : "D2.forward-ddns, no matching key name",
+"logic-error" : "DdnsDomain : four.example.com. specifies an undefined key: no.such.key (<string>:1:104)",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "key-name" : "no.such.key",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.1"
+                }
+            ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#----- D2.forward-ddns.dhcp-ddns.dns-servers tests
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers, no servers",
+"syntax-error" : "<string>:1.59: syntax error, unexpected ], expecting {",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" : []
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.forward-ddns.dhcp-ddns.dns-servers tests
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers, unknown parameter",
+"syntax-error" : "<string>:1.60-66: got unexpected keyword \"bogus\" in dns-servers map.",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "bogus" : true
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers.hostname unsupported",
+"syntax-error" : "<string>:1.70: hostname is not yet supported",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "hostname" : "myhost.com"
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers.ip-address v4 address ",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "172.16.1.1"
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers.ip-address v6 address ",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "2001:db8::1"
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers.ip-address invalid address ",
+"logic-error" : "Dns Server : invalid IP address : bogus (<string>:1:74)",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "bogus"
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers.port valid value ",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "2001:db8::1",
+                    "port" : 77
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.forward-ddns.dhcp-ddns.dns-servers.port cannot be 0 ",
+"syntax-error" : "<string>:1.97: port must be greater than zero but less than 65536",
+"data" :
+    {
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "four.example.com.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "2001:db8::1",
+                    "port" : 0
+                    }
+                ]
+            }
+        ]
+    },
+    "reverse-ddns" : {},
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.reverse-ddns tests
+,{
+"description" : "D2.reverse-ddns, valid, empty ddns-domains",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" : []
+    },
+    "tsig-keys" : []
+    }
+}
+
+#------
+,{
+"description" : "D2.reverse-ddns, unknown parameter",
+"syntax-error" : "<string>:1.43-49: got unexpected keyword \"bogus\" in reverse-ddns map.",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "bogus" : true,
+        "ddns-domains" : []
+    },
+    "tsig-keys" : []
+    }
+}
+
+#------
+,{
+"description" : "D2.reverse-ddns, one valid, domain",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addra.arpa.",
+            "key-name" : "d2.md5.key",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.1"
+                }
+            ]
+            }
+        ]
+    },
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#------
+,{
+"description" : "D2.reverse-ddns, duplicate domain",
+"logic-error" : "Duplicate domain specified:2.0.192.in-addra.arpa. (<string>:1:211)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addra.arpa.",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.1"
+                }
+            ]
+            },
+            {
+            "name" : "2.0.192.in-addra.arpa.",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.2"
+                }
+            ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.reverse-ddns.dhcp-ddns  tests
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns, unknown parameter",
+"syntax-error" : "<string>:1.63-69: got unexpected keyword \"bogus\" in ddns-domains map.",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "bogus" : true
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.reverse-ddns.dhcp-ddns.name tests
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns, no name",
+"syntax-error" : "<string>:1.64: syntax error, unexpected }",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns, blank name",
+"syntax-error" : "<string>:1.69: Ddns domain name cannot be blank",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : ""
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#------ "D2.reverse-ddns.dhcp-ddns, key-name tests
+,{
+"description" : "D2.reverse-ddns, no matching key name",
+"logic-error" : "DdnsDomain : 2.0.192.in-addr.arpa. specifies an undefined key: no.such.key (<string>:1:126)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "key-name" : "no.such.key",
+            "dns-servers" :
+            [
+                {
+                "ip-address" : "172.16.1.1"
+                }
+            ]
+            }
+        ]
+    },
+    "tsig-keys" :
+        [
+            {
+            "name" : "d2.md5.key",
+            "algorithm" : "HMAC-MD5",
+            "secret" : "LSWXnfkKZjdPJI5QxlpnfQ=="
+            }
+        ]
+    }
+}
+
+#----- D2.reverse-ddns.dhcp-ddns.dns-servers tests
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers, no servers",
+"syntax-error" : "<string>:1.81: syntax error, unexpected ], expecting {",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" : []
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#----- D2.reverse-ddns.dhcp-ddns.dns-servers tests
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers, unknown parameter",
+"syntax-error" : "<string>:1.82-88: got unexpected keyword \"bogus\" in dns-servers map.",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "bogus" : true
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers.hostname unsupported",
+"syntax-error" : "<string>:1.92: hostname is not yet supported",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "hostname" : "myhost.com"
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers.ip-address v4 address ",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "172.16.1.1"
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers.ip-address v6 address ",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "2001:db8::1"
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers.ip-address invalid value",
+"logic-error" : "Dns Server : invalid IP address : bogus (<string>:1:96)",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "bogus"
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers.port valid value ",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "2001:db8::1",
+                    "port" : 77
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+#-----
+,{
+"description" : "D2.reverse-ddns.dhcp-ddns.dns-servers.port cannot be 0 ",
+"syntax-error" : "<string>:1.119: port must be greater than zero but less than 65536",
+"data" :
+    {
+    "forward-ddns" : {},
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+            {
+            "name" : "2.0.192.in-addr.arpa.",
+            "dns-servers" :
+                [
+                    {
+                    "ip-address" : "2001:db8::1",
+                    "port" : 0
+                    }
+                ]
+            }
+        ]
+    },
+    "tsig-keys" : []
+    }
+}
+
+# ----- End of Tests
+]}

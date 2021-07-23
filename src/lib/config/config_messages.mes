@@ -1,0 +1,124 @@
+# Copyright (C) 2011-2018 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+$NAMESPACE isc::config
+
+% COMMAND_ACCEPTOR_START Starting to accept connections via unix domain socket bound to %1
+This informational message is issued when the Kea server starts an acceptor
+via which it is going to accept new control connections. The acceptor is
+bound to the endpoint associated with the filename provided as an argument.
+If starting the acceptor fails, subsequent error messages will provide a
+reason for failure.
+
+% COMMAND_DEREGISTERED Command %1 deregistered
+This debug message indicates that the daemon stopped supporting specified
+command. This command can no longer be issued. If the command socket is
+open and this command is issued, the daemon will not be able to process it.
+
+% COMMAND_EXTENDED_REGISTERED Command %1 registered
+This debug message indicates that the daemon started supporting specified
+command. The handler for the registered command includes a parameter holding
+entire command to be processed.
+
+% COMMAND_PROCESS_ERROR1 Error while processing command: %1
+This warning message indicates that the server encountered an error while
+processing received command. Additional information will be provided, if
+available. Additional log messages may provide more details.
+
+% COMMAND_PROCESS_ERROR2 Error while processing command: %1
+This warning message indicates that the server encountered an error while
+processing received command. The difference, compared to COMMAND_PROCESS_ERROR1
+is that the initial command was well formed and the error occurred during
+logic processing, not the command parsing. Additional information will be
+provided, if available. Additional log messages may provide more details.
+
+% COMMAND_RECEIVED Received command '%1'
+This informational message indicates that a command was received over command
+socket. The nature of this command and its possible results will be logged
+with separate messages.
+
+% COMMAND_REGISTERED Command %1 registered
+This debug message indicates that the daemon started supporting specified
+command. If the command socket is open, this command can now be issued.
+
+% COMMAND_RESPONSE_ERROR Server failed to generate response for command: %1
+This error message indicates that the server failed to generate response for
+specified command. This likely indicates a server logic error, as the server
+is expected to generate valid responses for all commands, even malformed
+ones.
+
+% COMMAND_SOCKET_ACCEPT_FAIL Failed to accept incoming connection on command socket %1: %2
+This error indicates that the server detected incoming connection and executed
+accept system call on said socket, but this call returned an error. Additional
+information may be provided by the system as second parameter.
+
+% COMMAND_SOCKET_CLOSED_BY_FOREIGN_HOST Closed command socket %1 by foreign host, %2
+This is an information message indicating that the command connection has been
+closed by a command control client, and whether or not any partially read data
+was discarded.
+
+% COMMAND_SOCKET_CONNECTION_CANCEL_FAIL Failed to cancel read operation on socket %1: %2
+This error message is issued to indicate an error to cancel asynchronous read
+of the control command over the control socket. The cancel operation is performed
+when the timeout occurs during communication with a client. The error message
+includes details about the reason for failure.
+
+% COMMAND_SOCKET_CONNECTION_CLOSED Closed socket %1 for existing command connection
+This is a debug message indicating that the socket created for handling
+client's connection is closed. This usually means that the client disconnected,
+but may also mean a timeout.
+
+% COMMAND_SOCKET_CONNECTION_CLOSE_FAIL Failed to close command connection: %1
+This error message is issued when an error occurred when closing a
+command connection and/or removing it from the connections pool. The
+detailed error is provided as an argument.
+
+% COMMAND_SOCKET_CONNECTION_OPENED Opened socket %1 for incoming command connection
+This is a debug message indicating that a new incoming command connection was
+detected and a dedicated socket was opened for that connection.
+
+% COMMAND_SOCKET_CONNECTION_SHUTDOWN_FAIL Encountered error %1 while trying to gracefully shutdown socket
+This message indicates an error while trying to gracefully shutdown command
+connection. The type of the error is included in the message.
+
+% COMMAND_SOCKET_CONNECTION_TIMEOUT Timeout occurred for connection over socket %1
+This is an informational message that indicates that the timeout has
+occurred for one of the command channel connections. The response
+sent by the server indicates a timeout and is then closed.
+
+% COMMAND_SOCKET_READ Received %1 bytes over command socket %2
+This debug message indicates that specified number of bytes was received
+over command socket identified by specified file descriptor.
+
+% COMMAND_SOCKET_READ_FAIL Encountered error %1 while reading from command socket %2
+This error message indicates that an error was encountered while
+reading from command socket.
+
+% COMMAND_SOCKET_WRITE Sent response of %1 bytes (%2 bytes left to send) over command socket %3
+This debug message indicates that the specified number of bytes was sent
+over command socket identifier by the specified file descriptor.
+
+% COMMAND_SOCKET_WRITE_FAIL Error while writing to command socket %1 : %2
+This error message indicates that an error was encountered while
+attempting to send a response to the command socket.
+
+% COMMAND_WATCH_SOCKET_CLEAR_ERROR watch socket failed to clear: %1
+This error message is issued when the command manager was unable to reset
+the ready status after completing a send. This is a programmatic error
+that should be reported. The command manager may or may not continue
+to operate correctly.
+
+% COMMAND_WATCH_SOCKET_CLOSE_ERROR watch socket failed to close: %1
+This error message is issued when command manager attempted to close the
+socket used for indicating the ready status for send operations. This
+should not have any negative impact on the operation of the command
+manager as it happens when the connection is being terminated.
+
+% COMMAND_WATCH_SOCKET_MARK_READY_ERROR watch socket failed to mark ready: %1
+This error message is issued when the command manager was unable to set
+ready status after scheduling asynchronous send. This is programmatic error
+that should be reported. The command manager may or may not continue
+to operate correctly.

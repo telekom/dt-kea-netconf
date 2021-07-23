@@ -1,0 +1,125 @@
+// This file may be used a template for constructing DHCP-DDNS JSON
+// configuration.
+//
+// It must start with a left-curly-bracket.
+{
+
+"DhcpDdns" :
+{
+//
+// --------------  Global Parameters ----------------
+//
+//    All of the global parameters have default values as shown.  If these
+//    are satisfactory you may omit them.
+//
+//    "ip-address" : "127.0.0.1",
+//    "port" : 53001,
+//    "dns-server-timeout" : 100,
+//    "ncr-protocol" : "UDP"
+//    "ncr-format" : "JSON"
+
+//
+// ----------------- Control Socket -----------------
+//
+
+//    "control-socket":
+//    {
+//        "socket-type": "unix",
+//        "socket-name": "/tmp/kea-ddns-ctrl-socket"
+//    },
+
+//
+// ----------------- Forward DDNS  ------------------
+//
+    "forward-ddns" :
+    {
+        "ddns-domains" :
+        [
+//            {
+//                "name" : "<zone name 1>",
+//                "key-name" : "<key name>",
+//                "dns-servers" :
+//                [
+//                    {
+//                        "ip-address" : "<ip address>"
+//                       ,"port" : 53
+//                    }
+//                    ,
+//                    {
+//                        next DNS server for this DdnsDomain
+//                    }
+//                    :
+//                ]
+//            }
+//            ,
+//            {
+//                 next Forward DdnsDomain
+//            }
+//            :
+        ]
+    },
+
+//
+// ----------------- Reverse DDNS  ------------------
+//
+    "reverse-ddns" :
+    {
+        "ddns-domains" :
+        [
+//            {
+//                "name" : "<reverse zone name 1>",
+//                "key-name" : "<key name>",
+//                "dns-servers" :
+//                [
+//                    {
+//                        "ip-address" : "<ip address>"
+//                        ,"port" : 53
+//                    }
+//                    ,
+//                    {
+//                        next DNS server for this DdnsDomain
+//                    }
+//                    :
+//                ]
+//            }
+//            ,
+//            {
+//                 next Reverse DdnsDomain
+//            }
+//            :
+        ]
+    },
+//
+// ------------------ TSIG keys ---------------------
+//
+    "tsig-keys" :
+    [
+//        {
+//            "name" : "<key name>",
+//            "algorithm" : "<algorithm name>",
+//            Valid values for algorithm are:    HMAC-MD5, HMAC-SHA1,
+//                                               HMAC-SHA224, HMAC-SHA256,
+//                                               HMAC-SHA384, HMAC-SHA512
+//            "digest-bits" : 256,
+//            Minimum truncated length in bits.
+//            Default 0 (means truncation is forbidden).
+//            "secret" : "<shared secret value>"
+//        }
+//        ,
+//        {
+//                next TSIG Key
+//        }
+    ]
+
+// Logging
+//    ,"loggers":
+//    [
+//        {
+//            "name": "kea-dhcp-ddns",
+//            "severity": "info"
+//        }
+//    ]
+}
+
+// It must end with an right-curly-bracket.
+}

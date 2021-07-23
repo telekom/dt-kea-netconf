@@ -1,0 +1,248 @@
+module ietf-dhcpv6-options-rfc7598 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc7598-server";
+  prefix rfc7598srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de ";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC7598 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping s46-rule-option-group {
+    container s46-rule-option {
+      description
+        "OPTION_S46_RULE (89) S46 rule option";
+      reference
+        "RFC7598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients.";
+      list s46-rule {
+        key "rule-id";
+        description
+          "s46 rule.";
+        leaf rule-id {
+          type uint8;
+          description
+            "Rule identifier.";
+        }
+
+        leaf rule-type {
+          type enumeration {
+            enum "BMR" {
+              description
+                "Indicates that this rule is a Basic Mapping
+                 Rule only and MUST NOT be used for forwarding.";
+            }
+            enum "FMR" {
+              description
+                "Indicates that the rule is a Forward
+                 Mapping Rule.";
+            }
+          }
+          description
+            "Mapping rule type, used to indicate the value
+             of the F-flag in the option.";
+        }
+
+        leaf ipv4-prefix {
+          type inet:ipv4-prefix;
+          description
+            "IPv4 prefix used to represent both the
+             'prefix4-len' and 'ipv4-prefix' fields defined in
+             RFC7598 Section 4.1.";
+        }
+
+        leaf ipv6-prefix {
+          type inet:ipv6-prefix;
+          description
+            "IPv6 prefix used to represent both the
+             'prefix6-len' and 'ipv6-prefix' fields defined in
+             RFC7598 Section 4.1.";
+        }
+
+        uses option-s46-portparams-option-group;
+      }
+    }
+  }
+
+  grouping s46-br-option-group {
+    container s46-br-option {
+      description
+        "OPTION_S46_BR (90) S46 BR Option.";
+      reference
+        "RFC7598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      list br {
+        key "br-id";
+        description
+          "List of border relay addresses.";
+        leaf br-id {
+          type uint8;
+          description
+            "Border relay list entry identifier.";
+        }
+
+        leaf br-ipv6-addr {
+          type inet:ipv6-address;
+          description
+            "Border relay IPv6 address.";
+        }
+      }
+    }
+  }
+
+  grouping s46-dmr-option-group {
+    container s46-dmr-option {
+      description
+        "OPTION_S46_DMR (91) S46 DMR Option.";
+      reference
+        "RFC7598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      leaf dmr-ipv6-prefix {
+        type inet:ipv6-prefix;
+        description
+          "IPv6 prefix used to represent both the
+           'dmr-prefix6-len' and 'dmr-ipv6-prefix' fields defined in
+           RFC7598 Section 4.3.";
+      }
+    }
+  }
+
+  grouping s46-v4-v6-binding-option-group {
+    container s46-v4-v6-binding-option {
+      description
+        "OPTION_S46_V4V6BIND (92) S46 IPv4/IPv6 Address
+         Binding option.";
+      reference
+        "RFC7598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      leaf ipv4-addr {
+        type inet:ipv4-address;
+        description
+          "Used to specify the full or shared IPv4 address
+           of the CE.";
+      }
+
+      leaf bind-ipv6-prefix {
+        type inet:ipv6-prefix;
+        description
+          "IPv6 prefix used to represent both the
+           'bind-prefix6-len' and 'bind-ipv6-prefix' fields defined in
+           RFC7598 Section 4.4.";
+      }
+
+      uses option-s46-portparams-option-group;
+    }
+  }
+
+  grouping option-s46-portparams-option-group {
+    container s46-portparams-option {
+      description
+        "OPTION_S46_PORTPARAMS (93) S46 Port Parameters
+         Option.";
+      reference
+        "RFC9598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      container port-parameter {
+        description
+          "port parameter";
+        leaf offset {
+          type uint8;
+          description
+            "offset in a port set";
+        }
+
+        leaf psid-len {
+          type uint8;
+          description
+            "length of a psid";
+        }
+
+        leaf psid {
+          type uint16;
+          description
+            "psid value";
+        }
+      }
+    }
+  }
+
+  grouping option-s46-cont-mape-option-group {
+    list s46-cont-mape-option-instances {
+      key "mape-cont-id";
+      description
+        "OPTION_S46_CONT_MAPE (94) S46 MAP-E Container
+         Option. RFC7598 allows for multiple instances of this
+         option.";
+      reference
+        "RFC9598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      leaf mape-cont-id {
+        type uint8;
+        description
+          "Identifier for the instance of the MAPE option";
+      }
+
+      container s46-cont-mape-option {
+        uses s46-rule-option-group;
+
+        uses s46-br-option-group;
+      }
+    }
+  }
+
+  grouping option-s46-cont-mapt-option-group {
+    container s46-cont-mapt-option {
+      description
+        "OPTION_S46_CONT_MAPT (95) S46 MAP-T Container
+         Option.";
+      reference
+        "RFC9598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      uses s46-rule-option-group;
+
+      uses s46-dmr-option-group;
+    }
+  }
+
+  grouping option-s46-cont-lw-option-group {
+    container s46-cont-lw-option {
+      description
+        "OPTION_S46_CONT_LW (96) S46 Lightweight 4 over 6
+         Container Option.";
+      reference
+        "RFC9598: DHCPv6 Options for Configuration of
+         Softwire Address and Port-Mapped Clients";
+      uses s46-v4-v6-binding-option-group;
+
+      uses s46-br-option-group;
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses s46-br-option-group;
+
+    uses option-s46-cont-mape-option-group;
+
+    uses option-s46-cont-mapt-option-group;
+
+    uses option-s46-cont-lw-option-group;
+  }
+}

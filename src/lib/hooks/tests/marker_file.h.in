@@ -1,0 +1,19 @@
+// Copyright (C) 2013-2015 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifndef MARKER_FILE_H
+#define MARKER_FILE_H
+
+/// @file
+/// Define a marker file that is used in tests to prove that an "unload"
+/// function has been called.
+
+namespace {
+const char* MARKER_FILE = "@abs_builddir@/marker_file.dat";
+}
+
+#endif // MARKER_FILE_H
+

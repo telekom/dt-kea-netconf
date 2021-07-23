@@ -1,0 +1,88 @@
+module ietf-dhcpv6-options-rfc5908 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc5908-server";
+  prefix rfc5908-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC3319 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping ntp-server-option-group {
+    description
+      "OPTION_NTP_SERVER (56) NTP Server Option for DHCPv6.
+       RFC5908 allows for multiple instances of this option.";
+    reference
+      "RFC5908: Network Time Protocol (NTP) Server Option for
+       DHCPv6";
+    list ntp-server-option-instances {
+      key "ntp-server-option-instance-id";
+      leaf ntp-server-option-instance-id {
+        type uint8;
+      }
+
+      container ntp-server-option {
+        list ntp-server {
+          key "ntp-serv-id";
+          description
+            "List of NTP server locationi suboptions.";
+          leaf ntp-serv-id {
+            type uint8;
+            description
+              "NTP server list element identifier.";
+          }
+
+          choice ntp-time-source-suboption {
+            description
+              "NTP time source suboptions.";
+            case server-address-suboption {
+              leaf server-address {
+                type inet:ipv6-address;
+                description
+                  "NTP server IPv6 address.";
+              }
+            }
+
+            case server-multicast-address-suboption {
+              leaf server-multicast-address {
+                type inet:ipv6-address;
+                description
+                  "NTP server IPv6 multicast address.";
+              }
+            }
+
+            case server-fqdn-suboption {
+              leaf server-fqdn {
+                type string;
+                description
+                  "NTP server FQDN.";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses ntp-server-option-group;
+  }
+}

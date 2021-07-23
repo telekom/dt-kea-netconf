@@ -1,0 +1,35 @@
+{
+    "Control-agent": {
+        "control-sockets": {
+            "d2": {
+                "socket-name": "/tmp/kea-ddns-ctrl-socket",
+                "socket-type": "unix",
+                "user-context": {
+                    "in-use": false
+                }
+            },
+            "dhcp4": {
+                "socket-name": "/tmp/kea4-ctrl-socket",
+                "socket-type": "unix",
+                "user-context": {
+                    "comment": "socket to DHCP4 server"
+                }
+            },
+            "dhcp6": {
+                "socket-name": "/tmp/kea6-ctrl-socket",
+                "socket-type": "unix"
+            }
+        },
+        "hooks-libraries": [
+            {
+                "library": "/opt/local/control-agent-commands.so",
+                "library-path": "/opt/local/control-agent-commands.so",
+                "parameters": {
+                    "param1": "foo"
+                }
+            }
+        ],
+        "http-host": "127.0.0.1",
+        "http-port": 8000
+    }
+}

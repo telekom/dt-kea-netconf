@@ -1,0 +1,64 @@
+// This is an example configuration file for D2, Kea's DHCP-DDNS processor.
+// It uses embedded comments which will be included in configuration objects
+// within user-contexts rather than stripped away by at lexical analysis.
+
+{
+"DhcpDdns":
+{
+
+    // Global scope
+    "comment": "A DHCP-DDNS server",
+    "ip-address": "127.0.0.1",
+    "port": 53001,
+    "dns-server-timeout" : 1000,
+
+    "control-socket":
+    {
+        "comment": "Control channel",
+        "socket-type": "unix",
+        "socket-name": "/tmp/kea-ddns-ctrl-socket"
+    },
+
+    "forward-ddns":
+    {
+        "ddns-domains":
+        [
+            // In DDNS domain
+            {
+                "comment": "DdnsDomain for zone 'four.example.com.'",
+                "name": "four.example.com.",
+                "key-name": "d2.md5.key",
+                // In DNS server
+                "dns-servers":
+                [
+                    {
+                        "comment": "four.example.com. server",
+                        "ip-address": "172.16.1.1"
+                    }
+                ]
+            }
+        ]
+    },
+
+    // In TSIG key
+    "tsig-keys":
+    [
+        {
+            "comment": "four.example.com. key",
+            "name": "d2.md5.key",
+            "algorithm": "HMAC-MD5",
+            "secret": "LSWXnfkKZjdPJI5QxlpnfQ=="
+        }
+    ],
+
+    // In loggers
+    "loggers": [
+        {
+            "comment": "A logger",
+            "name": "kea-dhcp-ddns",
+            "severity": "info"
+        }
+    ]
+}
+
+}

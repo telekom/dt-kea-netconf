@@ -1,0 +1,122 @@
+-- Copyright (C) 2012-2018 Internet Systems Consortium, Inc. ("ISC")
+
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this
+-- file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+-- This is the Kea DHCP schema specification for PostgreSQL schema 1.0.
+-- It is used to create a 1.0 schema database for testing kea-admin's
+-- ability to upgrade Postgres databases.
+
+-- The schema is reasonably portable (with the exception of some field types
+-- specification, which are PostgreSQL-specific).  Minor changes might be needed
+-- for other databases.
+
+-- To create the schema, either type the command:
+
+-- psql -U <user> -W <password> <database> < dhcpdb_create.pgsql
+
+-- ... at the command prompt, or log in to the PostgreSQL database and at the "postgres=#"
+-- prompt, issue the command:
+
+-- @dhcpdb_create.pgsql
+
+
+-- Holds the IPv4 leases.
+CREATE TABLE lease4 (
+    address BIGINT PRIMARY KEY NOT NULL,        -- IPv4 address
+    hwaddr BYTEA,                               -- Hardware address
+    client_id BYTEA,                            -- Client ID
+    valid_lifetime BIGINT,                      -- Length of the lease (seconds)
+    expire TIMESTAMP WITH TIME ZONE,            -- Expiration time of the lease
+    subnet_id BIGINT,                           -- Subnet identification
+    fqdn_fwd BOOLEAN,                           -- Has forward DNS update been performed by a server
+    fqdn_rev BOOLEAN,                           -- Has reverse DNS update been performed by a server
+    hostname VARCHAR(255)                       -- The FQDN of the client
+    );
+
+
+-- Create search indexes for lease4 table
+-- index by hwaddr and subnet_id
+CREATE INDEX lease4_by_hwaddr_subnet_id ON lease4 (hwaddr, subnet_id);
+
+-- index by client_id and subnet_id
+CREATE INDEX lease4_by_client_id_subnet_id ON lease4 (client_id, subnet_id);
+
+-- Holds the IPv6 leases.
+-- N.B. The use of a VARCHAR for the address is temporary for development:
+-- it will eventually be replaced by BINARY(16).
+CREATE TABLE lease6 (
+    address VARCHAR(39) PRIMARY KEY NOT NULL,   -- IPv6 address
+    duid BYTEA,                                 -- DUID
+    valid_lifetime BIGINT,                      -- Length of the lease (seconds)
+    expire TIMESTAMP WITH TIME ZONE,            -- Expiration time of the lease
+    subnet_id BIGINT,                           -- Subnet identification
+    pref_lifetime BIGINT,                       -- Preferred lifetime
+    lease_type SMALLINT,                        -- Lease type (see lease6_types
+                                                --    table for possible values)
+    iaid INT,                                   -- See Section 12 of RFC 8415
+    prefix_len SMALLINT,                        -- For IA_PD only
+    fqdn_fwd BOOLEAN,                           -- Has forward DNS update been performed by a server
+    fqdn_rev BOOLEAN,                           -- Has reverse DNS update been performed by a server
+    hostname VARCHAR(255)                       -- The FQDN of the client
+    );
+
+-- Create search indexes for lease4 table
+-- index by iaid, subnet_id, and duid
+CREATE INDEX lease6_by_iaid_subnet_id_duid ON lease6 (iaid, subnet_id, duid);
+
+-- ... and a definition of lease6 types.  This table is a convenience for
+-- users of the database - if they want to view the lease table and use the
+-- type names, they can join this table with the lease6 table
+CREATE TABLE lease6_types (
+    lease_type SMALLINT PRIMARY KEY NOT NULL,   -- Lease type code.
+    name VARCHAR(5)                             -- Name of the lease type
+    );
+START TRANSACTION;
+INSERT INTO lease6_types VALUES (0, 'IA_NA');   -- Non-temporary v6 addresses
+INSERT INTO lease6_types VALUES (1, 'IA_TA');   -- Temporary v6 addresses
+INSERT INTO lease6_types VALUES (2, 'IA_PD');   -- Prefix delegations
+COMMIT;
+
+-- Finally, the version of the schema.  We start at 1.0 during development.
+-- This table is only modified during schema upgrades.  For historical reasons
+-- (related to the names of the columns in the BIND 10 DNS database file), the
+-- first column is called "version" and not "major".
+-- Note: This MUST be kept in step with src/share/database/scripts/pgsql/dhcpdb_create.pgsql,
+-- which defines the schema for the unit tests.
+CREATE TABLE schema_version (
+    version INT PRIMARY KEY NOT NULL,       -- Major version number
+    minor INT                               -- Minor version number
+    );
+START TRANSACTION;
+INSERT INTO schema_version VALUES (1, 0);
+COMMIT;
+
+-- Notes:
+
+-- Indexes
+-- =======
+-- It is likely that additional indexes will be needed.  However, the
+-- increase in lookup performance from these will come at the expense
+-- of a decrease in performance during insert operations due to the need
+-- to update the indexes.  For this reason, the need for additional indexes
+-- will be determined by experiment during performance tests.
+
+-- The most likely additional indexes will cover the following columns:
+
+-- hwaddr and client_id
+-- For lease stability: if a client requests a new lease, try to find an
+-- existing or recently expired lease for it so that it can keep using the
+-- same IP address.
+
+-- Field Sizes
+-- ===========
+-- If any of the VARxxx field sizes are altered, the lengths in the PgSQL
+-- backend source file (pgsql_lease_mgr.cc) must be correspondingly changed.
+
+-- Portability
+-- ===========
+-- Some columns contain binary data so are stored as BYTEA instead of
+-- VARCHAR.  This may be non-portable between databases: in this case, the
+-- definition should be changed to VARCHAR.

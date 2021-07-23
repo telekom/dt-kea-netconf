@@ -1,0 +1,62 @@
+#!/bin/bash
+# (C) 2020 Deutsche Telekom AG.
+#
+# Deutsche Telekom AG and all other contributors /
+# copyright owners license this file to you under the Apache
+# License, Version 2.0 (the "License"); you may not use this
+# file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Fail if any command fails.
+set -e
+
+RED='\e[1m\e[31m'
+RESET='\e[1m\e[0m'
+
+# Print usage function.
+function print-help() {
+printf "\
+Usage: %s {{options}}
+Options:
+  [-d|--debug]                 Enables debug mode, showing every executed statement.
+  [-h|--help]                  Prints usage (this text).
+" "$(basename "${0}")"
+}
+
+# Parse arguments.
+while test ${#} -gt 0; do
+  case "${1}" in
+  # --kea-src-dir=\$dir
+  '-d'|'--debug') set -x ;;
+  # --name-only
+  '-h'|'--help') print-help; exit 0 ;;
+  *) # Unrecognized argument
+    printf "${RED}ERROR: Unrecognized argument '%s'${RESET}\\n" "${1}" 1>&2; print-help; exit 1 ;;
+  esac; shift
+done
+
+path=src/share/database/scripts
+
+# Make sure we're at top level.
+pushd "$(git rev-parse --show-toplevel)" || exit
+
+# Return to former working directory on exit.
+trap popd EXIT
+
+if [[ ! -d ${path} ]]; then
+  printf 'ERROR: Run this from somewhere in the Kea repository.\n' >&2
+  exit 1
+fi
+
+for file in $(find ${path} | grep -E '\.in$' | grep -Ev 'Makefile|sh\.in$'); do
+  tools/defines_resolver.sh "${file}" "${file%.in}"
+done

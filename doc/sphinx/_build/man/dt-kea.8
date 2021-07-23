@@ -1,0 +1,4127 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "KEADHCP" "1" "Aug 31, 2020" "" "Kea DHCP"
+.SH NAME
+keadhcp \- Kea DHCP 
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH DEVELOPMENT
+.SS Component depenendency diagram
+[image: Kea DHCP dependencies]
+[image]
+.SS dt\-kvm\-server access
+.sp
+/etc/hosts
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+##################################### IPv6 #####################################
+
+# Standard
+::1      ip6\-localhost ip6\-loopback
+fe00::0  ip6\-localnet
+ff00::0  ip6\-mcastprefix
+ff02::1  ip6\-allnodes
+ff02::2  ip6\-allrouters
+
+2003:1b3b:fffb:843::4000  dt\-kvm\-server
+2003:1f0b:fffd:853::4000  dt\-kvm\-server\-old
+2a03:b0c0:3:d0::48d:8001  dt\-proxy6
+2003:1b3b:fff9:0119:96f4:2af4:9284:70f4  kea2\-lab
+2003:1b3b:fff9:0119:0000:0000:0000:1350  kea3\-lab
+2003:1b3b:fff9:0119:cfa1:c8b1:77e8:bdc7  kea5\-lab
+2003:1b3b:fffd:0113::1260                kea17n\-lab
+2003:1b3b:fffd:0113::1254                cas6\-lab
+2003:1b3b:fffd:0113::1255                cas7\-lab
+2003:1b3b:fffd:0113::1256                cas8\-lab
+
+##################################### IPv4 #####################################
+
+127.0.0.1  localhost
+
+10.200.0.242  dt\-ci
+10.200.0.249  devops\-cpp
+
+46.101.184.61  dt\-proxy4
+
+62.225.28.142  dt\-jump\-server1
+62.225.28.254  dt\-jump\-server2
+
+# DT \- Setup
+192.168.128.5   dt\-dhcp\-server1
+192.168.128.6   dt\-dhcp\-server2
+192.168.128.17  dt\-db\-server1
+192.168.128.18  dt\-db\-server2
+192.168.128.19  dt\-db\-server3
+192.168.128.20  dt\-db\-server4
+192.168.128.21  dt\-db\-server5
+192.168.128.22  dt\-db\-server6
+
+# Q \- Test \- Setup
+192.168.144.3   q\-test\-slave
+192.168.144.5   q\-test\-dhcp\-server1
+192.168.144.6   q\-test\-dhcp\-server2
+192.168.144.7   q\-test\-dhcp\-server3
+192.168.144.8   q\-test\-dhcp\-server4
+192.168.144.17  q\-test\-db\-server1
+192.168.144.18  q\-test\-db\-server2
+192.168.144.19  q\-test\-db\-server3
+192.168.144.20  q\-test\-db\-server4
+192.168.144.21  q\-test\-db\-server5
+192.168.144.22  q\-test\-db\-server6
+192.168.144.33  q\-test\-dhcp\-relay1
+192.168.144.34  q\-test\-dhcp\-relay2
+192.168.144.65  q\-test\-dhcp\-client1
+192.168.144.66  q\-test\-dhcp\-client2
+192.168.144.67  q\-test\-dhcp\-client3
+192.168.144.68  q\-test\-dhcp\-client4
+
+# X \- Test \- Setup
+192.168.160.5   x\-test\-dhcp\-server1
+192.168.160.6   x\-test\-dhcp\-server2
+192.168.160.7   x\-test\-dhcp\-server3
+192.168.160.8   x\-test\-dhcp\-server4
+192.168.160.17  x\-test\-db\-server1
+192.168.160.18  x\-test\-db\-server2
+192.168.160.19  x\-test\-db\-server3
+192.168.160.20  x\-test\-db\-server4
+192.168.160.21  x\-test\-db\-server5
+192.168.160.22  x\-test\-db\-server6
+192.168.160.33  x\-test\-dhcp\-relay1
+192.168.160.34  x\-test\-dhcp\-relay2
+192.168.160.65  x\-test\-dhcp\-client1
+192.168.160.66  x\-test\-dhcp\-client2
+192.168.160.67  x\-test\-dhcp\-client3
+192.168.160.68  x\-test\-dhcp\-client4
+
+# Z \- Test \- Setup
+192.168.176.17  z\-test\-db\-server1
+192.168.176.18  z\-test\-db\-server2
+192.168.176.19  z\-test\-db\-server3
+192.168.176.20  z\-test\-db\-server4
+192.168.176.21  z\-test\-db\-server5
+192.168.176.22  z\-test\-db\-server6
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+~/.ssh/config \- replace $user with your DT username
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+Host gitlab.dev.terastrm.net
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc %h %p
+ User root
+
+Host dt\-db\-* dt\-dhcp\-* q\-test\-* x\-test\-* z\-test\-*
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-kvm\-server nc %h %p
+ User root
+
+Host cas6\-lab
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fffd:0113::1254 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fffd:0113::1254 %p
+ User dtadmin
+
+Host cas7\-lab
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fffd:0113::1255 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fffd:0113::1255 %p
+ User dtadmin
+
+Host cas8\-lab
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fffd:0113::1256 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fffd:0113::1256 %p
+ User dtadmin
+
+Host dt\-kvm\-server
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fffb:843::4000 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fffb:843::4000 %p
+ User root
+
+Host dt\-kvm\-server\-forwarding
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fffb:843::4000 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fffb:843::4000 %p
+ LocalForward 127.0.0.1:19090 127.0.0.1:9090
+ LocalForward 127.0.0.1:13000 127.0.0.1:3000
+ User root
+
+Host dt\-kvm\-server\-old
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1f0b:fffd:853::4000 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1f0b:fffd:853::4000 %p
+ User root
+
+Host dt\-jump\-server1 dt\-jump\-server2
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ Port 28545
+ User $user
+
+Host dt\-proxy
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ User qualitance
+
+Host kea2\-lab
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ User dcso
+
+Host kea3\-lab
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fff9:0119::1350 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fff9:0119::1350 %p
+ User dtadmin
+
+Host kea17n\-lab
+ IdentityFile ~/.ssh/id\-dt\-kvm\-server
+ ProxyCommand ssh dt\-jump\-server1 nc 2003:1b3b:fffd:0113::1260 %p
+ ProxyCommand ssh dt\-jump\-server2 nc 2003:1b3b:fffd:0113::1260 %p
+ User dtadmin
+
+Host vpn.dev.terastrm.net
+ Port 28545
+ User $user
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS dt\-kvm\-server NAT setup
+.sp
+For giving \fIapt\fP access to the Internet:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ ip link add link enp2s0f0 name enp2s0f0.721 type vlan id 721
+$ ip link set dev enp2s0f0.721 up
+$ ip addr add 192.168.15.58/24 dev enp2s0f0.721
+$ ip route add default via 192.168.15.1 dev enp2s0f0.721
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Generating documentation item for new deliverable
+.sp
+From the root directory of dt\-documentation, run:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\&./new ${project_number} ${deliverable_number_plus_name} ${deliverable_title}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Example:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\&./new prj10 deliverable\-23\-tractable\-telemetry \(aqMetric reporting via YANG\(aq
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+All files related to the deliverable should now be under \fIdeliverable\-23\-tractable\-telemetry\fP\&.
+Then add the content to the following files:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\&./deliverable\-23\-tractable\-telemetry/index.rst
+\&./deliverable\-23\-tractable\-telemetry/presentation\-content.html
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+To generate the documentation and publish it to \fI\%https://qualitance.atlassian.net/wiki/spaces/DBD/pages/5177348/TeraStream+DHCP\fP, run:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\&./build
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+\fICONFLUENCE_SERVER_USER\fP and \fICONFLUENCE_SERVER_PASS\fP are needed to succesfully publish. Get them from \fI\%https://id.atlassian.com/manage\-profile/security/api\-tokens\fP\&.
+.sp
+Offtopic note: at the end of a release, after writing documentation, copy the manual to dt\-kea’s repository with the following command and then push the changes so that it will be available via \fIman dt\-kea\fP on the machine that dt\-kea was installed on.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+cp "${DT_DOCUMENTATION_REPOSITORY}/ancillary/sphinx/build/man/keadhcp.1" "${DT_KEA_REPOSITORY}/doc/sphinx/_build/man/dt\-kea.8"
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Netconf/YANG setup
+.sp
+Install \fIdt\-kea\fP, \fIdt\-kea\-libs\fP & \fIdt\-kea\-tools\fP in \fIopt\fP\&.
+.sp
+Only once and then every time YANG models change:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo su
+$ /opt/dt\-kea\-tools/scripts/yang\-reinstall\-models \-c ./yang/config\-test.yaml
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+If you need Cassandra as a configuration backend:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ /opt/dt\-kea\-tools/scripts/start\-and\-monitor\-cassandra
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+At the start of every test session:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo su
+Creating log directory...                       [DONE]
+Reinstalling required YANG models...            [DONE]
+$ /opt/dt\-kea/sbin/kea\-netconf \-c /opt/dt\-kea\-tools/yang/share/kea\-netconf\-with\-server.conf
+Converting YAML to environment variables...     [DONE]
+Creating log directory...                       [DONE]
+Killing processes...                            [DONE]
+Waiting for processes to die...                 [DONE]
+Starting kea\-netconf...                         [DONE]
+$ tail \-f /var/log/yang/kea\-netconf.log
+$ sysrepocfg \-d running \-E/opt/dt\-kea\-tools/yang/share/ietf\-dhcpv6\-server\-config.xml
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Inside a test sesion, whenever you want to modify YANG data:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo su
+$ sysrepocfg \-d running \-E \-m ietf\-dhcpv6\-server
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+To test the operational nodes:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo su
+$ sysrepocfg \-x "/ietf\-dhcpv6\-server:dhcpv6\-server/network\-ranges/network\-range[network\-range\-id=\(aq1\(aq]/address\-pools/address\-pool[pool\-id=\(aq0\(aq]" \-X \-d operational
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+To test the notifications:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ sudo su
+$ sysrepocfg \-x "/ietf\-dhcpv6\-server:dhcpv6\-server/invalid\-client\-detected" \-X \-d operational
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Running hook library tests
+.sp
+Specifically only policy engine is tested using the following steps:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ initialize\-virtual\-interfaces
+$ sudo su
+$ /opt/dt\-kea/sbin/kea\-dhcp6 \-c /opt/dt\-kea\-tools/initial\-config/kea\-dhcp6.conf
+$ /opt/dt\-kea\-tools/scripts/hook\-library\-tests/kea\-hook\-library\-tests
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+All should pass with \fB[DONE]\fP\&.
+.SS Running system tests using Robot Framework
+.sp
+The dt\-testing\-framework tests:
+.INDENT 0.0
+.IP \(bu 2
+Cassandra replication when a node is down for a period of time
+.IP \(bu 2
+The ability of a DHCP client to move to the server of another shard when a Kea server is down for a period of time
+.IP \(bu 2
+Correctness during and after reconfiguration of different types:
+.INDENT 2.0
+.IP \(bu 2
+reconfiguration of a single shard on a piece of configuration not relevant to DHCP functionality i.e. debuglevel
+.IP \(bu 2
+reconfiguration of a single shard on a piece relevant to DHCP functionality i.e. subnet pools
+.IP \(bu 2
+reconfiguration of a server into another shard
+.UNINDENT
+.UNINDENT
+.sp
+Cassandra is required for most of the test cases to run. Other backends can be used for a small portion of the test cases, but they have to specified in the configuration templates. To deploy Cassandra:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ go get \-u github.com/ericchiang/pup  # one time
+$ /opt/dt\-kea\-tools/scripts/deploy\-cassandra\-to\-dt\-kvm\-server \-l  # to list all Cassandra versions
+[...]
+3.11.7/
+4.0\-alpha1/
+4.0\-alpha2/
+4.0\-alpha3/
+4.0\-alpha4/
+4.0\-beta1/
+# /opt/dt\-kea\-tools/scripts/for\-all\-hosts\-virsh \(aqq\-test\-db\(aq \(aqstart\(aq
+# /opt/dt\-kea\-tools/scripts/deploy\-cassandra\-to\-dt\-kvm\-server \(aqq\-test\(aq \(aq4.0\-beta1\(aq
+# /opt/dt\-kea\-tools/scripts/change\-version\-of\-cassandra\-on\-hosts\-to \(aqq\-test\(aq \(aq4.0\-beta1\(aq
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Be wary that the deploy script does textual substitutions to it’s configuration which you can see through \fIgit diff\fP on the database machines. This might have to be adjusted on future versions if the configuration format of Cassandra changes. Last tested on 4.0\-alpha3.
+.sp
+To then build and deploy DT components on \fIdt\-kvm\-server\fP:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ mkdir \-p /opt/dt\-components
+$ rm \-rf /opt/dt\-components/*
+$ cd /opt/dt\-components
+$ /opt/dt\-kea\-tools/scripts/build\-dt\-components\-on\-dt\-kvm\-server \-q
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+To then run the Robot Framework, make sure \fI/etc/robot/${environment}/dt\-testing\-framework\fP is there where \fI${environment}\fP can be \fIq\fP or \fIx\fP\&. The default configuration found under \fIenvironment.yaml\fP is made for the \fIq\-test\fP environment. Then run:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ /etc/robot/q/dt\-testing\-framework/run\-robot
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Result will be written to stdout, but logs and log analysis reports can be found in \fI/etc/robot/${environment}/output\fP\&.
+.SS virsh commands for VMs on dt\-kvm\-server
+.sp
+View all running VMs:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh list
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+View all VMs:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh list \-\-all
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Start a VM:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh start ${vm}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Gracefully stop a VM:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh shutdown ${vm}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Forcefully stop a VM:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh destroy ${vm}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+View the configuration of a VM:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh dumpxml ${vm}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Create a VM with a certain configuration (safer if the VM doesn’t exist or is shut down):
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh create ${xml}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Edit a VM’s configuration (safer if the VM is shut down):
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ virsh edit ${vm}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Set up kea\-dhcp.qualitance.com VM for documentation webserver
+.INDENT 0.0
+.IP \(bu 2
+Install Caddy 2
+.IP \(bu 2
+Install Certbot
+.IP \(bu 2
+.INDENT 2.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ certbot certonly
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+Run sync\-dt\-documentation from your personal machine
+.UNINDENT
+.SH DOXYGEN
+.sp
+\fI\%https://kea\-dhcp.qualitance.com/doxygen\fP
+.SH OLDER DOCUMENTATION
+.sp
+\fI\%https://kea\-dhcp.qualitance.com/old\-documentation\fP
+.SH PRESENTATIONS
+.INDENT 0.0
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-17.html\fP
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-18\-naughty\-netconf.html\fP
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-19\-optimal\-output.html\fP
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-20\-proper\-policy.html\fP
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-21\-rounded\-rfc.html\fP
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-22\-systematic\-structuring.html\fP
+.IP \(bu 2
+\fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-23\-tractable\-telemetry.html\fP
+.UNINDENT
+.SH RFCS
+.INDENT 0.0
+.IP \(bu 2
+\fI\%RFC  791 \- Internet Protocol\fP
+.IP \(bu 2
+\fI\%RFC  850 \- Standard for Interchange of USENET Messages\fP
+.IP \(bu 2
+\fI\%RFC  951 \- Bootstrap Protocol\fP
+.IP \(bu 2
+\fI\%RFC  952 \- DOD Internet Host Table Specification\fP
+.IP \(bu 2
+\fI\%RFC 1034 \- Domain Names\fP
+.IP \(bu 2
+\fI\%RFC 1035 \- Domain Names\fP
+.IP \(bu 2
+\fI\%RFC 1123 \- Requirements for Internet Hosts\fP
+.IP \(bu 2
+\fI\%RFC 1183 \- New DNS RR Definitions\fP
+.IP \(bu 2
+\fI\%RFC 1321 \- The MD5 Message\-Digest Algorithm\fP
+.IP \(bu 2
+\fI\%RFC 1886 \- DNS Extensions to support IP version 6\fP
+.IP \(bu 2
+\fI\%RFC 1982 \- Serial Number Arithmetic\fP
+.IP \(bu 2
+\fI\%RFC 1995 \- Incremental Zone Transfer in DNS\fP
+.IP \(bu 2
+\fI\%RFC 1996 \- A Mechanism for Prompt Notification of Zone Changes (DNS NOTIFY)\fP
+.IP \(bu 2
+\fI\%RFC 2068 \- Hypertext Transfer Protocol\fP
+.IP \(bu 2
+\fI\%RFC 2131 \- Dynamic Host Configuration Protocol\fP
+.IP \(bu 2
+\fI\%RFC 2132 \- DHCP Options and BOOTP Vendor Extensions\fP
+.IP \(bu 2
+\fI\%RFC 2136 \- Dynamic Updates in the Domain Name System (DNS UPDATE)\fP
+.IP \(bu 2
+\fI\%RFC 2168 \- Resolution of Uniform Resource Identifiers using the Domain Name System\fP
+.IP \(bu 2
+\fI\%RFC 2181 \- Clarifications to the DNS Specification\fP
+.IP \(bu 2
+\fI\%RFC 2202 \- Test Cases for HMAC\-MD5 and HMAC\-SHA\-1\fP
+.IP \(bu 2
+\fI\%RFC 2292 \- Advanced Sockets API for IPv6\fP
+.IP \(bu 2
+\fI\%RFC 2308 \- Negative Caching of DNS Queries (DNS NCACHE)\fP
+.IP \(bu 2
+\fI\%RFC 2373 \- IP Version 6 Addressing Architecture\fP
+.IP \(bu 2
+\fI\%RFC 2610 \- DHCP Options for Service Location Protocol\fP
+.IP \(bu 2
+\fI\%RFC 2671 \- Extension Mechanisms for DNS (EDNS0)\fP
+.IP \(bu 2
+\fI\%RFC 2782 \- A DNS RR for specifying the location of services (DNS SRV)\fP
+.IP \(bu 2
+\fI\%RFC 2845 \- Secret Key Transaction Authentication for DNS (TSIG)\fP
+.IP \(bu 2
+\fI\%RFC 2848 \- The PINT Service Protocol: Extensions to SIP and SDP for IP Access to Telephone Call Services\fP
+.IP \(bu 2
+\fI\%RFC 2915 \- The Naming Authority Pointer (NAPTR) DNS Resource Record\fP
+.IP \(bu 2
+\fI\%RFC 2930 \- Secret Key Establishment for DNS (TKEY RR)\fP
+.IP \(bu 2
+\fI\%RFC 3011 \- The IPv4 Subnet Selection Option for DHCP\fP
+.IP \(bu 2
+\fI\%RFC 3046 \- DHCP Relay Agent Information Option\fP
+.IP \(bu 2
+\fI\%RFC 3118 \- Authentication for DHCP Messages\fP
+.IP \(bu 2
+\fI\%RFC 3174 \- US Secure Hash Algorithm 1 (SHA1)\fP
+.IP \(bu 2
+\fI\%RFC 3256 \- The DOCSIS (Data\-Over\-Cable Service Interface Specifications) Device Class DHCP (Dynamic Host Configuration Protocol) Relay Agent Information Sub\-option\fP
+.IP \(bu 2
+\fI\%RFC 3315 \-  Dynamic Host Configuration Protocol for IPv6 (DHCPv6)\fP
+.IP \(bu 2
+\fI\%RFC 3319 \- Dynamic Host Configuration Protocol (DHCPv6) Options for Session Initiation Protocol (SIP) Servers\fP
+.IP \(bu 2
+\fI\%RFC 3397 \- Dynamic Host Configuration Protocol (DHCP) Domain Search Option\fP
+.IP \(bu 2
+\fI\%RFC 3403 \- Dynamic Delegation Discovery System (DDDS) Part Three: The Domain Name System (DNS) Database\fP
+.IP \(bu 2
+\fI\%RFC 3527 \- Link Selection sub\-option for the Relay Agent Information Option for DHCPv4\fP
+.IP \(bu 2
+\fI\%RFC 3542 \- Advanced Sockets Application Program Interface (API) for IPv6\fP
+.IP \(bu 2
+\fI\%RFC 3549 \- Linux Netlink as an IP Services Protocol\fP
+.IP \(bu 2
+\fI\%RFC 3597 \- Handling of Unknown DNS Resource Record (RR) Types\fP
+.IP \(bu 2
+\fI\%RFC 3633 \- IPv6 Prefix Options for Dynamic Host Configuration Protocol (DHCP) version 6\fP
+.IP \(bu 2
+\fI\%RFC 3646 \- DNS Configuration options for Dynamic Host Configuration Protocol for IPv6 (DHCPv6)\fP
+.IP \(bu 2
+\fI\%RFC 3658 \- Delegation Signer (DS) Resource Record (RR)\fP
+.IP \(bu 2
+\fI\%RFC 3898 \- Network Information Service (NIS) Configuration Options for Dynamic Host Configuration Protocol for IPv6 (DHCPv6)\fP
+.IP \(bu 2
+\fI\%RFC 3925 \- Vendor\-Identifying Vendor Options for Dynamic Host Configuration Protocol version 4 (DHCPv4)\fP
+.IP \(bu 2
+\fI\%RFC 3993 \- Subscriber\-ID Suboption for the Dynamic Host Configuration Protocol (DHCP) Relay Agent Option\fP
+.IP \(bu 2
+\fI\%RFC 4014 \- Remote Authentication Dial\-In User Service (RADIUS) Attributes Suboption for the Dynamic Host Configuration Protocol (DHCP) Relay Agent Information Option\fP
+.IP \(bu 2
+\fI\%RFC 4030 \- The Authentication Suboption for the Dynamic Host Configuration Protocol (DHCP) Relay Agent Option\fP
+.IP \(bu 2
+\fI\%RFC 4034 \- Resource Records for the DNS Security Extensions\fP
+.IP \(bu 2
+\fI\%RFC 4035 \- Protocol Modifications for the DNS Security Extensions\fP
+.IP \(bu 2
+\fI\%RFC 4075 \- Simple Network Time Protocol (SNTP) Configuration Option for DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 4231 \- Identifiers and Test Vectors for HMAC\-SHA\-224, HMAC\-SHA\-256, HMAC\-SHA\-384, and HMAC\-SHA\-512\fP
+.IP \(bu 2
+\fI\%RFC 4242 \- Information Refresh Time Option for Dynamic Host Configuration Protocol for IPv6 (DHCPv6)\fP
+.IP \(bu 2
+\fI\%RFC 4243 \- Vendor\-Specific Information Suboption for the Dynamic Host Configuration Protocol (DHCP) Relay Agent Option\fP
+.IP \(bu 2
+\fI\%RFC 4255 \- Using DNS to Securely Publish Secure Shell (SSH) Key Fingerprints\fP
+.IP \(bu 2
+\fI\%RFC 4280 \- Dynamic Host Configuration Protocol (DHCP) Options for Broadcast and Multicast Control Servers\fP
+.IP \(bu 2
+\fI\%RFC 4291 \- IP Version 6 Addressing Architecture\fP
+.IP \(bu 2
+\fI\%RFC 4361 \- Node\-specific Client Identifiers for Dynamic Host Configuration Protocol Version Four (DHCPv4)\fP
+.IP \(bu 2
+\fI\%RFC 4408 \- Sender Policy Framework (SPF) for Authorizing Use of Domains in E\-Mail, Version 1\fP
+.IP \(bu 2
+\fI\%RFC 4431 \- The DNSSEC Lookaside Validation (DLV) DNS Resource Record\fP
+.IP \(bu 2
+\fI\%RFC 4578 \- Dynamic Host Configuration Protocol (DHCP) Options for the Intel Preboot eXecution Environment (PXE)\fP
+.IP \(bu 2
+\fI\%RFC 4580 \- Dynamic Host Configuration Protocol for IPv6 (DHCPv6) Relay Agent Subscriber\-ID Option\fP
+.IP \(bu 2
+\fI\%RFC 4635 \- HMAC SHA TSIG Algorithm Identifiers\fP
+.IP \(bu 2
+\fI\%RFC 4648 \- The Base16, Base32, and Base64 Data Encodings\fP
+.IP \(bu 2
+\fI\%RFC 4649 \- Dynamic Host Configuration Protocol for IPv6 (DHCPv6) Relay Agent Remote\-ID Option\fP
+.IP \(bu 2
+\fI\%RFC 4701 \- A DNS Resource Record (RR) for Encoding Dynamic Host Configuration Protocol (DHCP) Information (DHCID RR)\fP
+.IP \(bu 2
+\fI\%RFC 4702 \- The Dynamic Host Configuration Protocol (DHCP) Client Fully Qualified Domain Name (FQDN) Option\fP
+.IP \(bu 2
+\fI\%RFC 4703 \- Resolution of Fully Qualified Domain Name (FQDN) Conflicts among Dynamic Host Configuration Protocol (DHCP) Clients\fP
+.IP \(bu 2
+\fI\%RFC 4704 \- The Dynamic Host Configuration Protocol for IPv6 (DHCPv6) Client Fully Qualified Domain Name (FQDN) Option\fP
+.IP \(bu 2
+\fI\%RFC 4776 \- Dynamic Host Configuration Protocol (DHCPv4 and DHCPv6) Option for Civic Addresses Configuration Information\fP
+.IP \(bu 2
+\fI\%RFC 4833 \- Timezone Options for DHCP\fP
+.IP \(bu 2
+\fI\%RFC 4941 \- Privacy Extensions for Stateless Address Autoconfiguration in IPv6\fP
+.IP \(bu 2
+\fI\%RFC 4994 \- DHCPv6 Relay Agent Echo Request Option\fP
+.IP \(bu 2
+\fI\%RFC 5007 \- DHCPv6 Leasequery\fP
+.IP \(bu 2
+\fI\%RFC 5010 \- The Dynamic Host Configuration Protocol Version 4 (DHCPv4) Relay Agent Flags Suboption\fP
+.IP \(bu 2
+\fI\%RFC 5107 \- DHCP Server Identifier Override Suboption\fP
+.IP \(bu 2
+\fI\%RFC 5155 \- DNS Security (DNSSEC) Hashed Authenticated Denial of Existence\fP
+.IP \(bu 2
+\fI\%RFC 5223 \- Discovering Location\-to\-Service Translation (LoST) Servers Using the Dynamic Host Configuration Protocol (DHCP)\fP
+.IP \(bu 2
+\fI\%RFC 5417 \- Control And Provisioning of Wireless Access Points (CAPWAP) Access Controller DHCP Option\fP
+.IP \(bu 2
+\fI\%RFC 5460 \- DHCPv6 Bulk Leasequery\fP
+.IP \(bu 2
+\fI\%RFC 5678 \- Dynamic Host Configuration Protocol (DHCPv4 and DHCPv6) Options for IEEE 802.21 Mobility Services (MoS) Discovery\fP
+.IP \(bu 2
+\fI\%RFC 5908 \- Network Time Protocol (NTP) Server Option for DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 5969 \- IPv6 Rapid Deployment on IPv4 Infrastructures (6rd) – Protocol Specification\fP
+.IP \(bu 2
+\fI\%RFC 5970 \- DHCPv6 Options for Network Boot\fP
+.IP \(bu 2
+\fI\%RFC 5986 \- Discovering the Local Location Information Server (LIS)\fP
+.IP \(bu 2
+\fI\%RFC 6011 \- Session Initiation Protocol (SIP) User Agent Configuration\fP
+.IP \(bu 2
+\fI\%RFC 6020 \- YANG \- A Data Modeling Language for the Network Configuration Protocol (NETCONF)\fP
+.IP \(bu 2
+\fI\%RFC 6153 \- DHCPv4 and DHCPv6 Options for Access Network Discovery and Selection Function (ANDSF) Discovery\fP
+.IP \(bu 2
+\fI\%RFC 6225 \- Dynamic Host Configuration Protocol Options for Coordinate\-Based Location Configuration Information\fP
+.IP \(bu 2
+\fI\%RFC 6234 \- US Secure Hash Algorithms (SHA and SHA\-based HMAC and HKDF)\fP
+.IP \(bu 2
+\fI\%RFC 6334 \- Dynamic Host Configuration Protocol for IPv6 (DHCPv6) Option for Dual\-Stack Lite\fP
+.IP \(bu 2
+\fI\%RFC 6355 \- Definition of the UUID\-Based DHCPv6 Unique Identifier (DUID\-UUID)\fP
+.IP \(bu 2
+\fI\%RFC 6422 \- Relay\-Supplied DHCP Options\fP
+.IP \(bu 2
+\fI\%RFC 6440 \- The EAP Re\-authentication Protocol (ERP) Local Domain Name DHCPv6 Option\fP
+.IP \(bu 2
+\fI\%RFC 6603 \- Prefix Exclude Option for DHCPv6\-based Prefix Delegation\fP
+.IP \(bu 2
+\fI\%RFC 6607 \- Virtual Subnet Selection Options for DHCPv4 and DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 6610 \- DHCP Options for Home Information Discovery in Mobile IPv6 (MIPv6)\fP
+.IP \(bu 2
+\fI\%RFC 6672 \- DNAME Redirection in the DNS\fP
+.IP \(bu 2
+\fI\%RFC 6698 \- The DNS\-Based Authentication of Named Entities (DANE) Transport Layer Security (TLS) Protocol: TLSA\fP
+.IP \(bu 2
+\fI\%RFC 6731 \- Improved Recursive DNS Server Selection for Multi\-Interfaced Nodes\fP
+.IP \(bu 2
+\fI\%RFC 6784 \- Kerberos Options for DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 6842 \- Client Identifier Option in DHCP Server Replies\fP
+.IP \(bu 2
+\fI\%RFC 6844 \- DNS Certification Authority Authorization (CAA) Resource Record\fP
+.IP \(bu 2
+\fI\%RFC 6891 \- Extension Mechanisms for DNS (EDNS(0))\fP
+.IP \(bu 2
+\fI\%RFC 6925 \- The DHCPv4 Relay Agent Identifier Sub\-Option\fP
+.IP \(bu 2
+\fI\%RFC 6939 \- Client Link\-Layer Address Option in DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 6969 \- OSPFv3 Instance ID Registry Update\fP
+.IP \(bu 2
+\fI\%RFC 6977 \- Triggering DHCPv6 Reconfiguration from Relay Agents\fP
+.IP \(bu 2
+\fI\%RFC 7037 \- RADIUS Option for the DHCPv6 Relay Agent\fP
+.IP \(bu 2
+\fI\%RFC 7078 \- Distributing Address Selection Policy Using DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 7083 \- Modification to Default Values of SOL_MAX_RT and INF_MAX_RT\fP
+.IP \(bu 2
+\fI\%RFC 7159 \- The JavaScript Object Notation (JSON) Data Interchange Format\fP
+.IP \(bu 2
+\fI\%RFC 7291 \- DHCP Options for the Port Control Protocol (PCP)\fP
+.IP \(bu 2
+\fI\%RFC 7341 \- DHCPv4\-over\-DHCPv6 (DHCP 4o6) Transport\fP
+.IP \(bu 2
+\fI\%RFC 7525 \- Recommendations for Secure Use of Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)\fP
+.IP \(bu 2
+\fI\%RFC 7550 \- Issues and Recommendations with Multiple Stateful DHCPv6 Options\fP
+.IP \(bu 2
+\fI\%RFC 7597 \- Mapping of Address and Port with Encapsulation (MAP\-E)\fP
+.IP \(bu 2
+\fI\%RFC 7598 \- DHCPv6 Options for Configuration of Softwire Address and Port\-Mapped Clients\fP
+.IP \(bu 2
+\fI\%RFC 7600 \- IPv4 Residual Deployment via IPv6 \- A Stateless Solution (4rd)\fP
+.IP \(bu 2
+\fI\%RFC 7618 \- Dynamic Allocation of Shared IPv4 Addresses\fP
+.IP \(bu 2
+\fI\%RFC 7653 \- DHCPv6 Active Leasequery\fP
+.IP \(bu 2
+\fI\%RFC 7710 \- Captive\-Portal Identification Using DHCP or Router Advertisements (RAs)\fP
+.IP \(bu 2
+\fI\%RFC 7774 \- Multicast Protocol for Low\-Power and Lossy Networks (MPL) Parameter Configuration Option for DHCPv6\fP
+.IP \(bu 2
+\fI\%RFC 7839 \- Access\-Network\-Identifier Option in DHCP\fP
+.IP \(bu 2
+\fI\%RFC 7950 \- The YANG 1.1 Data Modeling Language\fP
+.IP \(bu 2
+\fI\%RFC 8026 \- Unified IPv4\-in\-IPv6 Softwire Customer Premises Equipment (CPE): A DHCPv6\-Based Prioritization Mechanism\fP
+.IP \(bu 2
+\fI\%RFC 8115 \- DHCPv6 Option for IPv4\-Embedded Multicast and Unicast IPv6 Prefixes\fP
+.IP \(bu 2
+\fI\%RFC 8156 \- DHCPv6 Failover Protocol\fP
+.IP \(bu 2
+\fI\%RFC 8415 \- Dynamic Host Configuration Protocol for IPv6 (DHCPv6)\fP
+.IP \(bu 2
+\fI\%RFC 8539 \- Softwire Provisioning Using DHCPv4 over DHCPv6\fP
+.IP \(bu 2
+\fI\%draft\-ietf\-dhc\-dhcpv6\-yang\-10 \- YANG Data Model for DHCPv6 Configuration (expired)\fP
+.IP \(bu 2
+\fI\%draft\-ietf\-dhc\-dhcpv6\-yang\-10 \- YANG Data Model for DHCPv6 Configuration\fP
+.UNINDENT
+.SH IA_NA SYNTHESIS
+.SS Requirement Specification
+.sp
+The topology\-aware hook libraries previously had three main functions:
+.INDENT 0.0
+.IP 1. 3
+Identify if a device type has a specific vendor class ID via DHCPv6 option 16 and use it as a gating parameter for activating topology\-based actions. The only option data the libraries took into consideration up until now was:
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+Option: Vendor Class (16)
+Length: 12
+Value: 00000b790006542d4c414253
+Enterprise ID: Deutsche Telekom AG (2937)
+Vendor Class Data: T\-LABS
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Thus, the previous implementation might have not considered this configurable.
+.INDENT 0.0
+.IP 1. 3
+Identify and check validity of a policy descriptor data record that the R1\-access router inserts into a residential home gateway DHCPv6 query towards the DHCPv6 server, either through a relay inserted RFC 3315 “interface\-id” option 18 message, or through a RFC 4649 “remote\-id” option 37 message.
+.IP 2. 3
+When the policy descriptor is valid, keep enough request state to perform certain action \- either fully automatically or depending upon the DHCPv6 server reply message \- based on the content of the policy descriptor record received. Such actions are:
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.IP \(bu 2
+Identify which IAIDs in the residential home gateway request match the list of permitted IAIDs that are encoded in the DHCPv6 relay injected message policy descriptor content
+.IP \(bu 2
+Synthesize specific IA_PD replies for each IAID that is both in the incoming residential home gateway request and in the DHCPv6 relay injected message policy descriptor, in a configurable way. The configurability applies bitmasks that allow to create additional IA_PD prefixes, in which certain bits of the returned prefix can be pre\-determined, whereas other bits are mirrored from the DHCPv6 server reply for one specific IA_PD, which typically is the one with the IAID content “_ANY”.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+In order to additionally support RDK\-B based home gateway platforms, a valid IA_NA response needs to be supplied to hosts that request it. The requirements to create this reply are as follows:
+.INDENT 0.0
+.IP \(bu 2
+The address is taken from the R1 home gatway prefix and is a /128 i.e. the ‘FF/64.
+.IP \(bu 2
+The response should be synthesized, similar to how prefix delegation requests are created, rather than creating a new set of address pools. This is to avoid introducing an additional state and Cassandra complexity. A shim or hook function, existing or new, would be suitable for this.
+.IP \(bu 2
+IA_NA lease timers are the same as the IA_PD timers for the client.
+.IP \(bu 2
+Apply a method for creating a predictable and stable host identifier portion of the address.
+.INDENT 2.0
+.IP \(bu 2
+It needs to have a high probability of uniqueness such that the same residential home gateway on the same port should get the same IA_NA lease.
+.IP \(bu 2
+It should not collide with other home gateways.
+.IP \(bu 2
+It should allow to retain useful information in the chosen suffix.
+.UNINDENT
+.UNINDENT
+.sp
+Example:
+.sp
+Considering fe80:0:0:0:222:7ff:fe6f:4a26 as the selected lease address. Steps are:
+.INDENT 0.0
+.IP \(bu 2
+Remove the leading ffe80:: from the input before creating the hash.
+.IP \(bu 2
+Map the hash in the mid 32 bits in the lower 64 bits of the selected lease address.
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ printf \(aq0:%s\en\(aq "$(cut \-d \(aq:\(aq \-f \(aq2\-\(aq <<<\(aqfe80:0:0:0:222:7ff:fe6f:4a26\(aq)"
+0:0:0:0:222:7ff:fe6f:4a26
+$ md5sum <<<\(aq0:0:0:0:222:7ff:fe6f:4a26\(aq
+b699e80de8f522a99490fcad2b43a6d4  \-
+$ cut \-b 25\-32 <<<\(aqb699e80de8f522a99490fcad2b43a6d4\(aq
+2b43a6d4
+$ printf \(aq%s:%s:%s:%s\en\(aq \e
+  "$(cut \-d \(aq:\(aq \-f \(aq\-6\(aq <<<\(aq0:0:0:0:222:7ff:fe6f:4a26\(aq)" \e
+  "$(cut \-c 1\-4 <<<\(aq2b43a6d4\(aq)" \e
+  "$(cut \-c 5\-8 <<<\(aq2b43a6d4\(aq)" \e
+  "$(cut \-d \(aq:\(aq \-f \(aq8\-\(aq <<<\(aq0:0:0:0:222:7ff:fe6f:4a26\(aq)"
+0:0:0:0:222:7ff:2b43:a6d4:4a26
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
+.IP \(bu 2
+It should be possible enable/disable the supply of the IA_NA to the client depending on the contents of the relay’s option 18, or option 37 (as we use at the moment for the customer’s service subscriptions in the policy descriptor record).
+.IP \(bu 2
+Since these platforms are unaware of the past method of mutliple prefixes, and this do not designate any specific IAID in the IA_PD request to allow to designate a specific role to those requests using IAID “_ANY” – thus we need a way to trigger the IA_NA generation even if the IA_PD does NOT contain the formerly required specific IAID “_ANY”. Eligible selection criteria should be identified, for example:
+.INDENT 2.0
+.IP \(bu 2
+Additionally, it should be possible to the use a specific Vendor Class Option (16) content supplied by the client in conjunction with the reply inserted policy descriptor to additionally trigger IA_NA generation if it accompanies an incoming IA_PD request. In this case (and ONLY then), the policy descriptor validation logic needs to hand in the IA_PD request to the Kea lease lookup functions, and trigger the synthesis and injection of the IA_NA derived from the returned IA_PD prefix data and injection on the way back to the requestor.
+.IP \(bu 2
+It should also be possible to only generate the IA_NA if a specific Vendor Class Option (16) content and the setting of the IA_NA indicating portion of the option 18 / option 37 embedded policy descriptor records are both valid, so that we can steer that another vendor class ID, such as Deutsche Telekom AG T\-Labs devices, doesn’t get an IA_NA, and remain unaffected.
+.UNINDENT
+.UNINDENT
+.sp
+The solution could either be a new library, as long as it runs without interference to the existing libraries, and on differentiated selection criteria than the current topology\-aware libraries, or as an extension to the existing libraries. Work encompasses solution design, coding, and validation. We propose the policy descriptor record definition as documentation at \fI\%https://wiki.dev.terastrm.net/R1%20DHCPv6%20Relay%20configurable%20Service%20Policies\fP to be expanded by use of the ASCII character “N” instead of reserved position 4 of the policy descriptor and use that as one trigger, in combination with as well as without a match of specific vendor class ID option content. The function shall be available for both usage scenarios where the topology\-aware libraries play a role – runtime policy engine as well as sign up portal.
+.SS Changelog
+.INDENT 0.0
+.IP \(bu 2
+[📦 NEW] IA_NA address synthesis in hook libraries
+.IP \(bu 2
+[👌 IMPROVE] kea\-health\-check: adapt it to work with current components
+.IP \(bu 2
+[🔄 INTEGRATE] merge with upstream for all repositories up until the 25th of March 2020: dt\-kea 1.7.3\-git \-> 1.7.6
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B [📖 DOCUMENT] documentation in dt\-documentation
+.INDENT 7.0
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B available at \fI\%https://kea\-dhcp.qualitance.com/rst/deliverable\-21\-rounded\-rfc.html\fP
+.INDENT 7.0
+.IP \(bu 2
+Username: dt
+.IP \(bu 2
+Password:eor8cfYALaUoNURR8QEq7nUAQsaGxmJDF7U2dJGCi7ENreKxUfCqSREgjjPpJcDgxu2G7f63U7TPoMaJ2S5DBDc9bqcJ7E7MD9PWCMG8ovuKNjEnS3vbFdR5cmAFfcmi
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+presentation available at \fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-21\-rounded\-rfc.html#/\fP
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SS Solution
+.sp
+The solution is embedded inside the CommonEngine, a shared component of both the policy engine and the sign up portal which mostly deals with network topology behaviour, but also with IA_NA synthesis from now on. That means when using libdt\-kea\-policy\-engine\-lib.so or libdt\-kea\-signup\-portal\-lib.so hooks, you will also get IA_NA synthesis.
+.sp
+Packets that benefit from IA_NA synthesis can be filtered per the requirements above through configuration found at \fI\&.Dhcp6[“hooks\-libraries”][].parameters.config[“iana\-synthesis”][“client\-classes”]\fP which should look like:
+.sp
+in JSON
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+    "client\-classes": [
+        {
+            "name": "name\-that\-will\-not\-be\-taken\-into\-account",
+            "test": "vendor\-class[4491].exists"
+        }
+    ]
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+& in XML
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+<client\-classes>
+    <name>name\-that\-will\-not\-be\-taken\-into\-account</name>
+    <test>vendor\-class[4491].exists</test>
+</client\-classes>
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+More information on what expression \fI<test>\fP can hold can be found in the \fI\%ISC_documentation\fP\&.
+.sp
+The path of a DHCPv6 inbound packet which is relevant to IA_NA synthesis is as follows below. Out of it, only the packet send hook point is used for IA_NA synthesis:
+.INDENT 0.0
+.IP 1. 3
+Is received by the Kea DHCPv6 server.
+.IP 2. 3
+Is checked for any vendor class option configured at \fI\&.Dhcp6[“client\-classes”]\fP and assigns the configured label. Relevant further is any configured “dt\-device” client class.
+.IP 3. 3
+Is passed on to each hook library configured at \fI\&.Dhcp6[“hooks\-libraries”]\fP and so for each policy engine library and for each sign up portal library:
+.INDENT 3.0
+.IP 1. 3
+Allocate a context that can hold any custom data for the duration of the packet processing.
+.IP 2. 3
+[Hook] on receival:
+.INDENT 3.0
+.IP 1. 3
+Store the link address in the context.
+.IP 2. 3
+For every option configured at \fI\&.Dhcp6[“hooks\-libraries”][].parameters.config[“classification\-group”][“encoded\-options”]\fP e.g. \fI[ “18”, “37” ]\fP:
+.INDENT 3.0
+.IP 1. 3
+If the option is present in the packet…
+.IP 2. 3
+If the option contains the parent policy descriptor cookie configured at \fI\&.Dhcp6[“hooks\-libraries”][].parameters.config[“classification\-group”].tag\fP e.g. \fIDTAG\fP…
+.IP 3. 3
+Then for every policy descriptor configured at \fI\&.Dhcp6[“hooks\-libraries”][].parameters.config[“classification\-group”].groups[].tag\fP e.g. \fIDTAG.4.N\fP:
+.IP 4. 3
+If the option contains the policy descriptor…
+.IP 5. 3
+Then store the policy descriptor in the context.
+.UNINDENT
+.UNINDENT
+.IP 3. 3
+[Hook] on subnet selection:
+.INDENT 3.0
+.IP 1. 3
+If there is a network topology consisting of zone, router, port, user port configured at \fI\&.Dhcp6[“hooks\-libraries”][].parameters.config[“network\-topology”]\fP with the subnet that Kea obtained through usual subnet selection criteria, store the subnet in context.
+.UNINDENT
+.IP 4. 3
+[Hook] on lease selection:
+.INDENT 3.0
+.IP 1. 3
+For each IA_PD option in the packet:
+.INDENT 3.0
+.IP 1. 3
+If it’s IAID is among the policy descriptors stored on receival…
+.IP 2. 3
+Then keep the IA_PD option in the packet.
+.IP 3. 3
+Else delete the IA_PD option from the packet.
+.UNINDENT
+.UNINDENT
+.IP 5. 3
+[Hook] on packet send:
+.INDENT 3.0
+.IP 1. 4
+For each IA_PD option in the packet:
+.INDENT 3.0
+.IP 1. 3
+For each deleted / filtered out IA_PD option in lease selection:
+.IP 2. 3
+For each embedded option 26 IAPREFIX in the IA_PD option, generate the address from the IAPREFIX address and the bitmasks configured at \fI\&.Dhcp6[“hooks\-libraries”][].parameters.config[“network\-topology”].zones[]\fP in the \fIaddress\-format\-group\fP and the \fIallocation\-group\fP sections.
+.UNINDENT
+.IP 2. 4
+\fBIf packet does not contain client class… configured at ‘.Dhcp6[“hooks\-libraries”][][“policy\-engine\-parameters”].config[“library\-classes”]’ e.g. “dt\-device”\fP
+.IP 3. 4
+\fBThen if packet has a client class which has value ‘n’ on position 7 and which represents a policy descriptor configured at \(ga.Dhcp6[“hooks\-libraries”][].parameters.config[“classification\-group”].groups[].\(ga…\fP
+.IP 4. 4
+\fBThen if the conditions configured in \(ga.Dhcp6[“hooks\-libraries”][].parameters.config[“iana\-synthesis”][“client\-classes”]\(ga e.g. \(gavendor\-class[4491].exists\(ga are true for this packet…\fP
+.IP 5. 4
+\fBOr if there are no conditions configured…\fP
+.IP 6. 4
+\fBThen for each IA_NA option in the packet:\fP
+.IP 7. 4
+\fBStart with the peer address and strip it’s 8 most significant octets.\fP
+.IP 8. 4
+\fBHash the resulting EUI\-64 compliant part of the peer address with CRC\-16\-ARC.\fP
+.IP 9. 4
+\fBPlace the hash in the address space represented by octets 11 and 12 in the stripped peer address.\fP
+.IP 10. 4
+\fBPlace the link address’ first 8 octets into the space represented by the first 8 octets of the hash\-modified stripped peer address. This is the IA_NA address result.\fP
+.IP 11. 4
+\fBPlace the preferred lifetime valid lifetime, T1, T2 from accompanying prefix and in the IA_NA option.\fP
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+The hash used in IA_NA synthesis can be simulated in a command line shell:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ pycrc \-\-model crc\-16 \-\-check\-hexstring="$(ipv6calc \-\-in ipv6addr \-\-out hex ::1234:5678:9abc:deff)"
+0xf6af
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Note!
+.sp
+bolded text represents the functionality added in this deliverable
+.SS kea\-health\-check amendments
+.sp
+The \fIkea\-health\-check\fP script can be found at \fIdt\-kea\-tools/scripts/kea\-health\-check\fP alongside wrapper script \fIdt\-kea\-tools/scripts/kea\-policy\-engine\-tests\fP which tests for multiple scenarios.
+.sp
+Tasks carried out in making kea\-health\-check functional:
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B Test that IA_PD generation has not regressed.
+.INDENT 7.0
+.IP \(bu 2
+Get a lease from the server.
+.IP \(bu 2
+Correctly unpack options from the relay message for further verification.
+.IP \(bu 2
+Solve encoding issues.
+.IP \(bu 2
+Check if prefixes match through strict regular expressions rather than arbitrary textual substitutions.
+.IP \(bu 2
+[dt\-kea\-libs] Provide PD pools to the subnet that is returned from the select_subnet hook.
+.IP \(bu 2
+Fix an issue where unpacking tripled the number of IA_PD options.
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B Test that IA_NA synthesis functions correctly.
+.INDENT 7.0
+.IP \(bu 2
+Add IA_NA option.
+.IP \(bu 2
+Add ability to send the \fIn\fP cookie in the policy descriptor.
+.IP \(bu 2
+Check for IA_NA response.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SH IETF YANG MODEL
+.SS Requirement Specification
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Work package for refactoring the Kea YANG models to the recent IETF DHCP YANG model and a set of augmentation models
+.UNINDENT
+.UNINDENT
+.SS Exposition
+.sp
+The Kea open source DHCP server project includes support for a configuration database backend that allows configuration changes to be applied at runtime. Together with interface functions towards the Sysrepo package, Kea also provides a model based configuration interface, with configuration validation against a set of YANG models.
+.SS Overview of current use of YANG models in DT’s distributed Kea DHCP service
+.sp
+The DHCP server Kea that DT runs is currently configurable via three subsets of YANG models, using a bulk of YANG models:
+.INDENT 0.0
+.IP \(bu 2
+Some included and developed by in the Kea open source project
+.IP \(bu 2
+Some developed and specified by the IETF
+.IP \(bu 2
+A set of YANG models that handle the required configurability for the additional aspects of DTs distributed architecture extensions to Kea
+.UNINDENT
+.sp
+Since significant progress was made in the work in the IETF towards standardization of the DHCP YANG models, as represented in the upcoming IETF draft \fI\%https://www.ietf.org/id/draft\-ietf\-dhc\-dhcpv6\-yang\-10.txt\fP, we would like to steer our YANG model work into a structure that embraces the standards based YANG definition.
+.SS Description of required restructuring of the YANG models
+.sp
+The task at hand in this work package is therefore focused on YANG model refactoring, with as little as possible effort to reflect the restructuring of the YANG models in Keas internal JSON representation. ISC has been deeply involved in the creation of the new draft IETF DHCP YANG model, so we would assume the need of extra effort from what can be represented in Kea by adopting the new draft IETF DHCP YANG model is assumed to be limited.
+.sp
+The work would comprise of
+.INDENT 0.0
+.IP 1. 3
+.INDENT 3.0
+.TP
+.B YANG remapping
+.INDENT 7.0
+.IP 1. 3
+.INDENT 3.0
+.TP
+.B Identifying the overlap portions between \fI\%https://www.ietf.org/id/draft\-ietf\-dhc\-dhcpv6\-yang\-10.txt\fP of the then current YANG models (example of today):
+.INDENT 7.0
+.IP \(bu 2
+\fI\%dt\-kea\-dhcp4\-distributed@2019\-08\-15.yang\fP
+.IP \(bu 2
+\fI\%dt\-kea\-dhcp6\-distributed@2019\-08\-15.yang\fP
+.IP \(bu 2
+\fI\%ietf\-dhcpv6\-client@2018\-09\-04.yang\fP
+.IP \(bu 2
+\fI\%ietf\-dhcpv6\-options@2018\-09\-04.yang\fP
+.IP \(bu 2
+\fI\%ietf\-dhcpv6\-relay@2018\-09\-04.yang\fP
+.IP \(bu 2
+\fI\%ietf\-dhcpv6\-server@2018\-09\-04.yang\fP
+.IP \(bu 2
+\fI\%ietf\-dhcpv6\-types@2018\-09\-04.yang\fP
+.IP \(bu 2
+\fI\%ietf\-inet\-types@2013\-07\-15.yang\fP
+.IP \(bu 2
+\fI\%ietf\-interfaces@2018\-02\-20.yang\fP
+.IP \(bu 2
+\fI\%ietf\-yang\-types@2013\-07\-15.yang\fP
+.IP \(bu 2
+\fI\%kea\-ctrl\-agent@2019\-08\-12.yang\fP
+.IP \(bu 2
+\fI\%kea\-dhcp4\-server@2019\-08\-12.yang\fP
+.IP \(bu 2
+\fI\%kea\-dhcp6\-server@2019\-08\-12.yang\fP
+.IP \(bu 2
+\fI\%kea\-dhcp\-ddns@2019\-08\-12.yang\fP
+.IP \(bu 2
+\fI\%kea\-dhcp\-types@2019\-08\-12.yang\fP
+.IP \(bu 2
+\fI\%keatest\-module@2018\-11\-20.yang\fP
+.IP \(bu 2
+\fI\%kea\-types@2019\-08\-12.yang\fP
+.UNINDENT
+.UNINDENT
+.IP 2. 3
+Separation of all configurations that can be represented and that can NOT be represented in \fI\%https://www.ietf.org/id/draft\-ietf\-dhc\-dhcpv6\-yang\-10.txt\fP
+.IP 3. 3
+Expressing all portions that we can NOT represent in \fI\%https://www.ietf.org/id/draft\-ietf\-dhc\-dhcpv6\-yang\-10.txt\fP in new, augmentation based YANG models as exemplified in appendices A, B, C of \fI\%https://www.ietf.org/id/draft\-ietf\-dhc\-dhcpv6\-yang\-10.txt\fP
+.UNINDENT
+.UNINDENT
+.IP 2. 3
+.INDENT 3.0
+.TP
+.B Create implementation proposal and YANG model
+.INDENT 7.0
+.IP 1. 3
+Review implementation proposal and YANG model
+.IP 2. 3
+Implementation of changes in the system interfaces between Kea, Sysrepo and Cassandra that are required to keep configurability fully functional. That specifically means, the new IETF based YANG model needs to be mapped into the Kea underlying Cassandra tables; it is expected that the required code changes are mostly relating to mapping code changes between YANG and the Kea internal representation of the configuration.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+We assume such changes are infrequent at this scale, and deviation from the original Kea codebase shall be as limited as possible. Thus we do at this time not see a major rewrite of the parsing functions within Kea (freely configurable parsing) as a risk to deviate too far from the codebase.
+.SS Changelog
+.INDENT 0.0
+.IP \(bu 2
+[📦 NEW] Universal translator: reads and writes any model from/to Sysrepo
+.IP \(bu 2
+[📦 NEW] IETF\-Kea converter
+.IP \(bu 2
+[📦 NEW] framework for operational data
+.IP \(bu 2
+[📦 NEW] support for active\-leases operational node
+.IP \(bu 2
+[➕ EXTRA] work that is oustanding to the statement of work
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B [🔄 INTEGRATE] merge with upstream for all repositories up until the 3rd of June 2020:
+.INDENT 7.0
+.IP \(bu 2
+dt\-kea 1.7.6 \-> 1.7.8\-git
+.IP \(bu 2
+dt\-cpp\-driver 2.15.1 \-> 2.15.2
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B [📖 DOCUMENT] documentation in dt\-documentation
+.INDENT 7.0
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B available at \fI\%https://kea\-dhcp.qualitance.com/rst/deliverable\-22\-systematic\-structuring.html\fP
+.INDENT 7.0
+.IP \(bu 2
+Username: dt
+.IP \(bu 2
+Password:eor8cfYALaUoNURR8QEq7nUAQsaGxmJDF7U2dJGCi7ENreKxUfCqSREgjjPpJcDgxu2G7f63U7TPoMaJ2S5DBDc9bqcJ7E7MD9PWCMG8ovuKNjEnS3vbFdR5cmAFfcmi
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+presentation available at \fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-22\-systematic\-structuring.html#/\fP
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SS Solution
+.SS Component architecture
+[image: component architecture]
+[image]
+.SS Database architecture
+[image: database architecture]
+[image]
+.SS Workflow in pictures
+[image: kea-netconf workflow]
+[image]
+.nf
+
+.fi
+.sp
+[image: kea-netconf workflow 2]
+[image]
+.SS YANG dependency diagrams
+[image: IETF dependencies]
+[image]
+.nf
+
+.fi
+.sp
+[image: Kea dependencies]
+[image]
+.sp
+Note the colored annotations in \fIkea\-netconf workflow 2\fP\&. They are the ones that need work.
+.sp
+The red flow assures maintaining the distributed aspect of the configuration structure. The Kea distributed model will be mirrored with ietf\-dhcpv6\-server plugged in where kea\-dhcp6\-server stood before. Code and YANG modelling will be reused, and hopefully not needlessly copied, so this is trivial.
+.sp
+The blue flow is partly done by ISC. While a relief ar first, it fades when it is discovered how little of the entire model is actually implemented. network\-ranges is mapped to subnet6 and that’s it. ISC started implementation with a previous version of the draft, but network\-ranges is not affected since that version and in fact changes to the entire set of models is very limited. A generic way of converting YANG to JSON is preferred here. If it would be applied to the Kea processing it would increase reliability by decreasing manual parsing errors. But since we want to stay true to the Kea codebase, maybe this would only work as a pull request. We can handle it for the IETF model since it’s barely implemented.
+.sp
+Finally, the generic way above would allow us to configure, via a source file that maps that the two locations like in the table below, the conversion from the IETF model to the Kea model such that any slight modification in the IETF model could be easily changed in this file of mappings.
+.SS IETF\-Kea mapping
+.TS
+center;
+|l|l|l|l|.
+_
+T{
+ietf\-dhcpv6\-server path
+T}	T{
+kea\-dhcpv6\-server path
+T}	T{
+Transformations
+T}	T{
+Status
+T}
+_
+T{
+··+–rw·dhcpv6\-node\-type?···identityref
+T}	T{
+··+–rw·dhcpv6\-node\-type
+T}	T{
+NEW, strictly descriptive
+T}	T{
+☑️
+T}
+_
+T{
+··+–rw·dhcpv6\-server
+T}	T{
+··+–rw·Dhcp6
+T}	T{
+T}	T{
+T}
+_
+T{
+·····+–rw·server\-duid
+T}	T{
+·····+–rw·server\-id!
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|
+.fi
+··+–rw·type\-code?···························uint16
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·identifier?··········string
+T}	T{
+first\-two\-octets
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|
+.fi
+··+–rw·(duid\-type)?
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·type?················enumeration
+T}	T{
+choice\-to\-enumeration
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··+–:(duid\-llt)
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·type=”LLT”
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-llt\-hardware\-type?········uint16
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·htype?···············uint16
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-llt\-time?·················yang:timeticks
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·time?················uint32
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-llt\-link\-layer\-address?···yang:mac\-address
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·link\-layer\-address?··yang:mac\-address
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··+–:(duid\-en)
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·type=”EN”
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-en\-enterprise\-number?·····uint32
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·enterprise\-id?·······uint32
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-en\-identifier?············string
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·identifier?··········string
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··+–:(duid\-ll)
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·type=”LL”
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-ll\-hardware\-type?·········uint16
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·htype?···············uint16
+T}	T{
+.nf
+
+.fi
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·duid\-ll\-link\-layer\-address?····yang:mac\-address
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·link\-layer\-address?··yang:mac\-address
+T}	T{
+NEW                                               |
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··+–:(duid\-uuid)
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·type=”UUID”
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··
+.nf
+|
+.fi
+··+–rw·uuid?··························yang:uuid
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·uuid?················yang:uuid
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+··+–:(duid\-unknown)
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·type=”Unknown”
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|··|
+.fi
+·····+–rw·data?··························binary
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·identifier?··········string
+T}	T{
+all\-but\-first\-two\-octets
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|
+.fi
+··+–ro·active\-duid?·························binary
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·active\-duid?·········binary
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·····+–rw·vendor\-config
+T}	T{
+·····|
+T}	T{
+N/A, augmentation happens in IETF, client\-classes
+T}	T{
+T}
+_
+T{
+·····+–rw·option\-sets
+T}	T{
+·····|
+T}	T{
+N/A, mapping goes through straight to child
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|
+.fi
+··+–rw·option\-set*·[option\-set\-id]
+T}	T{
+·····+–rw·option\-def*·[code·space]
+T}	T{
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|
+.fi
+·····+–rw·option\-set\-id····uint32
+T}	T{
+·····
+.nf
+|
+.fi
+··+–code?···············uint16
+.sp
+·····
+.nf
+|
+.fi
+··+–space?··············string
+T}	T{
+map[code=first\-two\-octets, space=”dhcp6”]
+T}	T{
+T}
+_
+T{
+·····
+.nf
+|
+.fi
+·····+–rw·description?·····string
+T}	T{
+·····
+.nf
+|
+.fi
+··+–rw·description?·····string
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·····+–rw·class\-selector
+T}	T{
+·····|
+T}	T{
+N/A, augmentation happens in IETF, client\-classes
+T}	T{
+T}
+_
+T{
+·····+–rw·network\-ranges
+T}	T{
+·····|
+T}	T{
+N/A, mapping goes through straight to child
+T}	T{
+T}
+_
+T{
+········+–rw·option\-set\-id*········\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+·····|
+T}	T{
+TBD, /subnet6/option\-data*
+T}	T{
+T}
+_
+T{
+········+–rw·valid\-lifetime········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+·····+–rw·valid\-lifetime?·················uint32
+T}	T{
+T}	T{
+T}
+_
+T{
+········+–rw·renew\-time············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+·····+–rw·renew\-timer?····················uint32
+T}	T{
+T}	T{
+T}
+_
+T{
+········+–rw·rebind\-time···········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+·····+–rw·rebind\-timer?···················uint32
+T}	T{
+T}	T{
+T}
+_
+T{
+········+–rw·preferred\-lifetime····dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+·····+–rw·preferred\-lifetime?·············uint32
+T}	T{
+T}	T{
+T}
+_
+T{
+········+–rw·rapid\-commit··········boolean
+T}	T{
+·····+–rw·rapid\-commit?···················boolean
+T}	T{
+T}	T{
+T}
+_
+T{
+········+–rw·network\-range*·[network\-range\-id]
+T}	T{
+·····+–rw·subnet6*·[subnet]
+T}	T{
+T}	T{
+T}
+_
+T{
+···········+–rw·network\-range\-id·············uint32
+T}	T{
+········+–rw·network\-range\-id·············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–rw·network\-description··········string
+T}	T{
+········+–rw·network\-description··········string
+T}	T{
+NEW, strictly descriptive
+T}	T{
+T}
+_
+T{
+···········+–rw·network\-prefix···············inet:ipv6\-prefix
+T}	T{
+········+–rw·network\-prefix···············inet:ipv6\-prefix
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–rw·option\-set\-id*···············\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+········+–rw·option\-set\-id*···············\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–rw·valid\-lifetime···············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········+–rw·valid\-lifetime···············uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········+–rw·renew\-time···················dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········+–rw·renew\-timer··················uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········+–rw·rebind\-time··················dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········+–rw·rebind\-time··················uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········+–rw·preferred\-lifetime···········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········+–rw·preferred\-lifetime···········uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········+–rw·rapid\-commit·················boolean
+T}	T{
+········+–rw·rapid\-commit·················boolean
+T}	T{
+T}	T{
+T}
+_
+T{
+···········+–rw·address\-pools
+T}	T{
+········|
+T}	T{
+N/A, mapping goes through straight to child
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··+–rw·address\-pool*·[pool\-id]
+T}	T{
+········+–rw·pools*·[start\-address·end\-address]
+T}	T{
+map[N/A], requires key change
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·pool\-id···············uint32
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·pool\-id···················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·pool\-prefix···········inet:ipv6\-prefix
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·prefix?···················inet:ipv6\-prefix
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·start\-address·········inet:ipv6\-address\-no\-zone
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·start\-address·············inet:ipv6\-address
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·end\-address···········inet:ipv6\-address\-no\-zone
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·end\-address···············inet:ipv6\-address
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·max\-address\-count·····dhcpv6\-common:threshold
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·max\-address\-count·········dhcpv6\-common:threshold
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·option\-set\-id*········\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·option\-data*·[code·space]
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·valid\-lifetime········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·valid\-lifetime?···········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·renew\-time············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·renew\-time················dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·rebind\-time···········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·rebind\-time···············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·preferred\-lifetime····dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·preferred\-lifetime········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·rapid\-commit··········boolean
+T}	T{
+········
+.nf
+|
+.fi
+··+–rw·rapid\-commit?·············boolean
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·host\-reservations
+T}	T{
+········|
+T}	T{
+is one more level up, but only in JSON, not
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+··+–rw·host\-reservation*·[reserved\-addr]
+T}	T{
+········|
+T}	T{
+modelled in YANG, TBD
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·client\-duid?··········binary
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·reserved\-addr·········inet:ipv6\-address
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·prefix\-reservation*·[reserv\-prefix\-id]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····
+.nf
+|
+.fi
+··+–rw·reserv\-prefix\-id·····uint32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····
+.nf
+|
+.fi
+··+–rw·reserv\-prefix········inet:ipv6\-prefix
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····
+.nf
+|
+.fi
+··+–rw·reserv\-prefix\-len····uint8
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·option\-set\-id*········\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·valid\-lifetime········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·renew\-time············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·rebind\-time···········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·preferred\-lifetime····dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|·····|
+.fi
+·····+–rw·rapid\-commit··········boolean
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–ro·active\-leases*·[leased\-address]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–ro·leased\-address·············inet:ipv6\-address
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–ro·total\-address\-count········uint64
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–ro·allocated\-address\-count····uint64
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–ro·binding\-info*·[client\-duid]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+···········+–ro·client\-duid····binary
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+···········+–ro·iaid*·[iaid]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·iaid··················uint32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·allocation\-time?······yang:date\-and\-time
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·last\-renew\-rebind?····yang:date\-and\-time
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·preferred\-lifetime?···dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·valid\-lifetime?·······dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·lease\-t1?·············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·lease\-t2?·············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········+–rw·prefix\-pools·{prefix\-delegation}?
+T}	T{
+········|
+T}	T{
+N/A, mapping goes through straight to child
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··+–rw·prefix\-pool*·[pool\-id]
+T}	T{
+········+–rw·pd\-pools*·[prefix]
+T}	T{
+map[N/A], requires key change
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·pool\-id·····················uint32
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·pool\-id·····················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·prefix······················inet:ipv6\-prefix
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·prefix······················inet:ipv6\-prefix
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·prefix\-length···············uint8
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·prefix\-len··················uint8
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·max\-pd\-space\-utilization····dhcpv6\-common:threshold
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·max\-pd\-space\-utilization····dhcpv6\-common:threshold
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·option\-set\-id*··············\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·option\-set\-id*··············\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·valid\-lifetime··············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·valid\-lifetime··············uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·renew\-time··················dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·renew\-timer·················uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·rebind\-time·················dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·rebind\-timer················uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·preferred\-lifetime··········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·preferred\-lifetime··········uint32
+T}	T{
+type\-conversion
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·rapid\-commit················boolean
+T}	T{
+········
+.nf
+|
+.fi
+·····+–rw·rapid\-commit················boolean
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·····+–rw·host\-reservations
+T}	T{
+········|
+T}	T{
+is one more level up, but only in JSON, not
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·prefix\-reservation*·[reserved\-prefix]
+T}	T{
+········|
+T}	T{
+modelled in YANG, TBD
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|········|
+.fi
+··+–rw·client\-duid?·········binary
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|········|
+.fi
+··+–rw·reserved\-prefix······inet:ipv6\-prefix
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|········|
+.fi
+··+–rw·reserv\-prefix\-len····uint8
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·option\-set\-id*········\->·/dhcpv6\-server/option\-sets/option\-set/option\-set\-id
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·valid\-lifetime········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·renew\-time············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·rebind\-time···········dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·preferred\-lifetime····dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–rw·rapid\-commit··········boolean
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+········+–ro·active\-leases*·[leased\-prefix]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+···········+–ro·leased\-prefix··············inet:ipv6\-prefix
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+···········+–ro·total\-address\-count········uint64
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+···········+–ro·allocated\-address\-count····uint64
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+···········+–ro·binding\-info*·[client\-duid]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·client\-duid····binary
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+··············+–ro·iaid*·[iaid]
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·iaid··················uint32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·allocation\-time?······yang:date\-and\-time
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·last\-renew\-rebind?····yang:date\-and\-time
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·preferred\-lifetime?···dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·valid\-lifetime?·······dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·lease\-t1?·············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········
+.nf
+|
+.fi
+·················+–ro·lease\-t2?·············dhcpv6\-common:timer\-value\-seconds32
+T}	T{
+········|
+T}	T{
+T}	T{
+T}
+_
+T{
+···········+–ro·solicit\-count?···············uint32
+T}	T{
+········+–ro·solicit\-count?···············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·advertise\-count?·············uint32
+T}	T{
+········+–ro·advertise\-count?·············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·request\-count?···············uint32
+T}	T{
+········+–ro·request\-count?···············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·confirm\-count?···············uint32
+T}	T{
+········+–ro·confirm\-count?···············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·renew\-count?·················uint32
+T}	T{
+········+–ro·renew\-count?·················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·rebind\-count?················uint32
+T}	T{
+········+–ro·rebind\-count?················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·reply\-count?·················uint32
+T}	T{
+········+–ro·reply\-count?·················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–rw·release\-count?···············uint32
+T}	T{
+········+–rw·release\-count?···············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·decline\-count?···············uint32
+T}	T{
+········+–ro·decline\-count?···············uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·reconfigure\-count?···········uint32
+T}	T{
+········+–ro·reconfigure\-count?···········uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+···········+–ro·information\-request\-count?···uint32
+T}	T{
+········+–ro·information\-request\-count?···uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+T}	T{
+T}	T{
+T}	T{
+T}
+_
+T{
+··notifications:
+T}	T{
+··notifications:
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····+—n·address\-pool\-running\-out
+T}	T{
+····+—n·address\-pool\-running\-out
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·total\-address\-count········uint64
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·total\-address\-count········uint64
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·max\-address\-count··········uint64
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·max\-address\-count··········uint64
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·allocated\-address\-count····uint64
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·allocated\-address\-count····uint64
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·pool\-id····················uint32
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·pool\-id····················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····+—n·pd\-pool\-running\-out
+T}	T{
+····+—n·pd\-pool\-running\-out
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·max\-pd\-space\-utilization····dhcpv6\-common:threshold
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·max\-pd\-space\-utilization····dhcpv6\-common:threshold
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·pd\-space\-utilization········dhcpv6\-common:threshold
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·pd\-space\-utilization········dhcpv6\-common:threshold
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·pool\-id·····················uint32
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·pool\-id·····················uint32
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····+—n·invalid\-client\-detected
+T}	T{
+····+—n·invalid\-client\-detected
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·duid?··········binary
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·duid?··········binary
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·description?···string
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·description?···string
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····+—n·decline\-received
+T}	T{
+····+—n·decline\-received
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·duid?········binary
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·duid?········binary
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····
+.nf
+|
+.fi
+··+–ro·addresses*···inet:ipv6\-address
+T}	T{
+····
+.nf
+|
+.fi
+··+–ro·addresses*···inet:ipv6\-address
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+····+—n·non\-success\-code\-sent
+T}	T{
+····+—n·non\-success\-code\-sent
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·······+–ro·status\-code····uint16
+T}	T{
+·······+–ro·status\-code····uint16
+T}	T{
+NEW
+T}	T{
+T}
+_
+T{
+·······+–ro·duid?··········binary
+T}	T{
+·······+–ro·duid?··········binary
+T}	T{
+NEW
+T}	T{
+T}
+_
+.TE
+.SH METRIC REPORTING VIA YANG
+.SS Requirement Specification
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Work Package for Netconf/Yang Continuous Monitoring of Services for Kea DHCP Server and Cassandra backend
+.UNINDENT
+.UNINDENT
+.SS Exposition
+.sp
+A performance and functionality monitoring infrastructure for network services based on Netconf/YANG is required. The initial focus of this monitoring infrastructure is the distributed Kea DHCP server, and its Cassandra backend database. To implement the sensor\-side functionality of this infrastructure, Kea\- and Cassandra\- specific code must be instrumented for monitoring, and translation to YANG metrics must be performed, using the Sysrepo / Netopeer2 stack.
+.SS Overview of current DHCP, Cassandra database and Sysrepo configuration stack
+.sp
+The Netconf/YANG configurability using the Sysrepo stack which Kea supports forms the basis for new monitoring infrastructure.
+.sp
+The current implementation of DHCP in our network features a distributed and replicated DHCP server.
+.sp
+The server itself is a modified version of the open source ISC Kea DHCP server with a Cassandra database backend.
+.sp
+Both the DHCP servers and the Cassandra servers are replicated and coordinated to serve DHCP queries.
+.sp
+The redundancy model for both Kea servers and Cassandra servers is active\-active.
+.sp
+Specifically, as DHCP queries reach a DHCP relay in our network, the latter is configured with a set of Kea DHCP endpoint servers, all of which are associated with a specific shard of the network, and will forward each request to all of these servers.
+.sp
+The Kea servers that are alive at that moment and receive the query then coordinate (using the Cassandra database backend) to decide which one will handle each query, then proceed to resolve the query, again using the Cassandra backend for lease tables and all other configuration.
+.sp
+Consistency in handling each query is handled by the ensemble of servers using features of the Cassandra database.
+.sp
+Cassandra servers are in turn replicated, with a configurable replication factor.
+.sp
+Thus, at any moment, for a request to be solved successfully, we must have at least one Kea server alive from the specific network shard, and a quorum of Cassandra servers from the associated backend database.
+.sp
+Once the backend database is updated with the new lease by the servers, a single reply is sent back to the DHCP client with the result of the request (e.g. to the renew request).
+.sp
+Configuration\-wise, the Kea server ensemble is configured using Netconf/YANG, by the NSO.
+.sp
+Specifically, on each Kea server node, a Sysrepo stack is deployed, which acts as a configuration client receiving Netconf edit\-config requests from the NSO.
+.sp
+These reconfiguration requests are then translated by custom\-written hooks in Sysrepo to Cassandra queries that in turn update the configuration database backend and reconfigure all the Kea servers pertaining to that shard.
+.sp
+Note that the Sysrepo\-based configuration infrastructure we have implemented also handles the (common) scenario where multiple Sysrepo stacks (corresponding to several Kea instances) attempt to push configuration in the same Cassandra backend, when that configuration conflicts on some items (e.g. option settings, prefixes to be added etc.) and these conflicts need to be resolved.
+.sp
+To support this, the Kea Cassandra backend already supports per\-database item versioning.
+.sp
+Specifically, in case conflicts are detected by Cassandra operations on versions, the newer existing configuration needs read in from the database, a merge is performed with the new requested edit\-config, and a new database update is retried from the Sysrepo hook until success.
+.sp
+Once this is successful, the newly merged configuration that now exists in Cassandra is also installed via an edit\-config to the local Sysrepo.
+.sp
+All the above workflow is transparent to the user upstream (NSO), i.e. NSO only gets an ACK when all above steps have completed (no spurious errors due to e.g. Cassandra conflict retries).
+.sp
+Description of new required YANG monitoring infrastructure For the purposes of detecting issues in our network early, raising appropriate alarms and root cause analysis, the above DHCP stack needs to be continuously monitored from the perspective of both performance and functionality.
+.sp
+For instance, it is relatively easy for a software upgrade in either Kea, Cassandra or Sysrepo or NSO main code, hooks or configuration to break something in the network, either in terms of functionality or in terms of performance.
+.sp
+For instance, we had cases where along running DHCP stack deployment had one of the Cassandra servers stop serving write queries due to a misconfiguration related to delete tombstones that only triggered after almost a year of running.
+.sp
+While the overall deployment kept functioning in that case for months (due to the other Cassandra servers in the quorum operating well), it is certainly desirable to detect broken components and services in our stack early, to raise alarms and fix issues before they are noticed by customers.
+.sp
+For this purpose, the first thing we need is continuous and granular monitoring of all the elements of our stack in all relevant respects.
+.sp
+As we have seen from the journey of a DHCP query described in the previous section, each query involves several services (DHCP relay, all Kea servers in a shard, all Cassandra servers in a shard backend).
+.sp
+Each DHCP query (such as a lease renew request) is actually translated by the Kea servers to several Cassandra queries to several tables (lock table, configuration tables, lease tables), some of which are read queries and some of which are writes.
+.sp
+Our monitoring needs to enable us to tell what particular element of the stack had a problem (Kea server or Cassandra), which particular instance of the element has the issue (Which Kea server? Which Cassandra?) and what aspect of the query is broken (Is it a read query? Is it on the lock table or on the lease table? Are there access errors based on role/right mismatch) For this, both Kea and Cassandra needs to be instrumented accordingly to:
+.INDENT 0.0
+.IP \(bu 2
+bookkeep the trace and performance of each relevant action taken and keep rolling statistics of all these relevant metrics
+.IP \(bu 2
+export these metrics to YANG, using Sysrepo, so that they can be queried upstream as YANG operational state, e.g. by NSO  For Kea
+.UNINDENT
+.sp
+Relevant metrics are:
+.INDENT 0.0
+.IP \(bu 2
+duration of handling each type of relevant DHCP request (solicit, request etc.), broken down per IPv4/IPv6
+.IP \(bu 2
+duration of communication with the ensemble of Cassandra backend servers via the Cassandra driver (duration of each query issued to Cassandra: lock queries, selects, updates, CASs to each table)
+.IP \(bu 2
+any other relevant internal Kea metric that might affect performance of functionality (e.g. micro\-benchmarking internal modules, memory usage or application of incoming reconfiguration requests)
+.UNINDENT
+.sp
+For Cassandra, the server already exports a rich set of metrics, which can be queried remotely in the JMX format.
+.sp
+These metrics need to be sifted through and translated to YANG.
+.sp
+Relevant metrics for DHCP performance are:
+.INDENT 0.0
+.IP \(bu 2
+duration of each type of database query, broken down per type (read, write, CAS), keyspace and table (e.g. shard1, configuration / locks / leases table), internal query type (using partition key, using secondary indexes etc.)
+.IP \(bu 2
+internal Cassandra metrics that typically might affect performance (garbage collection pauses, tombstone collection pauses, number of tombstones, configured tombstone warning limit and tombstone failure limit, time spent in various Cassandra threads: compaction thread, query serving thread etc.).
+.UNINDENT
+.sp
+As discussed above, all of these metrics, for each Kea and each Cassandra servers, need to be exposed as Netconf/YANG operational state, using a Sysrepo stack co\-located on each individual monitored node.
+.sp
+Custom Sysrepo hooks need to be written to translate and potentially average / aggregate metrics collected from Cassandra via JMX and from Kea via a monitoring API.
+.sp
+The existing Kea API and internal capabilities need to be investigated to see if support exists for the features we requested above.
+.sp
+If support does not exist for some of the features, it needs to be implemented within Kea as part of this work.
+.sp
+Proposed Deliverable Milestones and Calendar Deliverables are each assigned a delivery date / time box as described.
+.sp
+Features described are to be developed and delivered as agreed in the corresponding time box.
+.sp
+Delivery will occur by the respective delivery deadline assigned to each delivery/feature, followed by acceptance.
+.sp
+Deliverables (code and documentation) will be made available in repositories and locations hosted on DT infrastructure.
+.sp
+Upon DT request, any of the features covered by deliverables will be deployed in DT labs, verified and deployed in pilot testbeds and/or production.
+.sp
+The developers must support DT in deployment and issue debugging post\-deployment on DT testbeds for at least 2 months post\-deployment.
+.sp
+DT is to maintain IP rights on all above deliverables and documentation.
+.sp
+Deliverable item: deliverable B, Netconf/Yang Continuous Monitoring with following features: Analysis of on available Kea operational and monitoring data sources and APIs and design proposal for presentation in YANG, including monitoring priorities (Priority A vs. Data for Refined Analytics):
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.IP 1. 3
+Analysis of on available Cassandra operational and monitoring data sources and APIs and design proposal for presentation in YANG, including monitoring priorities Priority A vs. Data for Refined Analytics)
+.IP 2. 3
+Create Implementation proposal on Kea and Cassandra
+.IP 3. 3
+Agreement on Metrics and Implementation proposal to be monitored YANG representation
+.IP 4. 3
+First drop of Implementation of monitoring function and YANG model for Kea operational and monitoring data sources
+.IP 5. 3
+First drop of Implementation of monitoring function and YANG model for Cassandra operational and monitoring data sources
+.IP 6. 3
+Review of first drop implementation on Kea and Cassandra
+.IP 7. 3
+Final drop of Implementation of monitoring function and YANG model for Kea operational and monitoring data sources
+.IP 8. 3
+Final drop of Implementation of monitoring function and YANG model for Cassandra operational and monitoring data sources
+.IP 9. 3
+Lab Installation and Deployment
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.sp
+Final drop delivery date: 30.9.2020
+.SS Changelog
+.INDENT 0.0
+.IP \(bu 2
+[📖 PARSER] refactor kea\-netconf configuration to be a list of models
+.IP \(bu 2
+[📦 NEW] support in configuring with ietf\-dhcpv6\-options\-rfc*.yang for RFCs 3319, 3646, 3898, 4075, 4280, 4833, 6603, 7341, 7598, 8415
+.IP \(bu 2
+[📦 NEW] configuration received in the running datastore automatically gets pushed to the startup datastore for reboot persistence
+.IP \(bu 2
+[📦 NEW] support for message\-stats operational nodes
+.IP \(bu 2
+[📦 NEW] ability to apply a threshold percentage to pool creation in support of max\-address\-count & max\-pd\-space\-utilization configuration nodes
+.IP \(bu 2
+[📦 NEW] YANG notifications
+.IP \(bu 2
+[📦 NEW] tools for managing startup configuration: on\-boot\-request\-configuration\-from\-kea\-netconf, on\-boot\-update\-socket, on\-boot\-update\-sysrepo
+.IP \(bu 2
+[📦 NEW] –with\-sigar support for system metric reporting
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B [🔄 INTEGRATE] merge with upstream for all repositories up until the 31st of August 2020:
+.INDENT 7.0
+.IP \(bu 2
+dt\-kea 1.7.8\-git \-> 1.9.0\-git
+.IP \(bu 2
+dt\-cpp\-driver 2.15.2 \-> 2.15.3
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B [📖 DOCUMENT] documentation in dt\-documentation
+.INDENT 7.0
+.IP \(bu 2
+.INDENT 2.0
+.TP
+.B available at \fI\%https://kea\-dhcp.qualitance.com/rst/deliverable\-23\-tractable\-telemetry.html\fP
+.INDENT 7.0
+.IP \(bu 2
+Username: dt
+.IP \(bu 2
+Password:eor8cfYALaUoNURR8QEq7nUAQsaGxmJDF7U2dJGCi7ENreKxUfCqSREgjjPpJcDgxu2G7f63U7TPoMaJ2S5DBDc9bqcJ7E7MD9PWCMG8ovuKNjEnS3vbFdR5cmAFfcmi
+.UNINDENT
+.UNINDENT
+.IP \(bu 2
+presentation available at \fI\%https://kea\-dhcp.qualitance.com/reveal.js/deliverable\-23\-tractable\-telemery.html#/\fP
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SS Solution
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Cassandra features have been de\-escalated if not dropped as agreed in calls subsequent to the statement of work. The solution does not present any of the Cassandra features.
+.UNINDENT
+.UNINDENT
+.sp
+As part of this release, the kea\-netconf process was enriched with:
+.INDENT 0.0
+.IP \(bu 2
+sysrepo’s operational data API to provide the ability to read read\-only nodes from the sysrepo datastores.
+.IP \(bu 2
+sysrepo’s notifications API to provide the ability to notify NETCONF clients of various events.
+.UNINDENT
+.sp
+The solution heavily relies on the conversion feature introduced in the previous release.
+.sp
+The following nodes have been implemented:
+.SS Operational nodes taken from the IETF YANG model:
+.INDENT 0.0
+.IP \(bu 2
+get implemented in the control\-socket channel statistics
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+|  +\-\-ro active\-duid?                         binary
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+|  |     +\-\-ro active\-leases
+|  |        +\-\-ro total\-count        uint64
+|  |        +\-\-ro allocated\-count    uint64
+|  |        +\-\-ro active\-lease* [leased\-address]
+|  |           +\-\-ro leased\-address        inet:ipv6\-address
+|  |           +\-\-ro client\-duid?          binary
+|  |           +\-\-ro iaid                  uint32
+|  |           +\-\-ro allocation\-time?      yang:date\-and\-time
+|  |           +\-\-ro last\-renew\-rebind?    yang:date\-and\-time
+|  |           +\-\-ro preferred\-lifetime?   dhcpv6\-common:timer\-seconds32
+|  |           +\-\-ro valid\-lifetime?       dhcpv6\-common:timer\-seconds32
+|  |           +\-\-ro lease\-t1?             dhcpv6\-common:timer\-seconds32
+|  |           +\-\-ro lease\-t2?             dhcpv6\-common:timer\-seconds32
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+|        +\-\-ro active\-leases
+|           +\-\-ro total\-count        uint64
+|           +\-\-ro allocated\-count    uint64
+|           +\-\-ro active\-lease* [leased\-prefix]
+|              +\-\-ro leased\-prefix         inet:ipv6\-prefix
+|              +\-\-ro client\-duid?          binary
+|              +\-\-ro iaid                  uint32
+|              +\-\-ro allocation\-time?      yang:date\-and\-time
+|              +\-\-ro last\-renew\-rebind?    yang:date\-and\-time
+|              +\-\-ro preferred\-lifetime?   dhcpv6\-common:timer\-seconds32
+|              +\-\-ro valid\-lifetime?       dhcpv6\-common:timer\-seconds32
+|              +\-\-ro lease\-t1?             dhcpv6\-common:timer\-seconds32
+|              +\-\-ro lease\-t2?             dhcpv6\-common:timer\-seconds32
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
++\-\-ro solicit\-count?               uint32
++\-\-ro advertise\-count?             uint32
++\-\-ro request\-count?               uint32
++\-\-ro confirm\-count?               uint32
++\-\-ro renew\-count?                 uint32
++\-\-ro rebind\-count?                uint32
++\-\-ro reply\-count?                 uint32
++\-\-rw release\-count?               uint32
++\-\-ro decline\-count?               uint32
++\-\-ro reconfigure\-count?           uint32
++\-\-ro information\-request\-count?   uint32
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Notifications taken from the IETF YANG model:
+.INDENT 0.0
+.IP \(bu 2
+get implemented in the control\-socket channel statistics
+.UNINDENT
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+notifications:
+  +\-\-\-n address\-pool\-utilization\-threshold\-exceeded
+  |  +\-\-ro pool\-id?                   \-> /dhcpv6\-server/network\-ranges/network\-range/address\-pools/address\-pool/pool\-id
+  |  +\-\-ro total\-address\-count        uint64
+  |  +\-\-ro max\-address\-count          uint64
+  |  +\-\-ro allocated\-address\-count    uint64
+  +\-\-\-n prefix\-pool\-utilization\-threshold\-exceeded {prefix\-delegation}?
+  |  +\-\-ro pool\-id                     \-> /dhcpv6\-server/network\-ranges/network\-range/prefix\-pools/prefix\-pool/pool\-id
+  |  +\-\-ro max\-pd\-space\-utilization    \-> /dhcpv6\-server/network\-ranges/network\-range/prefix\-pools/prefix\-pool/max\-pd\-space\-utilization
+  |  +\-\-ro pd\-space\-utilization?       uint64
+  +\-\-\-n invalid\-client\-detected
+  |  +\-\-ro duid?          binary
+  |  +\-\-ro description?   string
+  +\-\-\-n decline\-received
+  |  +\-\-ro duid?                 binary
+  |  +\-\-ro declined\-resources* []
+  |     +\-\-ro (resource\-type)?
+  |        +\-\-:(declined\-address)
+  |        |  +\-\-ro address?   inet:ipv6\-address
+  |        +\-\-:(declined\-prefix)
+  |           +\-\-ro prefix?    inet:ipv6\-prefix
+  +\-\-\-n non\-success\-code\-sent
+     +\-\-ro status\-code    uint16
+     +\-\-ro duid?          binary
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Operational nodes taken from the control socket statistics:
+.INDENT 0.0
+.IP \(bu 2
+get augmented in the IETF YANG model
+.UNINDENT
+.INDENT 0.0
+.IP 1. 3
+kea\-dhcp4:
+.INDENT 3.0
+.INDENT 3.5
+.INDENT 0.0
+.IP 1. 4
+pkt4\-ack\-received
+.IP 2. 4
+pkt4\-ack\-sent
+.IP 3. 4
+pkt4\-decline\-received
+.IP 4. 4
+pkt4\-discover\-received
+.IP 5. 4
+pkt4\-inform\-received
+.IP 6. 4
+pkt4\-nak\-received
+.IP 7. 4
+pkt4\-nak\-sent
+.IP 8. 4
+pkt4\-offer\-received
+.IP 9. 4
+pkt4\-offer\-sent
+.IP 10. 4
+pkt4\-parse\-failed
+.IP 11. 4
+pkt4\-receive\-drop
+.IP 12. 4
+pkt4\-received
+.IP 13. 4
+pkt4\-release\-received
+.IP 14. 4
+pkt4\-request\-received
+.IP 15. 4
+pkt4\-sent
+.IP 16. 4
+pkt4\-unknown\-received
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.IP 2. 3
+kea\-dhcp6:
+.INDENT 3.0
+.INDENT 3.5
+.INDENT 0.0
+.IP 1. 4
+pkt6\-advertise\-received
+.IP 2. 4
+pkt6\-advertise\-sent
+.IP 3. 4
+pkt6\-decline\-received
+.IP 4. 4
+pkt6\-dhcpv4\-query\-received
+.IP 5. 4
+pkt6\-dhcpv4\-response\-received
+.IP 6. 4
+pkt6\-dhcpv4\-response\-sent
+.IP 7. 4
+pkt6\-infrequest\-received
+.IP 8. 4
+pkt6\-parse\-failed
+.IP 9. 4
+pkt6\-rebind\-received
+.IP 10. 4
+pkt6\-receive\-drop
+.IP 11. 4
+pkt6\-received
+.IP 12. 4
+pkt6\-release\-received
+.IP 13. 4
+pkt6\-renew\-received
+.IP 14. 4
+pkt6\-reply\-received
+.IP 15. 4
+pkt6\-reply\-sent
+.IP 16. 4
+pkt6\-request\-received
+.IP 17. 4
+pkt6\-sent
+.IP 18. 4
+pkt6\-solicit\-received
+.IP 19. 4
+pkt6\-unknown\-received
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SS Operational nodes taken from the statement of work:
+.INDENT 0.0
+.IP \(bu 2
+get augmented in the IETF YANG model
+.IP \(bu 2
+get implemented in the control\-socket channel statistics
+.UNINDENT
+.INDENT 0.0
+.IP 1. 3
+kea\-dhcp4:
+.INDENT 3.0
+.INDENT 3.5
+.INDENT 0.0
+.IP 1. 4
+pkt4\-ack\-mean\-processing\-time
+.IP 2. 4
+pkt4\-decline\-mean\-processing\-time
+.IP 3. 4
+pkt4\-discover\-mean\-processing\-time
+.IP 4. 4
+pkt4\-inform\-mean\-processing\-time
+.IP 5. 4
+pkt4\-nak\-mean\-processing\-time
+.IP 6. 4
+pkt4\-offer\-mean\-processing\-time
+.IP 7. 4
+pkt4\-mean\-cpu\-usage\-per\-packet
+.IP 8. 4
+pkt4\-mean\-memory\-usage\-per\-packet
+.IP 9. 4
+pkt4\-mean\-processing\-time
+.IP 10. 4
+pkt4\-release\-mean\-processing\-time
+.IP 11. 4
+pkt4\-request\-mean\-processing\-time
+.IP 12. 4
+pkt4\-unknown\-mean\-processing\-time
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.IP 2. 3
+kea\-dhcp6:
+.INDENT 3.0
+.INDENT 3.5
+.INDENT 0.0
+.IP 1. 4
+pkt6\-advertise\-mean\-processing\-time
+.IP 2. 4
+pkt6\-decline\-mean\-processing\-time
+.IP 3. 4
+pkt6\-dhcpv4\-query\-mean\-processing\-time
+.IP 4. 4
+pkt6\-dhcpv4\-response\-mean\-processing\-time
+.IP 5. 4
+pkt6\-infrequest\-mean\-processing\-time
+.IP 6. 4
+pkt6\-rebind\-mean\-processing\-time
+.IP 7. 4
+pkt6\-mean\-cpu\-usage\-per\-packet
+.IP 8. 4
+pkt6\-mean\-memory\-usage\-per\-packet
+.IP 9. 4
+pkt6\-mean\-processing\-time
+.IP 10. 4
+pkt6\-release\-mean\-processing\-time
+.IP 11. 4
+pkt6\-renew\-mean\-processing\-time
+.IP 12. 4
+pkt6\-reply\-mean\-processing\-time
+.IP 13. 4
+pkt6\-request\-mean\-processing\-time
+.IP 14. 4
+pkt6\-solicit\-mean\-processing\-time
+.IP 15. 4
+pkt6\-unknown\-mean\-processing\-time
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.IP 3. 3
+universal:
+.INDENT 3.0
+.INDENT 3.5
+.INDENT 0.0
+.IP 1. 3
+kea\-dhcp\-cpu\-usage
+.IP 2. 3
+kea\-dhcp\-memory\-usage
+.IP 3. 3
+kea\-netconf\-cpu\-usage
+.IP 4. 3
+kea\-netconf\-memory\-usage
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SS IETF\-Kea mapping
+.sp
+Entries that have transformations other than \fBcopy\fP perform some changes to the data which are not shown below.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+//        IETF xpath                                                                           |        Kea xpath                              |        Transformations        //
+{"/dhcpv6\-node\-type",                                                                           "/Dhcp6/dhcpv6\-node\-type",                      {}},
+{"/dhcpv6\-server/server\-duid",                                                                  "/Dhcp6/server\-id",                             {DUID, copy}},
+{"/dhcpv6\-server/option\-sets/option\-set[option\-set\-id=\(aq0\(aq]/option\-set\-id",                      "/Dhcp6/option\-set\-id",                         {copy}},
+{"/dhcpv6\-server/option\-sets/option\-set[option\-set\-id=\(aq0\(aq]/description",                        "/Dhcp6/option\-set\-description",                {copy}},
+{"/dhcpv6\-server/network\-ranges",                                                               "/Dhcp6/subnet6",                               {network_ranges, copy}},
+{"/dhcpv6\-server",                                                                              "/Dhcp6/subnet6",                               {network_range_option_sets}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:client\-classes",              "/Dhcp6/client\-classes",                        {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:config\-control",              "/Dhcp6/config\-control",                        {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:dhcp\-queue\-control",          "/Dhcp6/dhcp\-queue\-control",                    {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:dhcp4o6\-port",                "/Dhcp6/dhcp4o6\-port",                          {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:dhcp\-ddns",                   "/Dhcp6/dhcp\-ddns",                             {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:expired\-leases\-processing",   "/Dhcp6/expired\-leases\-processing",             {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:hooks\-libraries",             "/Dhcp6/hooks\-libraries",                       {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:hosts\-database",              "/Dhcp6/hosts\-database",                        {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:host\-char\-set",               "/Dhcp6/host\-char\-set",                         {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:host\-char\-replacement",       "/Dhcp6/host\-char\-replacement",                 {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:interfaces\-config",           "/Dhcp6/interfaces\-config",                     {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:lease\-database",              "/Dhcp6/lease\-database",                        {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:loggers",                     "/Dhcp6/loggers",                               {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:reservation\-mode",            "/Dhcp6/reservation\-mode",                      {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:sanity\-checks",               "/Dhcp6/sanity\-checks",                         {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:server\-tag",                  "/Dhcp6/server\-tag",                            {copy}},
+{"/dhcpv6\-server/vendor\-config/kea\-augments\-to\-ietf\-dhcpv6\-server:thread\-count",                "/Dhcp6/thread\-count",                          {copy}},
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Incompatible options
+.sp
+The foillowing options are not supported by Kea:
+.INDENT 0.0
+.IP \(bu 2
+RFC4704 OPTION_CLIENT_FQDN (39): there isn’t a clear correlation between the fields from the IETF .yang file and the fields described in the RFC
+.IP \(bu 2
+RFC4776 OPTION_GEOCONF_CIVIC (36): not implemented in Kea, might be handleable by the generic OptionCustom class, but the fact that the civic\-address\-elements fields CAtype, CAlength, CAvalue are treated as binary data suggests that a custom implementation is required
+.IP \(bu 2
+RFC5908 OPTION_NTP_SERVER (56): not implemented in Kea
+.UNINDENT
+.SS option\-set\-id 0 explained
+.sp
+The option set is a concept introduced by ietf\-dhcpv6\-server. Kea configuration doesn’t have the notion of option set. That is equivalent to saying that Kea configuration supports a single option set. Here are the similarities and differences:
+.INDENT 0.0
+.TP
+.B Similarities:
+.INDENT 7.0
+.IP \(bu 2
+both support granular options meaning that they can be defined at a network range level, at a pool level and so on, not only at global level
+.UNINDENT
+.TP
+.B Differences:
+.INDENT 7.0
+.IP \(bu 2
+ietf\-dhcpv6\-server has both option definitions and option data defined in the same option entry while Kea configuration has them separately contained in \fB“option\-def”\fP & \fB“option\-data”\fP\&. \fB“option\-def”\fP refers to the option structure i.e. the data types used for the fields of an option while \fB“option\-data”\fP refers to the values that these fields should contain, where there is a specifiable value.
+.IP \(bu 2
+ietf\-dhcpv6\-server references these options via option set IDs which point to global option sets while Kea configuration has the \fB“option\-def”\fP global & the \fB“option\-data”\fP redefined at each level
+.UNINDENT
+.UNINDENT
+.sp
+To not rework the way options are handled in Kea configuration, in order to facilitate the conversion between the two models, specifically to be able to write into the global \fB“option\-def”\fP, we’ve made the following assumption: \fB“option\-set\-id”\fP with value 0 is an option set that contains all options of the other option\-sets.
+.sp
+\fB“option\-set\-id”\fP 0 can be the only option\-set, but that is not mandatory. It might seem like this design restricts the ability to have multiple entries of the same option in your configuration, but that is only true if the options have different “option\-def”s which should never be the case. In case you want options with different “option\-data”s, simply define one of the options in \fB“option\-set\-id”\fP with arbitrary \fB“option\-data”\fP & then two or however many options in different option sets.
+.SS Notifications semantics
+.sp
+As compared to operational data, notifications need an event to be triggered on. This makes them more heuristical on which event is chosen for each. The event choice is described next:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
++\-\-\-n address\-pool\-utilization\-threshold\-exceeded
+|  +\-\- whenever a pool has been selected for leasing and the pool has reached it\(aqs end
+|  +\-\- e.g. for 3 full pools and 1 non\-full pool, 3 notifications will be issued and the lease will be offered from the last pool
++\-\-\-n prefix\-pool\-utilization\-threshold\-exceeded {prefix\-delegation}?
+|  +\-\- whenever a pool has been selected for leasing and the pool has reached it\(aqs end
+|  +\-\- e.g. for 3 full pools and 1 non\-full pool, 3 notifications will be issued and the lease will be offered from the last pool
++\-\-\-n invalid\-client\-detected
+|  +\-\- whenever a client packet with no hardware address is received
++\-\-\-n decline\-received
+|  +\-\- whenever a packet containing DHCPv6 option 3 OPTION_IA_NA of type decline is received
++\-\-\-n non\-success\-code\-sent
+|  +\-\- whenever a response containing DHCPv6 option 13 OPTION_STATUS_CODE containing value other that success i.e. 0 is sent
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SS Required modules
+.sp
+For kea\-netconf configured to talk to a kea\-dhcp6 on the other end, the following YANG modules are required:
+.INDENT 0.0
+.IP \(bu 2
+dhcpv6\-server\-stats\-augment
+.IP \(bu 2
+ietf\-dhcpv6\-common
+.IP \(bu 2
+ietf\-dhcpv6\-server
+.IP \(bu 2
+ietf\-inet\-types
+.IP \(bu 2
+ietf\-interfaces
+.IP \(bu 2
+ietf\-yang\-types
+.IP \(bu 2
+kea\-augments\-to\-ietf\-dhcpv6\-server
+.IP \(bu 2
+kea\-dhcp6\-server
+.IP \(bu 2
+kea\-dhcp\-types
+.IP \(bu 2
+kea\-types
+.UNINDENT
+.sp
+And the following can be added:
+.INDENT 0.0
+.IP \(bu 2
+ietf\-dhcp\-options
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc3319
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc3646
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc3898
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc4075
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc4280
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc4833
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc6603
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc7341
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc7598
+.IP \(bu 2
+ietf\-dhcpv6\-options\-rfc8415
+.UNINDENT
+.SS Synchronizing configuration
+.sp
+kea\-dhcp6 can technically start with an empty configuration. However in order to be configurable via NETCONF, it requires the following minimal kea\-dhcp6.conf configuration:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+{
+  "Dhcp6": {
+    "control\-socket": {
+      "socket\-name": "/tmp/kea\-dhcp6\-ctrl.sock",
+      "socket\-type": "unix"
+    },
+    "notifications": {
+      "on\-boot\-request\-configuration\-from\-kea\-netconf": true,
+      "socket\-name": "/tmp/kea\-dhcp6\-notifications.sock",
+      "socket\-type": "unix"
+    }
+  }
+}
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The “control\-socket” and “notifications” nodes are considered meta\-configuration and the only two nodes that are not overridable through NETCONF as it would result in lack of communication between kea\-dhcp6 & kea\-netconf.
+.sp
+Arguably, one could include in this minimal file configuration, nodes that are machine\-specific such as “interfaces\-config”, but they can be configured via NETCONF as well.
+.sp
+The “on\-boot\-request\-configuration\-from\-kea\-netconf” node is self explanatory. If set to true, when booting up, it will send a “request\-configuration” to kea\-netconf. kea\-netconf will respond with success to this specific request and then send a config\-set command with the configuration found in the startup datastore of the model which is configured in kea\-netconf.conf. It is nested under “notifications” because it requires the notifications socket created by kea\-netconf to function.
+.INDENT 0.0
+.TP
+.B As you can see in /opt/dt\-kea\-tools/yang/share/kea\-netconf\-with\-server.conf, kea\-netconf.conf has two options that help with synchronizing configuration:
+.INDENT 7.0
+.IP \(bu 2
+“on\-boot\-update\-socket” makes kea\-netconf read startup configuration and send it to kea\-dhcp6
+.IP \(bu 2
+“on\-boot\-update\-sysrepo” makes kea\-netconf read kea\-dhcp6 configuration and send it to the startup datastore
+.UNINDENT
+.UNINDENT
+.sp
+These actions are called in the following order:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+onBootUpdateSysrepo<DHCP_SPACE_V6>(model);
+onBootUpdateSocket<DHCP_SPACE_V6>(model);
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+The suggestion is to only make use of “on\-boot\-request\-configuration\-from\-kea\-netconf” as it’s kea\-dhcp6’s responsibility to update it’s configuration and it booting up is the perfect opportunity.
+.SS SIGAR
+.sp
+SIGAR short for System Information Gatherer And Reporter is an alternative way of offering the operational nodes specified under \fIuniversal\fP related to CPU and memory usages. You can configure it by passing \fI–with\-sigar=/opt/sigar\fP\&. You need to install sigar itself which is found at \fI\%https://github.com/dumitrupaul/sigar\fP\&.
+.sp
+Build and installation instructions:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+\&./configure \-\-prefix="${sigar_path}"
+make
+make install
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.SH AUTHOR
+Qualitance
+.SH COPYRIGHT
+2015-2020, Deutsche Telekom AG.
+.\" Generated by docutils manpage writer.
+.

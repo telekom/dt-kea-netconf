@@ -1,0 +1,90 @@
+module ietf-dhcpv6-options-rfc3319 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc3319-server";
+  prefix rfc3319-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC3319 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping sip-server-domain-name-list-option-group {
+    container sip-server-domain-name-list-option {
+      description
+        "OPTION_SIP_SERVER_D (21) SIP Servers Domain Name
+         List";
+      reference
+        "RFC3319: Dynamic Host Configuration Protocol
+         (DHCPv6) Options for Session Initiation Protocol (SIP)
+         Servers";
+      list sip-server {
+        key "sip-serv-id";
+        description
+          "sip server info";
+        leaf sip-serv-id {
+          type uint8;
+          description
+            "sip server id";
+        }
+
+        leaf sip-serv-domain-name {
+          type inet:domain-name;
+          description
+            "sip server domain name";
+        }
+      }
+    }
+  }
+
+  grouping sip-server-address-list-option-group {
+    container sip-server-address-list-option {
+      description
+        "OPTION_SIP_SERVER_A (22) SIP Servers IPv6 Address
+         List";
+      reference
+        "RFC3319: Dynamic Host Configuration Protocol
+         (DHCPv6) Options for Session Initiation Protocol (SIP)
+         Servers";
+      list sip-server {
+        key "sip-serv-id";
+        description
+          "sip server info";
+        leaf sip-serv-id {
+          type uint8;
+          description
+            "sip server id";
+        }
+
+        leaf sip-serv-addr {
+          type inet:ipv6-address;
+          description
+            "sip server addr";
+        }
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses sip-server-domain-name-list-option-group;
+
+    uses sip-server-address-list-option-group;
+  }
+}

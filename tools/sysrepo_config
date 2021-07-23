@@ -1,0 +1,99 @@
+#!/bin/bash
+#
+# Copyright (C) 2018-2019 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Fail script if any command fails.
+set -e
+
+# Get script path.
+if test "$(uname -s)" = 'Darwin'; then
+    script_path="$(stat -f '%N' "${0}" | xargs dirname)"
+else
+    script_path="$(readlink -f "${0}" | xargs dirname)"
+fi
+
+# Source defines file.
+defines_file="${script_path}/sysrepo_config_defines.sh"
+if test ! -f "${defines_file}"; then
+    printf 'ERROR: %s is missing' "${defines_file}" >&2
+    exit 1
+fi
+# Can't follow non-constant source. Use a directive to specify location.
+# shellcheck disable=SC1090
+. "${defines_file}"
+
+function print-help() {
+  printf "\
+%s {{argument}} {{library}}
+arguments:
+  [-h|--help]                           display usage
+  --cflags-only-I                       get include path
+  --cflags-only-other                   get cpp compilation flags
+  --libs                                get lib path
+  --modversion                          get version
+  --variable=SR_REPOSITORY_LOC          get repo path
+libraries:
+  libsysrepo
+  libsysrepo-cpp
+" "$(basename "${0}")"
+}
+# supported_libraries appears unused. Verify it or export it.
+# shellcheck disable=SC2034
+supported_libraries=('libsysrepo' 'libsysrepo-cpp')
+# library appears unused. Verify it or export it.
+# shellcheck disable=SC2034
+library="${2-}"
+
+# Can't follow non-constant source. Use a directive to specify location.
+# shellcheck disable=SC1090
+. "${script_path}/config_utils.sh"
+
+if [ "$1" = "--modversion" ]; then
+    exit 0
+fi
+
+# Parse arguments.
+while test ${#} -gt 0; do
+  case "${1}" in
+  # [-h|--help]                           display usage
+  '-h'|'--help')
+    print-help
+    exit 0
+    ;;
+  # --cflags-only-I                       get include path
+  '--cflags-only-I')
+    check-if-library-is-supported
+    printf '%s' "-I${LIBYANG_PATH}/include -I${SYSREPO_PATH}/include"
+    ;;
+  # --cflags-only-other                   get cpp compilation flags
+  '--cflags-only-other')
+    check-if-library-is-supported
+    ;;
+  # --libs                                get lib path
+  '--libs')
+    check-if-library-is-supported
+    printf '%s' "-L${LIBYANG_PATH}/lib -L${SYSREPO_PATH}/lib -Wl,-rpath=${LIBYANG_PATH}/lib -Wl,-rpath=${SYSREPO_PATH}/lib -lyang -lyang-cpp -lpcre -lev -lprotobuf-c -lsysrepo -lsysrepo-cpp"
+    ;;
+  # --modversion                          get version
+  '--modversion')
+    check-if-library-is-supported
+    version=$(sysrepoctl -v | tr -s " " | cut -d " " -f 7)
+    printf '%s\n' "${version}"
+    ;;
+  # --variable=SR_REPOSITORY_LOC          get repo path
+  '--variable=SR_REPOSITORY_LOC')
+    check-if-library-is-supported
+    printf '%s' "${SYSREPO_PATH}/build/repository"
+    ;;
+  # Unrecognized argument
+  *)
+    printf 'ERROR: Unrecognized argument ''%s''\n' "${1}" 1>&2
+    print-help
+    exit 5
+    ;;
+  esac; shift; shift
+done

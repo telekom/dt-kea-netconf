@@ -1,0 +1,91 @@
+#!/bin/bash
+# (C) 2020 Deutsche Telekom AG.
+#
+# Deutsche Telekom AG and all other contributors /
+# copyright owners license this file to you under the Apache
+# License, Version 2.0 (the "License"); you may not use this
+# file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Fail script if any command fails.
+set -euo pipefail
+
+# Get script path.
+if test "$(uname -s)" = 'Darwin'; then
+    script_path="$(stat -f '%N' "${0}" | xargs dirname)"
+else
+    script_path="$(readlink -f "${0}" | xargs dirname)"
+fi
+
+# Store some paths.
+modules_path=$(readlink -f "${script_path}/../src/share/yang/modules")
+check_hashes=$(readlink -f "${modules_path}/utils/check-hashes.sh")
+ietf_model=$(readlink -f "${modules_path}/ietf-dhcpv6-server.yang")
+ietf_patch=$(readlink -f "${script_path}/ietf-dhcpv6-server.patch")
+
+# Check if changes are staged.
+diff=$(git diff "${modules_path}" 2>&1)
+if [[ -n "${diff}" ]]; then
+  printf 'Stage changes for %s before running this script...\n' "${modules_path}"
+  exit 1
+fi
+
+# Clone dhcwg-yang.
+printf 'Cloning...\n'
+rm -rf /tmp/dhcwg-yang
+git clone https://github.com/dhcwg/yang.git /tmp/dhcwg-yang &> /dev/null
+pushd /tmp/dhcwg-yang > /dev/null
+git checkout master &> /dev/null
+
+# Copy modules.
+printf 'Copying...\n'
+pushd options > /dev/null
+cp ./ietf-*.yang "${modules_path}" &> /dev/null || true
+popd > /dev/null
+cp ./ietf-*.yang "${modules_path}" &> /dev/null || true
+
+# Explicitly remove broken modules.
+rm -rf "${modules_path}/ietf-dhcp-options.yang"
+
+# Format so that patch has higher change of getting applied. Ignore failures,
+# they most likely are because of patch not being applied yet.
+"${check_hashes}" -a &> /dev/null || true
+
+mkdir -p "${script_path}/../tools/ietf-patches"
+
+not_applied=()
+for yang_module in "${modules_path}"/*.yang; do
+  pushd "${script_path}/.." > /dev/null
+
+  # Apply patch to bring our changes to latest dhcwg-yang IETF modules.
+  ietf_patch=$(basename "${yang_module}")
+  ietf_patch="tools/ietf-patches/${ietf_patch/.yang/}.patch"
+  if test -f "${ietf_patch}"; then
+    git apply "${ietf_patch}" 2> /dev/null || not_applied+=( "${ietf_patch}" )
+  fi
+
+  popd > /dev/null
+done
+
+# Warn about unappliable patches.
+if test "${#not_applied[@]}" != 0; then
+  printf 'Please manually apply the following patches:\n' >&2
+fi
+for i in $(seq 0 "$(( "${#not_applied[@]}" - 1 ))"); do
+  printf '* %s\n' "${not_applied[${i}]}" >&2
+done
+
+# Format our YANG modules.
+pushd "${script_path}/.." > /dev/null
+"${check_hashes}" -a &> /dev/null || true
+git add "${modules_path}"
+popd > /dev/null

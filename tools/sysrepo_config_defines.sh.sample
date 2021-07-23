@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# This variable should point to the directory where sysrepo is compiled.
+# You can download sysrepo sources from https://github.com/sysrepo/sysrepo.git
+export LIBYANG_PATH='/path/to/libyang'
+export SYSREPO_PATH='/path/to/sysrepo'

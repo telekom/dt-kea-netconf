@@ -1,0 +1,38 @@
+module dhcpv6-distributed-stats-augment {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:dhcpv6-distributed-stats-augment";
+  prefix dhcpv6-distributed-stats-augment;
+
+  import ietf-dhcpv6-distributed {
+    prefix ietf-dhcpv6-distributed;
+  }
+
+  import dhcpv6-server-stats-augment {
+    prefix dhcpv6-server-stats-augment;
+  }
+
+  organization
+    "Qualitance";
+  contact
+    "paul.dumitru@qualitance.com";
+  description
+    "This YANG module defines message stats augments for the
+     IETF DHCPv6 distributed functionality.";
+
+  revision 2020-08-12 {
+    description
+      "Initial version";
+  }
+
+  augment "/ietf-dhcpv6-distributed:config/ietf-dhcpv6-distributed:masters/ietf-dhcpv6-distributed:shards/ietf-dhcpv6-distributed:shard-config/ietf-dhcpv6-distributed:dhcpv6-server/ietf-dhcpv6-distributed:network-ranges" {
+    uses dhcpv6-server-stats-augment:cassandra-stats;
+
+    uses dhcpv6-server-stats-augment:extra-message-stats;
+  }
+
+  augment "/ietf-dhcpv6-distributed:config/ietf-dhcpv6-distributed:masters/ietf-dhcpv6-distributed:shards/ietf-dhcpv6-distributed:master-config/ietf-dhcpv6-distributed:server-config/ietf-dhcpv6-distributed:dhcpv6-server/ietf-dhcpv6-distributed:network-ranges" {
+    uses dhcpv6-server-stats-augment:cassandra-stats;
+
+    uses dhcpv6-server-stats-augment:extra-message-stats;
+  }
+}

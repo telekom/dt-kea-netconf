@@ -1,0 +1,158 @@
+#!/bin/bash
+# (C) 2020 Deutsche Telekom AG.
+#
+# Deutsche Telekom AG and all other contributors /
+# copyright owners license this file to you under the Apache
+# License, Version 2.0 (the "License"); you may not use this
+# file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Fail script if any command fails.
+set -e
+
+RED='\e[1m\e[31m'
+RESET='\e[1m\e[0m'
+
+# Print usage function.
+function print-help() {
+printf "\
+Usage: %s \$input \$output {{options}}
+Options:
+  [-d|--debug]                 Enables debug mode, showing every executed statement.
+  [-h|--help]                  Prints usage (this text).
+" "$(basename "${0}")"
+}
+
+# Parse arguments.
+while test ${#} -gt 0; do
+  case "${1}" in
+  # [-d|--debug]                 Enables debug mode, showing every executed statement.
+  '-d'|'--debug') set -x ;;
+  # [-h|--help]                  Prints usage (this text).
+  '-h'|'--help') print-help; exit 0 ;;
+  *)
+    [[ -z ${input} ]] && input="${1}" && shift && continue;
+    [[ -z ${output} ]] && output="${1}" && shift && continue;
+    # Unrecognized argument
+    printf "${RED}ERROR: Unrecognized argument '%s'${RESET}\\n" "${1}" 1>&2; print-help; exit 1 ;;
+  esac; shift
+done
+
+DEFINES=(
+  'EXTENDED_VERSION:@EXTENDED_VERSION@' # Troublesome because of double quotes
+  'CPPFLAGS:@CPPFLAGS@'                 # contains $(top_srcdir) which is only
+                                        #   defined in Makefile
+  'KEA_CXXFLAGS:@KEA_CXXFLAGS@'         # FLAGS may contain spaces.
+  'CRYPTO_CFLAGS:@CRYPTO_CFLAGS@'       # FLAGS may contain spaces.
+  'CRYPTO_LDFLAGS:@CRYPTO_LDFLAGS@'     # FLAGS may contain spaces.
+  'CRYPTO_RPATH:@CRYPTO_RPATH@'         # RPATH may contain spaces.
+  'MYSQL_CPPFLAGS:@MYSQL_CPPFLAGS@'     # FLAGS may contain spaces.
+  'PGSQL_CPPFLAGS:@PGSQL_CPPFLAGS@'     # FLAGS may contain spaces.
+  'CQL_CPPFLAGS:@CQL_CPPFLAGS@'         # FLAGS may contain spaces.
+  'GTEST_LDFLAGS:@GTEST_LDFLAGS@'       # FLAGS may contain spaces.
+  'LIBS:@LIBS@'                         # LIBS may contain spaces.
+  'CRYPTO_LIBS:@CRYPTO_LIBS@'           # LIBS may contain spaces.
+  'MYSQL_LIBS:@MYSQL_LIBS@'             # LIBS may contain spaces.
+  'PGSQL_LIBS:@PGSQL_LIBS@'             # LIBS may contain spaces.
+  'CQL_LIBS:@CQL_LIBS@'                 # LIBS may contain spaces.
+  'LOG4CPLUS_LIBS:@LOG4CPLUS_LIBS@'     # LIBS may contain spaces.
+  'SEP:@SEP@'
+  'ENABLE_AFL:@ENABLE_AFL@'
+  'ENABLE_DEBUG:@ENABLE_DEBUG@'
+  'PREMIUM_DIR:@PREMIUM_DIR@'
+  'WARNING_GCC_44_STRICT_ALIASING_CFLAG:@WARNING_GCC_44_STRICT_ALIASING_CFLAG@'
+  'USE_STATIC_LINK:@USE_STATIC_LINK@'
+  'HAS_UNDEFINED_PTHREAD_BHEAVIOR:@HAS_UNDEFINED_PTHREAD_BEHAVIOR@'
+  'HAVE_BROKEN_GET_IPV6_USE_MIN_MTU:@HAVE_BROKEN_GET_IPV6_USE_MIN_MTU@'
+  'PYTHON:@PYTHON@'
+  'PYTHON_PREFIX:@PYTHON_PREFIX@'
+  'PYTHON_EXEC_PREFIX:@PYTHON_EXEC_PREFIX@'
+  'PYTHON_VERSION:@PYTHON_VERSION@'
+  'PYTHON_PLATFORM:@PYTHON_PLATFORM@'
+  'pythondir:@pythondir@'
+  'pkgpythondir:@pkgpythondir@'
+  'pyexecdir:@pyexecdir@'
+  'pkgpyexecdir:@pkgpyexecdir@'
+  'OS_LINUX:@OS_LINUX@'
+  'OS_BSD:@OS_BSD@'
+  'OS_OSX:@OS_OSX@'
+  'OS_BSD:@OS_BSD@'
+  'OS_FREEBSD:@OS_FREEBSD@'
+  'OS_BSD:@OS_BSD@'
+  'OS_NETBSD:@OS_NETBSD@'
+  'OS_BSD:@OS_BSD@'
+  'OS_OPENBSD:@OS_OPENBSD@'
+  'OS_SOLARIS:@OS_SOLARIS@'
+  'HAVE_SA_LEN:@HAVE_SA_LEN@'
+  'LCOV:@LCOV@'
+  'GENHTML:@GENHTML@'
+  'USE_LCOV:@USE_LCOV@'
+  'BOTAN_TOOL:@BOTAN_TOOL@'
+  'WITH_BOTAN:@WITH_BOTAN@'
+  'WITH_OPENSSL:@WITH_OPENSSL@'
+  'CRYPTO_INCLUDES:@CRYPTO_INCLUDES@'
+  'CRYPTO_PACKAGE:@CRYPTO_PACKAGE@'
+  'DISTCHECK_CRYPTO_CONFIGURE_FLAG:@DISTCHECK_CRYPTO_CONFIGURE_FLAG@'
+  'HAVE_MYSQL:@HAVE_MYSQL@'
+  'HAVE_PGSQL:@HAVE_PGSQL@'
+  'HAVE_CQL:@HAVE_CQL@'
+  'CASSANDRA_DENORMALIZED_TABLES:@CASSANDRA_DENORMALIZED_TABLES@'
+  'LOG4CPLUS_INCLUDES:@LOG4CPLUS_INCLUDES@'
+  'DISTCHECK_GTEST_CONFIGURE_FLAG:@DISTCHECK_GTEST_CONFIGURE_FLAG@'
+  'GTEST_INCLUDES:@GTEST_INCLUDES@'
+  'GTEST_SOURCE:@GTEST_SOURCE@'
+  'PERL:@PERL@'
+  'AWK:@AWK@'
+  'ENABLE_LOGGER_CHECKS:@ENABLE_LOGGER_CHECKS@'
+  'TERASTREAM:@TERASTREAM@'
+  'TERASTREAM_LOCK:@TERASTREAM_LOCK@'
+  'TERASTREAM_FULL_TRANSACTIONS:@TERASTREAM_FULL_TRANSACTIONS@'
+  'HAVE_OPTRESET:@HAVE_OPTRESET@'
+  'CONFIG_H_WAS_INCLUDED:@CONFIG_H_WAS_INCLUDED@'
+  'PREMIUM:@PREMIUM@'
+  'HAVE_UNIFDEF:@HAVE_UNIFDEF@'
+  'UNIFDEF:@UNIFDEF@'
+  'UNIFDEFALL:@UNIFDEFALL@'
+)
+
+options=()
+for define in "${DEFINES[@]}"; do
+  key="${define%%:*}"
+  value="${define##*:}"
+  if [[ -z "${value}" ]]; then
+    options+=("-U${key}")
+  else
+    options+=("-D${key}=\"${value}\"")
+  fi
+done
+
+printf 'Input file: %s\n' "${input}"
+printf 'Output file: %s\n' "${output}"
+
+# Argument to -z is always false due to literal strings.
+# shellcheck disable=SC2157
+if [[ -z "@UNIFDEFALL@" ]]; then
+  printf 'ERROR while resolving defines: unifdef is not installed. Please install it before continuing.\n' >&2
+  exit 1
+fi
+
+unifdefall_output="$(@UNIFDEFALL@ -t "${options[@]}" "${input}" > "${output}")" || true
+
+if test "${PIPESTATUS[0]}" -ne 0; then
+  printf 'ERROR while resolving defines: unifdefall exited with %s and outputted:\n%s\n' "${PIPESTATUS[0]}" "${unifdefall_output}" >&2
+  exit 2
+fi
+
+if test "$(du -hks "${output}" | cut -f 1)" -eq 0; then
+  printf 'ERROR while resolving defines: output file %s turned out empty and unifdefall outputted:\n%s\n' "${output}" "${unifdefall_output}" >&2
+  exit 3
+fi

@@ -1,0 +1,305 @@
+# Copyright (C) 2014-2020 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Path to the temporary configuration file.
+CFG_FILE=@abs_top_builddir@/src/bin/d2/tests/test_config.json
+# Path to the D2 log file.
+LOG_FILE=@abs_top_builddir@/src/bin/d2/tests/test.log
+# Expected version
+EXPECTED_VERSION="@PACKAGE_VERSION@"
+# D2 configuration to be stored in the configuration file.
+CONFIG="{
+    \"DhcpDdns\":
+    {
+        \"ip-address\": \"127.0.0.1\",
+        \"port\": 53001,
+        \"tsig-keys\": [],
+        \"forward-ddns\" : {},
+        \"reverse-ddns\" : {},
+        \"loggers\": [
+        {
+            \"name\": \"kea-dhcp-ddns\",
+            \"output_options\": [
+                {
+                    \"output\": \"$LOG_FILE\"
+                }
+            ],
+            \"severity\": \"DEBUG\"
+        }
+        ]
+    }
+}"
+
+# Invalid configuration (syntax error) to check that Kea can check syntax.
+CONFIG_BAD_SYNTAX="{
+    \"DhcpDdns\":
+    {
+        \"ip-address\": \"127.0.0.1\",
+        \"port\": BOGUS,
+        \"tsig-keys\": [],
+        \"forward-ddns\" : {},
+        \"reverse-ddns\" : {},
+        \"loggers\": [
+        {
+            \"name\": \"kea-dhcp-ddns\",
+            \"output_options\": [
+                {
+                    \"output\": \"$LOG_FILE\"
+                }
+            ],
+            \"severity\": \"INFO\"
+        }
+        ]
+    }
+}"
+
+# Invalid configuration (out of range port) to check that Kea can check syntax.
+CONFIG_BAD_VALUE="{
+    \"DhcpDdns\":
+    {
+        \"ip-address\": \"127.0.0.1\",
+        \"port\": 80000,
+        \"tsig-keys\": [],
+        \"forward-ddns\" : {},
+        \"reverse-ddns\" : {},
+        \"loggers\": [
+        {
+            \"name\": \"kea-dhcp-ddns\",
+            \"output_options\": [
+                {
+                    \"output\": \"$LOG_FILE\"
+                }
+            ],
+            \"severity\": \"INFO\"
+        }
+        ]
+    }
+}"
+
+# Invalid value configuration (invalid port) to check that D2
+# gracefully handles reconfiguration errors.
+CONFIG_INVALID="{
+    \"DhcpDdns\":
+    {
+        \"ip-address\": \"127.0.0.1\",
+        \"port\": BOGUS,
+        \"tsig-keys\": [],
+        \"forward-ddns\" : {},
+        \"reverse-ddns\" : {},
+        \"loggers\": [
+        {
+            \"name\": \"kea-dhcp-ddns\",
+            \"output_options\": [
+                {
+                    \"output\": \"$LOG_FILE\"
+                }
+            ],
+            \"severity\": \"INFO\"
+        }
+        ]
+    }
+}"
+
+# Set the location of the executable.
+bin="kea-dhcp-ddns"
+bin_path=@abs_top_builddir@/src/bin/d2
+
+# Import common test library.
+. @abs_top_builddir@/src/lib/testutils/dhcp_test_lib.sh
+
+# This test verifies that syntax checking works properly. This function
+# requires 3 parameters:
+# testname
+# config - string with a content of the config (will be written to a file)
+# exp_code - expected exit code returned by kea (0 - success, 1 - failure)
+syntax_check_test() {
+    local TESTNAME="${1}"
+    local CONFIG="${2}"
+    local EXP_CODE="${3}"
+
+    # Log the start of the test and print test name.
+    test_start $TESTNAME
+    # Remove dangling Kea instances and remove log files.
+    cleanup
+    # Create correct configuration file.
+    create_config "${CONFIG}"
+    # Check it
+    printf "Running command %s.\n" "\"${bin_path}/${bin} -t ${CFG_FILE}\""
+    ${bin_path}/${bin} -t ${CFG_FILE}
+    exit_code=$?
+    if [ ${exit_code} -ne $EXP_CODE ]; then
+        printf "ERROR: expected exit code ${EXP_CODE}, got ${exit_code}\n"
+        clean_exit 1
+    fi
+    test_finish 0
+}
+
+# This test verifies that D2 can be reconfigured with a SIGHUP signal.
+dynamic_reconfiguration_test() {
+    # Log the start of the test and print test name.
+    test_start "dhcp_ddns.dynamic_reconfiguration"
+    # Remove dangling D2 instances and remove log files.
+    cleanup
+    # Create new configuration file.
+    create_config "${CONFIG}"
+    # Instruct D2 to log to the specific file.
+    set_logger
+    # Start D2.
+    start_kea ${bin_path}/${bin}
+    # Wait up to 20s for D2 to start.
+    wait_for_kea 20
+    if [ ${_WAIT_FOR_KEA} -eq 0 ]; then
+        printf "ERROR: timeout waiting for D2 to start.\n"
+        clean_exit 1
+    fi
+
+    # Check if it is still running. It could have terminated (e.g. as a result
+    # of configuration failure).
+    get_pid ${bin}
+    if [ ${_GET_PIDS_NUM} -ne 1 ]; then
+        printf "ERROR: expected one D2 process to be started. Found %d processes\
+ started.\n" ${_GET_PIDS_NUM}
+        clean_exit 1
+    fi
+
+    # Check in the log file, how many times server has been configured.
+    # It should be just once on startup.
+    get_reconfigs
+    if [ ${_GET_RECONFIGS} -ne 1 ]; then
+        printf "ERROR: D2 hasn't been configured.\n"
+        clean_exit 1
+    else
+        printf "D2 successfully configured.\n"
+    fi
+
+    # Now use invalid configuration.
+    create_config "${CONFIG_INVALID}"
+
+    # Try to reconfigure by sending SIGHUP
+    send_signal 1 ${bin}
+
+    # Wait up to 10s for the D2Controller to log reload signal received.
+    wait_for_message 10 "DCTL_CFG_FILE_RELOAD_SIGNAL_RECVD"  1
+    if [ ${_WAIT_FOR_MESSAGE} -eq 0 ]; then
+        printf "ERROR: D2 did report the reload signal receipt.\n"
+        clean_exit 1
+    fi
+
+    # After receiving SIGHUP the server should try to reconfigure itself.
+    # The configuration provided is invalid so it should result in
+    # reconfiguration failure but the server should still be running.
+    wait_for_message 10 "DCTL_CFG_FILE_RELOAD_ERROR" 1
+    if [ ${_WAIT_FOR_MESSAGE} -eq 0 ]; then
+        printf "ERROR: D2 did not report reload error.\n"
+        clean_exit 1
+    fi
+
+    # Make sure the server is still operational.
+    get_pid ${bin}
+    if [ ${_GET_PIDS_NUM} -ne 1 ]; then
+        printf "ERROR: D2 was killed when attempting reconfiguration.\n"
+        clean_exit 1
+    fi
+
+    # Restore the good configuration.
+    create_config "${CONFIG}"
+
+    # Reconfigure the server with SIGHUP.
+    send_signal 1 ${bin}
+
+    # There should be two occurrences of the DHCP4_CONFIG_COMPLETE messages.
+    # Wait for it up to 10s.
+    wait_for_message 10 "DCTL_CONFIG_COMPLETE" 2
+
+    # After receiving SIGHUP the server should get reconfigured and the
+    # reconfiguration should be noted in the log file. We should now
+    # have two configurations logged in the log file.
+    if [ ${_WAIT_FOR_MESSAGE} -eq 0 ]; then
+        printf "ERROR: D2 hasn't been reconfigured.\n"
+        clean_exit 1
+    else
+        printf "D2 successfully reconfigured.\n"
+    fi
+
+    # Make sure the server is still operational.
+    get_pid ${bin}
+    if [ ${_GET_PIDS_NUM} -ne 1 ]; then
+        printf "ERROR: D2 was killed when attempting reconfiguration.\n"
+        clean_exit 1
+    fi
+
+    # All ok. Shut down D2 and exit.
+    test_finish 0
+}
+
+# This test verifies that DHCPv4 server is shut down gracefully when it
+# receives a SIGINT or SIGTERM signal.
+shutdown_test() {
+    test_name=${1}  # Test name
+    signum=${2}      # Signal number
+    # Log the start of the test and print test name.
+    test_start ${test_name}
+    # Remove dangling D2 instances and remove log files.
+    cleanup
+    # Create new configuration file.
+    create_config "${CONFIG}"
+    # Instruct D2 to log to the specific file.
+    set_logger
+    # Start D2.
+    start_kea ${bin_path}/${bin}
+    # Wait up to 20s for D2 to start.
+    wait_for_kea 20
+    if [ ${_WAIT_FOR_KEA} -eq 0 ]; then
+        printf "ERROR: timeout waiting for D2 to start.\n"
+        clean_exit 1
+    fi
+
+    # Check if it is still running. It could have terminated (e.g. as a result
+    # of configuration failure).
+    get_pid ${bin}
+    if [ ${_GET_PIDS_NUM} -ne 1 ]; then
+        printf "ERROR: expected one D2 process to be started. Found %d processes\
+ started.\n" ${_GET_PIDS_NUM}
+        clean_exit 1
+    fi
+
+    # Check in the log file, how many times server has been configured.
+    # It should be just once on startup.
+    get_reconfigs
+    if [ ${_GET_RECONFIGS} -ne 1 ]; then
+        printf "ERROR: server hasn't been configured.\n"
+        clean_exit 1
+    else
+        printf "Server successfully configured.\n"
+    fi
+
+    # Send signal to D2 (SIGTERM, SIGINT etc.)
+    send_signal ${signum} ${bin}
+
+    # Now wait for process to log that it is exiting.
+    wait_for_message 10 "DCTL_SHUTDOWN" 1
+    if [ ${_WAIT_FOR_MESSAGE} -eq 0 ]; then
+        printf "ERROR: DHCP-DDNS did not log shutdown.\n"
+        clean_exit 1
+    fi
+
+    # Make sure the server is down.
+    wait_for_server_down 5 ${bin}
+    assert_eq 1 ${_WAIT_FOR_SERVER_DOWN} \
+        "Expected wait_for_server_down return %d, returned %d"
+
+    test_finish 0
+}
+
+server_pid_file_test "${CONFIG}" DCTL_ALREADY_RUNNING
+dynamic_reconfiguration_test
+shutdown_test "dhcp-ddns.sigterm_test" 15
+shutdown_test "dhcp-ddns.sigint_test" 2
+version_test "dhcp-ddns.version"
+logger_vars_test "dhcp-ddns.variables"
+syntax_check_test "dhcp-ddns.syntax_check_success" "${CONFIG}" 0
+syntax_check_test "dhcp-ddns.syntax_check_bad_syntax" "${CONFIG_BAD_SYNTAX}" 1
+syntax_check_test "dhcp-ddns.syntax_check_bad_values" "${CONFIG_BAD_VALUE}" 1

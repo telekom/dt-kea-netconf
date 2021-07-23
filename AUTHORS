@@ -1,0 +1,211 @@
+ Kea authors and contributors
+------------------------------
+
+Primary developers:
+ - Tomek Mrugalski (lead developer: DHCPv4, DHCPv6 components, prefix
+                    delegation, memfile, database interface, core libdhcp++,
+                    host reservation, MAC extraction in DHCPv6,
+                    statistics manager, kea-shell, netconf, flex/bison
+                    parsers, flex-id, documentation)
+ - Stephen Morris (Hooks, MySQL)
+ - Marcin Siodelski (DHCPv4, DHCPv6 components, options handling, perfdhcp,
+                     host reservation, lease file cleanup, lease expiration,
+                     control agent, shared networks, high availability,
+                     config backend)
+ - Thomas Markwalder (DDNS, user_chk, global host reservations, stat commands,
+                      congestion handling, config backend)
+ - Jeremy C. Reed (documentation, build system, testing, release engineering)
+ - Wlodek Wencel (testing, release engineering)
+ - Francis Dupont (crypto, flex/bison parsers, perfdhcp, control agent,
+                   radius, netconf, config backend)
+ - Brian Reid (logo design)
+ - Shawn Routhier (lease file cleanup)
+ - Michal Nowikowski (testing, hammer, release engineering)
+ - Razvan Becheriu (cassandra, sysrepo)
+ - Suzanne Goldlust (documentation)
+
+Primary area of work mentioned in parentheses. The list is in a roughly
+chronological order.
+
+Kea uses parts of the code of the now-defunct BIND 10 project. The following
+people contributed to BIND 10 code:
+
+Chen Zhengzhang
+Dmitriy Volodin
+Evan Hunt
+Francis Dupont
+Haidong Wang
+Haikuo Zhang
+Han Feng
+Jelte Jansen
+Jeremy C. Reed
+Xie Jiagui
+Jin Jian
+JINMEI Tatuya
+John DuBois
+Kazunori Fujiwara
+Marcin Siodelski
+Michael Graff
+Michal Vaner
+Mukund Sivaraman
+Naoki Kambe
+Paul Selkirk
+Shane Kerr
+Shen Tingting
+Stephen Morris
+Thomas Markwalder
+Tomek Mrugalski
+Yoshitaka Aharen
+Zhang Likun
+
+We have received the following contributions:
+
+ - David Carlier
+   2013-11: memfile fixes
+   2013-12: better error handling when port is in use
+   2013-12: interface detection for BSD systems
+   2014-04: PostgreSQL support
+
+ - Jiri Popelka, Red Hat
+   2014-08: config files examples permission fix
+   2014-08: compilation fix for armv7
+   2014-08: configure.ac update: AC_PROG_LIBTOOL => LT_INIT
+   2014-08: PostgreSQL compilation fix on i686
+   2015-12: compilation fix in MySQL host data source
+   2016-02: Fixed missing slashes in path_replacer.sh
+
+ - Adam Osuchowski, Silesian University of Technology
+   2014-09: Examples corrected in Kea ARM
+   2019-02: Hooks installation directory fixed.
+   2019-02: Possible syntax error in keactrl fixed.
+
+ - Nicolas Chaigneau, Capgemini
+   2014-09: Fix for interfaces with multiple addresses in perfdhcp
+   2015-11: query4 parameter added to pkt4_send hook point
+
+ - Marcin Wyszynki, Facebook
+   2014-11: Export CalloutManager headers for testing statically linked
+            libraries.
+
+ - David Gutierrez Rueda, CERN
+   2014-12: Support for client link-address option in DHCPv6 (RFC6939)
+
+ - Adam Kalmus, Gdansk University of Technology
+   2014-12: Extract MAC address from DUID-LL and DUID-LLT types
+   2015-01: Extract MAC address from remote-id
+   2015-05: MySQL schema extended to cover host reservation
+   2015-10: Common MySQL Connector Pool
+   2015-12: MySQL host data source implemented
+   2016-02: IPv6 reservations implemented
+
+ - Jinmei Tatuya
+   2015-10: Pkt4o6 class improvements
+   2015-11: split Dhcpv4Srv::run() into run() and processPacket()
+
+ - Sebastien Couture, Ubity Inc
+   2015-12: Fixes to MySQL schema creation
+
+ - Angelo Failla, Facebook
+   2016-04: Fixes for transaction id generation in perfdhcp
+   2016-08: Using a file as a source of MAC addresses to be used
+            in new transactions.
+   2016-08: Support for generating relayed DHCPv6 traffic.
+
+ - Razvan Becheriu, Qualitance
+   2016-05: Added support for Cassandra
+   2017-12: Significant update for Cassandra backend
+   2018-01: Host reservations for Cassandra
+   2018-01: Various changes (github 54)
+   2018-02: Support for Google benchmark added (github 36)
+   2018-02: exit-wait-time param added to perfdhcp (github 55)
+   2018-03: Cassandra: host delete, fixed DHCPv4 fields, user contexts,
+            Postgres: hwaddress source, type storage (github 70)
+   2018-07: Sysrepo detection improvements
+
+ - Patrik Lundin
+   2016-07: Replace test by expr for < in configure.ac
+   2016-11: Fixes in Lease File Cleanup unit test
+
+ - Michal Humpula (mihu)
+   2016-07: Response to DHCPINFORM is sent to port 68
+
+ - Andreas Rammhold (andir)
+   2016-09: Compilation fixes for GCC 6, using C++14.
+
+ - Yusef Shaban (xxwolfsrainxx)
+   2016-09: MySQL database creation scripts use single quotes for
+            strings to avoid issues with creation of the database
+            when MySQL server operates in ANSI_QUOTES mode.
+
+ - Cristian Secareanu, Qualitance
+   2016-10: Support for IPv6 prefix and PDEXCLUDE option
+
+ - Andrei Pavel, Qualitance
+   2016-10: Support for DHCPv6 options defined in RFC6603 and RFC7598
+   2017-02: Doxygen support updated to 1.8.11
+   2017-02: Improved PgSQL backend version handling
+   2017-02: Numerous spelling mistakes
+   2017-12: Significant update for Cassandra backend
+   2018-01: Host reservations for Cassandra
+   2018-01: Uniform compilation
+   2018-01: Various changes (github 54,43)
+   2018-02: Documentation upgraded to DocBook 5.0
+   2018-02: --with-dhcp-XXX renamed to --with-XXX
+   2018-02: Support for Google benchmark added (github 36)
+   2018-02: exit-wait-time param added to perfdhcp (github 55)
+   2018-07: Sysrepo detection improvements
+   2020-05: Fix exit-wait-time in perfdhcp
+
+ - Vincent Legout
+   2016-11: Fixed serveral spelling mistakes
+
+ - Sebasian Schrader
+   2017-01: Fix build dir in doc/guide/Makefile.am
+
+ - Marvin Frick (MrMarvin)
+   2017-04: -h and --host parameters added to kea-admin
+
+ - Olivier Clavel (zeitounator)
+   2017-04: Improvements in valgrind test script
+
+ - Josh Soref (jsoref)
+   2017-07: Many spelling corrections.
+
+ - Walt Steverson (waltsteverson)
+   2017-07: Compilation fixed for Alpine Linux
+   2017-07: option6_pdexclude.h now installed properly
+
+ - Ebben Aries
+   2017-10: Option length checks improvements for the V-I Vendor Class option
+
+ - Ryan Goodfellow (rcgoodfellow)
+   2018-01: Fix kea-admin typo breaking lease-dump
+
+ - Sunil Mayya
+   2018-07: support for Authentication option in DHCPv6
+   2018-07: support storage of Authentication keys in host structure
+   2018-08: Optimized query for host reservation from the backends
+
+ - Piotr Strzyżewski
+   2018-07: YANG model for DHCPv4 Kea
+
+ - Vicky Risk
+   2018-08: Documentation clean up
+   2018-10: API documentation clean ups
+
+ - Franciszek Gorski
+   2018-10: Makefile bug fixed
+   2019-07: Statistics enhancements
+   2019-09: Statistics initialization enhancements
+
+ - Suzanne Goldlust
+   2018-10: API documentation
+
+ - lpaserati, Thorsten Krohn
+   2018-11: Two bugfixes in kea-admin
+
+ - Kristoffer Larsen
+   2019-10: Changes in alloc_engine_messages.mes are now picked up correctly.
+
+ - Niclas Rosenvik
+   2020-01: Fix in the gtest detection scripts.

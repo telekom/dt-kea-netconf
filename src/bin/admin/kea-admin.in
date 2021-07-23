@@ -1,0 +1,1565 @@
+#!/bin/sh
+
+# Copyright (C) 2014-2020 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This is kea-admin script that conducts administrative tasks on the Kea
+# installation. Currently supported operations are:
+#
+# - database init
+# - database version check
+# - database version upgrade
+# - lease database dump
+# - lease database recount
+
+
+# Get the location of the kea-admin scripts
+prefix="@prefix@"
+export prefix
+SCRIPTS_DIR_DEFAULT="@datarootdir@/@PACKAGE@/scripts"
+scripts_dir="${SCRIPTS_DIR_DEFAULT}"
+VERSION="@PACKAGE_VERSION@"
+EXTENDED_VERSION="@EXTENDED_VERSION@"
+
+# These are the default parameters. They will likely not work in any
+# specific deployment.
+db_host="localhost"
+db_user="keatest"
+db_password="keatest"
+db_name="keatest"
+db_server_port=""
+db_use_ssl=""
+
+# These are CQL default parameters
+db_server_version=""
+
+# lease dump parameters
+dump_type=0
+dump_file=""
+dump_qry=""
+
+# Include utilities. Use installed version if available and
+# use build version if it isn't.
+# shellcheck disable=SC1091
+if [ -e @datarootdir@/@PACKAGE_NAME@/scripts/admin-utils.sh ]; then
+    . @datarootdir@/@PACKAGE_NAME@/scripts/admin-utils.sh
+else
+    . @abs_top_srcdir@/src/bin/admin/admin-utils.sh
+fi
+
+# Prints out usage version.
+usage() {
+    printf "kea-admin %s\n" "$VERSION"
+    printf "\n"
+    printf "This is a kea-admin script that conducts administrative tasks on\n"
+    printf "the Kea installation.\n"
+    printf "\n"
+    printf "Usage: %s COMMAND BACKEND [parameters]\n" "$0"
+    printf "\n"
+    printf "COMMAND: Currently supported operations are:\n"
+    printf "\n"
+    printf " - -h or --help: Displays this help.\n"
+    printf " - -d or --debug: Enables debug mode.\n"
+    printf " - create-db-and-users: internal use only\n"
+    printf " - db-create: Creates new empty databases. Useful for first time installation.\n"
+    printf " - db-drop: Drops all tables in the lease database. \n"
+    printf " - db-remove: Removes an existing database.\n"
+    printf " - db-init: Initializes new database. Useful for first time installation.\n"
+    printf " - db-version: Checks version of the existing database scheme. Useful\n"
+    printf " -             for checking databaseB version when preparing for an upgrade.\n"
+    printf " - db-upgrade: Upgrades your database scheme\n"
+    printf " - lease-dump: Dump current leases to a CSV file\n"
+    printf " - config-init: Initalizes new config database. Useful for first time installation.\n"
+    printf " - config-version: Checks version of the existing config database scheme. Useful\n"
+    printf " -                 for checking config DB version when preparing for an upgrade.\n"
+    printf " - config-upgrade: Upgrades your config database scheme\n"
+    printf " - master-init: Initalizes new master config database. Useful for first time installation.\n"
+    printf " - master-version: Checks version of the existing master config database scheme. Useful\n"
+    printf " -                 for checking master config DB version when preparing for an upgrade.\n"
+    printf " - master-upgrade: Upgrades your master config database scheme\n"
+    printf " - stats-recount: Recounts lease statistics\n"
+    printf "\n"
+    printf "BACKEND - one of the supported backends: memfile|mysql|pgsql|cql\n"
+    printf "\n"
+    printf "PARAMETERS: Parameters are optional in general, but may be required\n"
+    printf "            for specific operation.\n"
+    printf " -sp or --server-port - specifies remote database server port\n"
+    printf " --db-server-version - specifies remote database version\n"
+    printf " -h or --host hostname - specifies a hostname of a database to connect to\n"
+    printf " -u or --user name - specifies username when connecting to a database\n"
+    printf " -p or --password pass - specifies a password when connecting to a database\n"
+    printf " -n or --name database - specifies a database name to connect to\n"
+    printf " -d or --directory - path to upgrade scripts (default: ${SCRIPTS_DIR_DEFAULT})\n"
+    printf " -v or --version - prints kea-admin version and quits.\n"
+    printf " -V or --extended-version - prints kea-admin extended version and quits.\n"
+    printf " --ssl - specifies the use of ssl encrypted connections\n"
+    printf "\n"
+    printf " Parameters specific to lease-dump:\n"
+    printf "     -4 to dump IPv4 leases to file\n"
+    printf "     -6 to dump IPv6 leases to file\n"
+    printf "     -o or --output - name of file to which leases will be dumped\n"
+}
+
+
+### Logging functions ###
+
+# Logs message at the error level.
+# Takes one parameter that is printed as is.
+log_error() {
+    printf "ERROR/kea-admin: %s\n" "${1}"
+}
+
+# Logs message at the warning level.
+# Takes one parameter that is printed as is.
+log_warning() {
+    printf "WARNING/kea-admin: %s\n" "${1}"
+}
+
+# Logs message at the info level.
+# Takes one parameter that is printed as is.
+log_info() {
+    printf "INFO/kea-admin: %s\n" "${1}"
+}
+
+### Convenience functions ###
+
+# Checks if the value is in the list. An example usage of this function
+# is to determine whether the kea-admin command belongs to the list of
+# supported commands.
+is_in_list() {
+    local member=${1}  # Value to be checked
+    local list="${2}"  # Comma separated list of items
+    _inlist=0          # Return value: 0 if not in list, 1 otherwise.
+    if [ -z "${member}" ]; then
+        log_error "missing member (need to specify a string as first param)"
+    fi
+    # Iterate over all items on the list and compare with the member.
+    # If they match, return, otherwise log error and exit.
+    for item in ${list}
+    do
+        if [ "${item}" = "${member}" ]; then
+            _inlist=1
+            return
+        fi
+    done
+}
+
+
+### Functions that implement database initialization commands
+
+memfile_init() {
+    # Useless as Kea converts CSV versions at startup.
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+memfile_config_init() {
+    # @todo Implement this as part of #3601
+    log_error 'NOT IMPLEMENTED'
+    exit 1
+}
+
+memfile_master_init() {
+    # @todo Implement this as part of #3601
+    log_error 'NOT IMPLEMENTED'
+    exit 1
+}
+
+# Validates that the MySQL db_users's permissions are sufficient to
+# create the schema.
+mysql_can_create() {
+    # Let's grab the version for possible debugging issues.  It also
+    # determines basic functional access to db.
+    RESULT=$(mysql_execute "select @@global.version;")
+    ERRCODE=$?
+    if [ $ERRCODE -ne  0 ]
+    then
+        log_error "mysql_can_create: get MySQL version failed, mysql status = $ERRCODE"
+        exit 1
+    fi
+
+    printf "MySQL Version is: %s\n" "$RESULT"
+
+    # SQL to drop our test table and trigger
+    cleanup_sql="DROP TABLE IF EXISTS kea_dummy_table; DROP PROCEDURE IF EXISTS kea_dummy_trigger;"
+
+    # SQL to create our test table
+    table_sql="CREATE TABLE kea_dummy_table(dummy INT UNSIGNED PRIMARY KEY NOT NULL);"
+
+    # SQL to create our test trigger
+    trigger_sql="\
+CREATE TRIGGER kea_dummy_trigger BEFORE insert ON kea_dummy_table FOR EACH ROW\n \
+BEGIN\n \
+END;"
+
+    # Let's clean up just in case.
+    RESULT=$(mysql_execute "$cleanup_sql")
+    ERRCODE=$?
+    if [ $ERRCODE -ne  0 ]
+    then
+        log_error "mysql_can_create cannot run pre cleanup, mysql status = $ERRCODE"
+        exit 1;
+    fi
+
+    # Now make the dummy table.
+    perms_ok=1
+    RESULT=$(mysql_execute "$table_sql")
+    ERRCODE=$?
+    if [ $ERRCODE -ne  0 ]
+    then
+        log_error "mysql_can_create cannot create table, check user permissions, mysql status = $ERRCODE"
+        perms_ok=0;
+    else
+        # Now attempt to make trigger
+        RESULT=$(mysql_execute "$trigger_sql")
+        ERRCODE=$?
+        if [ $ERRCODE -ne  0 ]
+        then
+            log_error "mysql_can_create cannot trigger, check user permissions, mysql status = $ERRCODE"
+            perms_ok=0;
+        fi
+    fi
+
+    # Try to cleanup no matter what happened above
+    RESULT=$(mysql_execute "$cleanup_sql")
+    ERRCODE=$?
+    if [ $ERRCODE -ne  0 ]
+    then
+        log_error "mysql_can_create cannot run post cleanup, mysql status = $ERRCODE"
+        exit 1;
+    fi
+
+    if [ $perms_ok -ne 1 ]
+    then
+        log_error "Create failed, the user, $db_user, has insufficient privileges."
+        exit 1;
+    fi
+}
+
+# Initializes a new, empty MySQL database.
+# It essentially calls scripts/mysql/dhcpdb_create.mysql script, with
+# some extra sanity checks. It will refuse to use it if there are any
+# existing tables. It's better safe than sorry.
+mysql_init() {
+    printf "Checking if there is a database initialized already.\n"
+
+    # Let's try to count the number of tables. Anything above 0 means that there
+    # is some database in place. If there is anything, we abort. Note that
+    # mysql may spit out connection or access errors to stderr, we ignore those.
+    # We should not hide them as they may give hints to user what is wrong with
+    # his setup.
+    #
+    RESULT=$(mysql_execute "SHOW TABLES;")
+    ERRCODE=$?
+    if [ $ERRCODE -ne 0 ]
+    then
+        log_error "mysql_init table query failed, mysql status = $ERRCODE"
+        exit 1
+    fi
+
+    COUNT=$(echo "$RESULT" | wc -w)
+    if [ "$COUNT" -gt 0 ]; then
+        # Let's start with a new line. mysql could have printed something out.
+        printf "\n"
+        log_error "Expected empty database $db_name, but there are $COUNT tables: \n$RESULT. Aborting."
+        exit 1
+    fi
+
+    # Beginning with MySQL 8.0, the db user needs additional settings or SUPER
+    # privileges to create triggers and or functions. Call mysql_can_create to find
+    # out if we're good to go.  If not, it will exit.
+    printf "Verifying create permissions for %s\n" "$db_user"
+    mysql_can_create
+
+    printf "Initializing database using script %s\n" $scripts_dir/mysql/dhcpdb_create.mysql
+    mysql_execute_script $scripts_dir/mysql/dhcpdb_create.mysql
+    ERRCODE=$?
+
+    printf "mysql returned status code %s\n" "$ERRCODE"
+
+    if [ "$ERRCODE" -eq 0 ]; then
+        printf "Database version reported after initialization: "
+        mysql_version
+        printf "\n"
+    fi
+
+    exit $ERRCODE
+}
+
+# Creates a new, empty MySQL database.
+mysql_db_create() {
+    for name in $(printf ${db_name} | tr ',' '\n'); do
+        command="CREATE DATABASE ${name};"
+        mysql_execute "${command}" --no-database > /dev/null
+        exit_code=${?}
+        if [ ${exit_code} = 0 ]; then
+            printf 'Database "%s" has been created.\n' "${name}"
+        else
+            log_error "Database '${name}' creation failed, status code: ${exit_code}"
+            break
+        fi
+    done
+
+    exit ${exit_code}
+}
+
+# Removes an existing MySQL database.
+mysql_db_remove() {
+    for name in $(printf ${db_name} | tr ',' '\n'); do
+        command="DROP DATABASE ${name};"
+        mysql_execute "${command}" --no-database > /dev/null
+        exit_code=${?}
+        if [ ${exit_code} = 0 ]; then
+            printf 'Database "%s" has been removed.\n' "${name}"
+        else
+            log_error "Database '${name}' removal failed, status code: ${exit_code}"
+            break
+        fi
+    done
+
+    exit ${exit_code}
+}
+
+mysql_config_init() {
+    mysql_execute_script "${scripts_dir}/mysql/configdb_create.mysql"
+    version="$(mysql_config_version)"
+    exit_code=${?}
+    printf 'Config DB version reported after initialization: %s\n' "${version}"
+    exit ${exit_code}
+}
+
+mysql_master_init() {
+    mysql_execute_script "${scripts_dir}/mysql/masterdb_create.mysql"
+    version="$(mysql_master_version)"
+    exit_code=${?}
+    printf 'Master DB version reported after initialization: %s\n' "${version}"
+    exit ${exit_code}
+}
+
+# Creates a new, empty PgSQL database.
+pgsql_db_create() {
+    for name in $(printf ${db_name} | tr ',' '\n'); do
+        command="CREATE DATABASE ${name};"
+        pgsql_execute "${command}" --no-database > /dev/null
+        exit_code=${?}
+        if [ ${exit_code} = 0 ]; then
+            printf 'Database "%s" has been created.\n' "${name}"
+        else
+            log_error "Database '${name}' creation failed, status code: ${exit_code}"
+            break
+        fi
+    done
+
+    exit ${exit_code}
+}
+
+# Removes an existing PgSQL database.
+pgsql_db_remove() {
+    for name in $(printf ${db_name} | tr ',' '\n'); do
+        command="DROP DATABASE $name;"
+        pgsql_execute "${command}" --no-database > /dev/null
+        exit_code=${?}
+        if [ ${exit_code} = 0 ]; then
+            printf 'Database "%s" has been removed.\n' "${name}"
+        else
+            log_error "Database '${name}' removal failed, status code: ${exit_code}"
+            break
+        fi
+    done
+
+    exit ${exit_code}
+}
+
+pgsql_init() {
+    printf "Checking if there is a database initialized already.\n"
+
+    # Let's try to count the number of tables. Anything above 0 means that there
+    # is some database in place. If there is anything, we abort.
+    RESULT=$(pgsql_execute "\d")
+    ERRCODE=$?
+    if [ "$ERRCODE" -ne 0 ]; then
+        log_error "pgsql_init: table query failed, status code: $ERRCODE?"
+        exit 1
+    fi
+
+    COUNT=$(echo "$RESULT" | wc -w)
+    if [ "$COUNT" -gt 0 ]; then
+        printf "\n"
+        log_error "Expected empty database $db_name, but the following tables are present \n$RESULT. Aborting."
+        exit 2
+    fi
+
+    init_script="$scripts_dir/pgsql/dhcpdb_create.pgsql"
+    printf "Initializing database using script %s\n" $init_script
+    RESULT=$(pgsql_execute_script $init_script)
+    ERRCODE=$?
+    if [ "$ERRCODE" -ne 0 ]; then
+        log_error "Database initialization failed, status code: $ERRCODE?"
+        exit 1
+    fi
+
+    version=$(pgsql_version)
+    printf "Database version reported after initialization: %s\n" "$version"
+    exit 0
+}
+
+pgsql_config_init() {
+    pgsql_execute_script "${scripts_dir}/pgsql/configdb_create.pgsql"
+    version="$(pgsql_config_version)"
+    exit_code=${?}
+    printf 'Config DB version reported after initialization: %s\n' "${version}"
+    exit ${exit_code}
+}
+
+pgsql_master_init() {
+    pgsql_execute_script $scripts_dir/pgsql/masterdb_create.pgsql
+    version="$(pgsql_master_version)"
+    exit_code=${?}
+    printf 'Master DB version reported after initialization: %s\n' "${version}"
+    exit ${exit_code}
+}
+
+# Creates a new, empty CQL database.
+cql_db_create() {
+    # Set default values for the keyspace strategy and replication.
+    strategy='SimpleStrategy'
+    replication='1'
+
+    # Load the keyspace strategy and replication from file.
+    . "${scripts_dir}/cql/masterdb_create_config.sh"
+    exit_code=${?}
+    if [ ${exit_code} != 0 ]; then
+        log_error "Could not execute script 'masterdb_create_config.sh' file, status code: ${exit_code}"
+        exit ${exit_code}
+    fi
+
+    for name in $(printf ${db_name} | tr ',' '\n'); do
+        command="CREATE KEYSPACE ${name} WITH REPLICATION = { 'class' : '${strategy}', 'replication_factor' : ${replication} };"
+        cql_execute "${command}" --no-database > /dev/null
+        exit_code=${?}
+        if [ ${exit_code} = 0 ]; then
+            printf 'Keyspace "%s" has been created.\n' "${name}"
+        else
+            log_error "Keyspace '${name}' creation failed, status code: ${exit_code}"
+            break
+        fi
+    done
+
+    exit ${exit_code}
+}
+
+# Removes an existing CQL database.
+cql_db_remove() {
+    for name in $(printf ${db_name} | tr ',' '\n'); do
+        command="DROP KEYSPACE ${name}"
+        cql_execute "${command}" > /dev/null
+        exit_code=$?
+        if [ ${exit_code} = 0 ]; then
+            printf 'Keyspace "%s" has been removed.\n' "${name}"
+        else
+            log_error "Keyspace '${name}' removal failed, status code: ${exit_code}"
+            break
+        fi
+    done
+
+    exit ${exit_code}
+}
+
+cql_init() {
+    printf 'Checking if there is a database initialized already...\n'
+
+    # Capture only stdout in result and stderr in file so that we can output it in case of issues.
+    trap 'rm -rf /tmp/kea-admin-errors.txt' EXIT
+    result="$(cql_execute 'DESCRIBE tables;' 2> /tmp/kea-admin-errors.txt)"
+    exit_code=${?}
+
+    # First condition is for Cassandra <= 3, second condition is for Cassandra >= 4.
+    if test "$(printf '%s' "${result}" | grep -c '<empty>')" != 0 || test -z "${result}"; then
+        printf 'Creating and initializing tables using script %s...\n' ${scripts_dir}/cql/dhcpdb_create.cql
+        cql_execute_script "${scripts_dir}/cql/dhcpdb_create.cql"
+    else
+        if test ${exit_code} = 0; then
+            log_error "ERROR: Expected empty database ${db_name}, but the following tables are present: \\n${result}. Aborting."
+        else
+            log_error "ERROR: Unable to execute cql_execute, reason: \\n$(cat /tmp/kea-admin-errors.txt). Aborting."
+        fi
+        exit 2
+    fi
+
+    version=$(cql_version)
+    printf 'Database version reported after initialization: %s\n' "${version}"
+}
+
+cql_config_init() {
+    cql_execute_script "${scripts_dir}/cql/configdb_create.cql"
+    version="$(cql_config_version)"
+    exit_code=${?}
+    printf 'Config DB version reported after initialization: %s\n' "${version}"
+    exit ${exit_code}
+}
+
+cql_master_init() {
+    cql_execute_script "${scripts_dir}/cql/masterdb_create.cql"
+    version="$(cql_master_version)"
+    exit_code=${?}
+    printf 'Master DB version reported after initialization: %s\n' "${version}"
+    exit ${exit_code}
+}
+
+# Drop functions
+memfile_drop() {
+    # @todo Implement this as part of #3601
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+mysql_drop() {
+    script="${scripts_dir}/mysql/dhcpdb_drop.mysql"
+    printf 'Droping tables in database using script %s...\n' "${script}"
+    mysql -B --user=${db_user} --password=${db_password} ${db_name} < "${script}"
+    exit_code=${?}
+    printf 'mysql_drop returned with code %s\n' "${exit_code}"
+    exit ${exit_code}
+}
+
+pgsql_drop() {
+    script="${scripts_dir}/pgsql/dhcpdb_drop.pgsql"
+    printf 'Droping tables in database using script %s...\n' "${script}"
+    pgsql_execute_script "${script}"
+    exit_code=${?}
+    printf 'pgsql_drop returned with code %s\n' "${exit_code}"
+    exit ${exit_code}
+}
+
+cql_drop() {
+    script="${scripts_dir}/cql/dhcpdb_drop.cql"
+    printf 'Droping tables in database using script %s...\n' "${script}"
+    cql_execute_script "${script}"
+    exit_code=${?}
+    printf 'cql_drop returned with code %s\n' "${exit_code}"
+    exit ${exit_code}
+}
+
+### Functions that implement database version checking commands
+memfile_version() {
+    # @todo Implement this?
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+memfile_config_version() {
+    # @todo Implement this as part of #3601
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+memfile_master_version() {
+    # @todo Implement this as part of #3601
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+### Functions used for upgrade
+memfile_upgrade() {
+    # Useless as Kea converts CSV versions at startup.
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+### Functions used for upgrade
+memfile_config_upgrade() {
+    # @todo Implement this as part of #3601
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+### Functions used for upgrade
+memfile_master_upgrade() {
+    # @todo Implement this as part of #3601
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+# Upgrades existing MySQL database installation. The idea is that
+# it will go over all upgrade scripts from (prefix)/share/kea/scripts/mysql
+# and run them one by one. They will be named properly, so they will
+# be run in order.
+#
+# This function prints version before and after upgrade.
+mysql_upgrade() {
+
+    printf "Database version reported before upgrade: "
+    mysql_version
+    printf "\n"
+
+    # Check if the scripts directory exists at all.
+    if [ ! -d ${scripts_dir}/mysql ]; then
+        log_error "Invalid scripts directory: ${scripts_dir}/mysql"
+        exit 1
+    fi
+
+    # Check if there are any files in it
+    num_files=$(find "${scripts_dir}/mysql" -name 'upgrade*.sh' -type f | wc -l)
+    if [ "$num_files" -eq 0 ]; then
+        log_error "No scripts in ${scripts_dir}/mysql or the directory is not readable or does not have any upgrade* scripts."
+        exit 1
+    fi
+
+    # Beginning with MySQL 8.0, the db user needs additional settings or SUPER
+    # privileges to create triggers and or functions. Call mysql_can_create to find
+    # out if we're good to go.  If not, it will exit.
+    printf "Verifying upgrade permissions for %s\n" "$db_user"
+    mysql_can_create
+
+    for script in "${scripts_dir}"/mysql/upgrade*.sh
+    do
+        echo "Processing $script file..."
+        sh "${script}" --host="${db_host}" --user="${db_user}" --password="${db_password}" "${db_name}"
+    done
+
+    printf "Database version reported after upgrade: "
+    mysql_version
+    printf "\n"
+}
+
+mysql_config_upgrade() {
+    printf 'Config DB version reported before upgrade: %s\n' "$(mysql_config_version)"
+
+    # Check if the scripts directory exists at all.
+    if test ! -d "${scripts_dir}/mysql"; then
+        log_error "Invalid scripts directory: ${scripts_dir}/mysql"
+        exit 1
+    fi
+
+    # Check if there are any files in it
+    num_files="$(find "${scripts_dir}"/mysql/config_upgrade*.sh -type f | wc -l)"
+    if [ ${num_files} = 0 ]; then
+        log_error "No scripts in ${scripts_dir}/mysql or the directory is not readable or does not have any config_upgrade* scripts."
+        exit 1
+    fi
+
+    for script in "${scripts_dir}"/mysql/config_upgrade*.sh; do
+        printf 'Processing %s file...\n' "${script}"
+        sh "${script}" --user="${db_user}" --password="${db_password}" "${db_name}"
+    done
+
+    printf 'Config DB version reported after upgrade: %s\n' "$(mysql_config_version)"
+}
+
+mysql_master_upgrade() {
+    printf 'Master DB version reported before upgrade: %s\n' "$(mysql_master_version)"
+
+    # Check if the scripts directory exists at all.
+    if test ! -d "${scripts_dir}/mysql"; then
+        log_error "Invalid scripts directory: ${scripts_dir}/mysql"
+        exit 1
+    fi
+
+    # Check if there are any files in it
+    num_files="$(find "${scripts_dir}"/mysql/master_upgrade*.sh -type f | wc -l)"
+    if [ ${num_files} = 0 ]; then
+        log_error "No scripts in ${scripts_dir}/mysql or the directory is not readable or does not have any master_upgrade* scripts."
+        exit 1
+    fi
+
+    for script in "${scripts_dir}"/mysql/master_upgrade*.sh; do
+        printf 'Processing %s file...\n' "${script}"
+        sh "${script}" --user="${db_user}" --password="${db_password}" "${db_name}"
+    done
+
+    printf 'Master DB version reported after upgrade: %s\n' "$(mysql_master_version)"
+}
+
+pgsql_upgrade() {
+    version=$(pgsql_version)
+    printf "Database version reported before upgrade: %s\n" "$version"
+
+    # Check if the scripts directory exists at all.
+    if [ ! -d ${scripts_dir}/pgsql ]; then
+        log_error "Invalid scripts directory: ${scripts_dir}/pgsql"
+        exit 1
+    fi
+
+    # Check if there are any files in it
+    num_files=$(find "${scripts_dir}/pgsql" -name 'upgrade*.sh' -type f | wc -l)
+    if [ "$num_files" -eq 0 ]; then
+        log_error "No scripts in ${scripts_dir}/pgsql or the directory is not readable or does not have any upgrade* scripts."
+        exit 1
+    fi
+
+    # Postgres psql does not accept pw on command line, but can do it
+    # thru an env
+    export PGPASSWORD=$db_password
+
+    for script in "${scripts_dir}"/pgsql/upgrade*.sh; do
+        echo "Processing $script file..."
+        sh "${script}" -U "${db_user}" -h "${db_host}" -d "${db_name}"
+    done
+
+    version=$(pgsql_version)
+    printf "Database version reported after upgrade: %s\n" "$version"
+    exit 0
+}
+
+pgsql_config_upgrade() {
+    printf 'Config DB version reported before upgrade: %s\n' "$(pgsql_config_version)"
+
+    # Check if the scripts directory exists at all.
+    if test ! -d ${scripts_dir}/pgsql; then
+        log_error "Invalid scripts directory: ${scripts_dir}/pgsql"
+        exit 1
+    fi
+
+    # Check if there are any files in it
+    num_files="$(find "${scripts_dir}"/pgsql/config_upgrade*.sh -type f | wc -l)"
+    if [ ${num_files} = 0 ]; then
+        log_error "No scripts in ${scripts_dir}/pgsql or the directory is not readable or does not have any config_upgrade* scripts."
+        exit 1
+    fi
+
+    for script in "${scripts_dir}"/pgsql/config_upgrade*.sh; do
+        printf 'Processing %s file...\n' "${script}"
+        sh "${script}" -U "${db_user}" -h localhost -d "${db_name}"
+    done
+
+    printf 'Config DB version reported after upgrade: %s\n' "$(pgsql_config_version)"
+}
+
+pgsql_master_upgrade() {
+    printf 'Config DB version reported before upgrade: %s\n' "$(pgsql_master_version)"
+
+    # Check if the scripts directory exists at all.
+    if test ! -d "${scripts_dir}/pgsql"; then
+        log_error "Invalid scripts directory: ${scripts_dir}/pgsql"
+        exit 1
+    fi
+
+    # Check if there are any files in it
+    num_files="$(find "${scripts_dir}"/pgsql/master_upgrade*.sh -type f | wc -l)"
+    if [ ${num_files} = 0 ]; then
+        log_error "No scripts in ${scripts_dir}/pgsql or the directory is not readable or does not have any master_upgrade* scripts."
+        exit 1
+    fi
+
+    for script in "${scripts_dir}"/pgsql/master_upgrade*.sh; do
+        printf 'Processing %s file...\n' "${script}"
+        sh "${script}" -U "${db_user}" -h localhost -d "${db_name}"
+    done
+
+    printf 'Config DB version reported after upgrade: %s\n' "$(pgsql_master_version)"
+}
+
+cql_upgrade() {
+    version=$(cql_version)
+    printf 'Lease DB version reported before upgrade: %s\n' "${version}"
+
+    # Check if the scripts directory exists at all.
+    if [ ! -d ${scripts_dir}/cql ]; then
+        log_error "Invalid scripts directory: ${scripts_dir}/cql"
+        exit 1
+    fi
+
+    # Check if directory is readable.
+    if [ ! -r ${scripts_dir}/cql ]; then
+        log_error "Directory is not readable: ${scripts_dir}/cql"
+        exit 1
+    fi
+
+    # Check if there are upgrade scripts.
+    find "${scripts_dir}/cql" -name 'upgrade*.sh' -type f
+    if [ $? -eq 0 ]; then # Upgrade scripts are present.
+        for script in "${scripts_dir}"/cql/upgrade*.sh; do
+            printf 'Processing %s file...\n' "${script}"
+            if test -z "${db_server_version}"; then
+                sh "${script}" -u "${db_user}" -p "${db_password}" -k "${db_name}"
+            else
+                sh "${script}" -u "${db_user}" -p "${db_password}" -k "${db_name}" --cqlversion="${db_server_version}"
+            fi
+        done
+    else
+        printf 'No upgrade script available.\n'
+    fi
+
+    version=$(cql_version)
+    printf "Lease DB version reported after upgrade: %s\n" "$version"
+}
+
+cql_config_upgrade() {
+    printf 'Config DB version reported before upgrade: %s\n' "$(cql_config_version)"
+
+    # Check if the scripts directory exists at all.
+    if test ! -d "${scripts_dir}/cql"; then
+        log_error "Invalid scripts directory: ${scripts_dir}/cql"
+        exit 1
+    fi
+
+    # Check if directory is readable.
+    if test ! -r "${scripts_dir}/cql"; then
+        log_error "Directory is not readable: ${scripts_dir}/cql"
+        exit 1
+    fi
+
+    # Check if there are upgrade scripts.
+    files="$(find ${scripts_dir}/cql/config_upgrade*.sh -type f)"
+    if [ ${?} = 0 ]; then # Upgrade scripts are present.
+        for script in "${scripts_dir}"/cql/config_upgrade*.sh; do
+            printf 'Processing %s file...\n' "${script}"
+            if test -z ${db_server_version}; then
+                sh ${script} -u ${db_user} -p ${db_password} -k ${db_name}
+            else
+                sh ${script} -u ${db_user} -p ${db_password} -k ${db_name} --cqlversion=${db_server_version}
+            fi
+        done
+    else
+        printf 'No upgrade script available.\n'
+    fi
+
+    printf 'Config DB version reported after upgrade: %s\n' "$(cql_config_version)"
+}
+
+cql_master_upgrade() {
+    printf 'Master DB version reported before upgrade: %s\n' "$(cql_master_version)"
+
+    # Check if the scripts directory exists at all.
+    if test ! -d "${scripts_dir}/cql"; then
+        log_error "Invalid scripts directory: ${scripts_dir}/cql"
+        exit 1
+    fi
+
+    # Check if directory is readable.
+    if test ! -r "${scripts_dir}/cql"; then
+        log_error "Directory is not readable: ${scripts_dir}/cql"
+        exit 1
+    fi
+
+    # Check if there are upgrade scripts.
+    files=$(find "${scripts_dir}"/cql/master_upgrade*.sh -type f)
+    if [ ${?} = 0 ]; then # Upgrade scripts are present.
+        for script in "${scripts_dir}"/cql/master_upgrade*.sh; do
+            printf 'Processing %s file...\n' "${script}"
+            if test -z "${db_server_version}"; then
+                sh "${script}" -u "${db_user}" -p "${db_password}" -k "${db_name}"
+            else
+                sh "${script}" -u "${db_user}" -p "${db_password}" -k "${db_name}" --cqlversion="${db_server_version}"
+            fi
+        done
+    else
+        printf 'No upgrade script available.\n'
+    fi
+
+    printf 'Master DB version reported after upgrade: %s\n' "$(cql_master_version)"
+}
+
+# Utility function which tests if the given file exists and
+# if so notifies the user and provides them the opportunity
+# to abort the current command.
+check_file_overwrite () {
+    local file=$1
+    if [ -e "${file}" ]
+    then
+        echo "Output file, $file, exists and will be overwritten."
+        echo "Do you wish to continue? (y/n)"
+        read -r ans
+        if [ "${ans}" != "y" ]
+        then
+            echo "$command aborted by user."
+            exit 1
+        fi
+    fi
+}
+
+### Functions used for dump
+
+# Sets the global variable, dump_qry, to the schema-version specific
+# SQL text needed to dump the lease data for the current backend
+# and protocol
+get_dump_query() {
+    local version=$1
+
+    case ${backend} in
+        mysql)
+            invoke="call"
+            ;;
+        pgsql)
+            invoke="select * from"
+            ;;
+        *)
+            log_error "unsupported backend ${backend}"
+            usage
+            exit 1
+            ;;
+    esac
+
+    dump_qry="${invoke} lease${dump_type}DumpHeader();${invoke} lease${dump_type}DumpData();";
+}
+
+memfile_dump() {
+    log_error "lease-dump is not supported for memfile"
+    exit 1
+}
+
+mysql_dump() {
+
+    # Check the lease type was given
+    if [ $dump_type -eq 0 ]; then
+        log_error "lease-dump: lease type ( -4 or -6 ) needs to be specified"
+        usage
+        exit 1
+    fi
+
+    # get the correct dump query
+    version=$(mysql_version)
+    retcode=$?
+    if [ $retcode -ne 0 ]
+    then
+        log_error "lease-dump: mysql_version failed, exit code $retcode"
+        exit 1;
+    fi
+
+    # Fetch the correct SQL text. Note this function will exit
+    # if it fails.
+    get_dump_query "$version"
+
+    # Make sure they specified a file
+    if [ "$dump_file" = "" ]; then
+        log_error "you must specify an output file for lease-dump"
+        usage
+        exit 1
+
+    fi
+
+    # If output file exists, notify user, allow them a chance to bail
+    check_file_overwrite $dump_file
+
+    # Check the temp file too
+    tmp_file="$dump_file.tmp"
+    check_file_overwrite $tmp_file
+
+    # Run the sql to output tab-delimited lease data to a temp file.
+    # By using a temp file we can check for MySQL errors before using
+    # 'tr' to translate tabs to commas.  We do not use MySQL's output
+    # to file as that requires linux superuser privileges to execute
+    # the select.
+    mysql_execute "${dump_qry}" > $tmp_file
+    retcode=$?
+    if [ $retcode -ne 0 ]; then
+        log_error "lease-dump: mysql_execute failed, exit code $retcode";
+        exit 1
+    fi
+
+    # Now translate tabs to commas.
+    tr '\t' ',' < $tmp_file >$dump_file
+    retcode=$?
+    if [ $retcode -ne 0 ]; then
+        log_error "lease-dump: reformatting failed";
+        exit 1
+    fi
+
+    # delete the tmp file on success
+    rm $tmp_file
+    echo lease$dump_type successfully dumped to $dump_file
+    exit 0
+}
+
+### Functions used for dump
+pgsql_dump() {
+    # Check the lease type was given
+    if [ $dump_type -eq 0 ]; then
+        log_error "lease-dump: lease type ( -4 or -6 ) needs to be specified"
+        usage
+        exit 1
+    fi
+
+    version=$(pgsql_version)
+    get_dump_query "$version"
+
+    # Make sure they specified a file
+    if [ "$dump_file" = "" ]; then
+        log_error "you must specify an output file for lease-dump"
+        usage
+        exit 1
+
+    fi
+
+    # If output file exists, notify user, allow them a chance to bail
+    check_file_overwrite $dump_file
+
+    # psql does not accept password as a parameter but will look in the environment
+    export PGPASSWORD=$db_password
+
+    # Call psql and redirect output to the dump file. We don't use psql "to csv"
+    # as it can only be run as db superuser.
+    echo "$dump_qry" | psql --set ON_ERROR_STOP=1 -t -h $db_host -q --user=$db_user --dbname=$db_name -w --no-align --field-separator=',' >$dump_file
+    retcode=$?
+
+    # Check for errors.
+    if [ $retcode -ne 0 ]; then
+        log_error "lease-dump: psql call failed, exit code: $retcode";
+        exit 1
+    fi
+
+    echo lease$dump_type successfully dumped to $dump_file
+    exit 0
+}
+
+cql_dump() {
+    # Get the query appropriate to lease version. Explicitly specify all columns
+    # so that they are returned in expected order.
+    if [ $dump_type -eq 4 ]; then
+        dump_query="SELECT address,hwaddr,client_id,valid_lifetime,expire,subnet_id,fqdn_fwd,fqdn_rev,hostname,state,user_context FROM lease4"
+    elif [ $dump_type -eq 6 ]; then
+        dump_query="SELECT address,duid,valid_lifetime,expire,subnet_id,pref_lifetime,lease_type,iaid,prefix_len,fqdn_fwd,fqdn_rev,hostname,hwaddr,hwtype,hwaddr_source,state,user_context FROM lease6"
+    else
+        log_error "lease-dump: lease type ( -4 or -6 ) needs to be specified"
+        usage
+        exit 1
+    fi
+
+    # Check if file was specified.
+    if [ "$dump_file" = "" ]; then
+        log_error "lease-dump: output file needs to be specified with -o"
+        usage
+        exit 1
+    fi
+
+    # If output file exists, notify user, allow them a chance to bail.
+    check_file_overwrite $dump_file
+
+    # Run query, check for failure.
+    result=$(cql_execute "$dump_query")
+    return_code=$?
+    if [ $return_code -ne 0 ]; then
+        log_error "lease-dump: cql_execute failed, exit code $return_code";
+        exit 1
+    fi
+
+    # Parse and display header.
+    echo "$result" | head -n 2 | tail -n 1 | sed -e 's/[[:space:]]*//g' | sed -e 's/|/,/g' > $dump_file
+
+    # Parse and display contents - done separately from header to allow sorting
+    # by address. awk script replaces head -n -2 which is not portable.
+    echo "$result" | tail -n +4 | awk 'n>=2 { print a[n%2] } { a[n%2]=$0; n=n+1 }' | sed -e 's/[[:space:]]*//g' | sed -e 's/|/,/g' | sort -r >> $dump_file
+
+    echo lease$dump_type successfully dumped to $dump_file
+    exit 0
+}
+
+memfile_create_database_and_users() {
+    log_error "NOT IMPLEMENTED"
+    exit 1
+}
+
+mysql_create_database_and_users() {
+    for query in                                                    \
+        "CREATE USER 'keatest' IDENTIFIED BY 'keatest';"            \
+        'GRANT ALL ON *.* TO keatest;'                              \
+        'CREATE DATABASE keatest;'                                  \
+        "CREATE USER 'keatest_readonly' IDENTIFIED BY 'keatest';"   \
+        'GRANT SELECT ON keatest.* TO keatest_readonly;'            \
+        ; do
+        mysql_execute "${query}" --no-database
+    done
+}
+
+pgsql_create_database_and_users() {
+    db_user='postgres'
+    for query in                                                \
+        "CREATE USER keatest WITH PASSWORD 'keatest' CREATEDB;" \
+        'CREATE DATABASE keatest;'                              \
+        'GRANT ALL PRIVILEGES ON DATABASE keatest TO keatest;'  \
+        "CREATE USER keatest_readonly WITH PASSWORD 'keatest';" \
+        ; do
+        pgsql_execute "${query}" --no-database
+    done
+    db_user='keatest'
+    db_password='keatest'
+    pgsql_execute 'ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT SELECT ON TABLES TO keatest_readonly;'
+}
+
+cql_create_database_and_users() {
+    cql_execute "CREATE KEYSPACE keatest WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}" --no-database
+}
+
+### Functions used for recounting statistics
+mysql_recount() {
+    printf "Recount lease statistics from database\n"
+
+    RESULT=$(mysql_execute "$_RECOUNT4_QUERY")
+    ERRCODE=$?
+    if [ $ERRCODE -ne 0 ]
+    then
+        log_error "mysql failed to recount IPv4 leases, mysql status = $ERRCODE"
+        exit 1
+    fi
+
+    RESULT=$(mysql_execute "$_RECOUNT6_QUERY")
+    ERRCODE=$?
+    if [ $ERRCODE -ne 0 ]
+    then
+        log_error "mysql failed to recount IPv6 leases, mysql status = $ERRCODE"
+        exit 1
+    fi
+}
+
+pgsql_recount() {
+    printf "Recount lease statistics from database\n"
+
+    RESULT=$(pgsql_execute "$_RECOUNT4_QUERY")
+    ERRCODE=$?
+    if [ $ERRCODE -ne 0 ]
+    then
+        log_error "pgsql failed to recount IPv4 leases, pgsql status = $ERRCODE"
+        exit 1
+    fi
+
+    RESULT=$(pgsql_execute "$_RECOUNT6_QUERY")
+    ERRCODE=$?
+    if [ $ERRCODE -ne 0 ]
+    then
+        log_error "pgsql failed to recount IPv6 leases, pgsql status = $ERRCODE"
+        exit 1
+    fi
+}
+
+### Script starts here ###
+
+# Check if this is a debug mode set.
+if test "${1}" = "-d" || test "${1}" = "--debug"; then
+    shift
+    set -x
+fi
+
+# First, find what the command is
+command=${1}
+if [ -z "${command}" ]; then
+    log_error "missing command"
+    usage
+    exit 1
+fi
+
+# Check if this a simple help request.
+if [ "${command}" = "-h" -o "${command}" = "--help" ]; then
+    usage
+    exit 0
+fi
+
+# Check if this is a simple question about version.
+if test "${command}" = "-v" || test "${command}" = "--version" ; then
+    echo "${VERSION}"
+    exit 0
+fi
+if test "${command}" = "-V" || test "${command}" = "--extended-version"; then
+    printf '%s\n' "${EXTENDED_VERSION}"
+    exit 0
+fi
+
+is_in_list "${command}" "create-db-and-users db-create db-remove db-init db-drop db-version db-upgrade lease-dump stats-recount config-init config-version config-upgrade master-init master-version master-upgrade"
+if [ ${_inlist} -eq 0 ]; then
+    log_error "invalid command: ${command}"
+    usage
+    exit 1
+fi
+shift
+
+# Second, check what's the backend
+backend=${1}
+if [ -z "${backend}" ]; then
+    log_error "missing backend"
+    usage
+    exit 1
+fi
+is_in_list "${backend}" "memfile mysql pgsql cql"
+if [ ${_inlist} -eq 0 ]; then
+    log_error "invalid backend: ${backend}"
+    exit 1
+fi
+shift
+
+# Ok, let's process parameters (if there are any)
+while [ -n "${1}" ]
+do
+    option=${1}
+    case ${option} in
+        # Specify server port
+        -sp|--server-port)
+            shift
+            db_server_port=${1}
+            if [ -z ${db_server_port} ]; then
+                log_error "-sp or --server-port requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify use of ssl
+        --ssl)
+            shift
+            db_use_ssl=${1}
+            if [ -z ${db_use_ssl} ]; then
+                log_error "--ssl requires a parameter"
+                usage
+                exit 1
+            fi
+            if [ ${db_use_ssl} != "yes" ]; then
+                log_error "--ssl must be set to 'yes'"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify CQL database version
+        --db-server-version)
+            shift
+            db_server_version=${1}
+            if [ -z ${db_server_version} ]; then
+                log_error "--db-server-version requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify database host
+        -h|--host)
+            shift
+            db_host=${1}
+            if [ -z "${db_host}" ]; then
+                log_error "-h or --host requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify database user
+        -u|--user)
+            shift
+            db_user=${1}
+            if [ -z "${db_user}" ]; then
+                log_error "-u or --user requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify database password
+        -p|--password)
+            shift
+            db_password=${1}
+            if [ -z "${db_password}" ]; then
+                log_error "-p or --password requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify database name
+        -n|--name)
+            shift
+            db_name=${1}
+            if [ -z "${db_name}" ]; then
+                log_error "-n or --name requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # Specify the database scripts directory
+        -d|--directory)
+            shift
+            scripts_dir=${1}
+            if [ -z "${scripts_dir}" ]; then
+                log_error "-d or --directory requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        # specify DHCPv4 lease type
+        -4)
+            if [ $dump_type -eq 6 ]; then
+                log_error "you may not specify both -4 and -6"
+                usage
+                exit 1
+            fi
+            dump_type=4
+            ;;
+        # specify DHCPv6 lease type
+        -6)
+            if [ $dump_type -eq 4 ]; then
+                log_error "you may not specify both -4 and -6"
+                usage
+                exit 1
+            fi
+            dump_type=6
+            ;;
+        # specify output file, currently only used by lease dump
+        -o|--output)
+            shift
+            dump_file=${1}
+            if [ -z "${dump_file}" ]; then
+                log_error "-o or --output requires a parameter"
+                usage
+                exit 1
+            fi
+            ;;
+        *)
+            log_error "invalid option: ${option}"
+            usage
+            exit 1
+    esac
+    shift
+done
+
+case ${command} in
+    # Create the database
+    db-create)
+        case ${backend} in
+            memfile)
+                log_error "this command is not compatible with memory file backend"
+                ;;
+            mysql)
+                mysql_db_create
+                ;;
+            pgsql)
+                pgsql_db_create
+                ;;
+            cql)
+                cql_db_create
+                ;;
+        esac
+        ;;
+    # Remove the database
+    db-remove)
+        case ${backend} in
+            memfile)
+                log_error "this command is not compatible with memory file backend"
+                ;;
+            mysql)
+                mysql_db_remove
+                ;;
+            pgsql)
+                pgsql_db_remove
+                ;;
+            cql)
+                cql_db_remove
+                ;;
+        esac
+        ;;
+    # Initialize the database
+    db-init)
+        case ${backend} in
+            memfile)
+                memfile_init
+                ;;
+            mysql)
+                mysql_init
+                ;;
+            pgsql)
+                pgsql_init
+                ;;
+            cql)
+                cql_init
+                ;;
+        esac
+        ;;
+    # Drop all tables from the database
+    db-drop)
+        case ${backend} in
+            memfile)
+                memfile_drop
+                ;;
+            mysql)
+                mysql_drop
+                ;;
+            pgsql)
+                pgsql_drop
+                ;;
+            cql)
+                cql_drop
+                ;;
+        esac
+        ;;
+    # Get schema versions
+    db-version)
+        case ${backend} in
+            memfile)
+                memfile_version
+                ;;
+            mysql)
+                mysql_version
+                ;;
+            pgsql)
+                pgsql_version
+                ;;
+            cql)
+                cql_version
+                ;;
+        esac
+        ;;
+    # Upgrade schema
+    db-upgrade)
+        case ${backend} in
+            memfile)
+                memfile_upgrade
+                ;;
+            mysql)
+                mysql_upgrade
+                ;;
+            pgsql)
+                pgsql_upgrade
+                ;;
+            cql)
+                cql_upgrade
+                ;;
+        esac
+        ;;
+    # Retrieve all the leases from the current tables and put them in a file
+    lease-dump)
+        case ${backend} in
+            memfile)
+                memfile_dump
+                ;;
+            mysql)
+                mysql_dump
+                ;;
+            pgsql)
+                pgsql_dump
+                ;;
+            cql)
+                cql_dump
+                ;;
+        esac
+        ;;
+    # Initialize the configuration database
+    config-init)
+        case ${backend} in
+            memfile)
+                memfile_config_init
+                ;;
+            mysql)
+                mysql_config_init
+                ;;
+            pgsql)
+                pgsql_config_init
+                ;;
+            cql)
+                cql_config_init
+                ;;
+        esac
+        ;;
+    # Get the configuration schema's version
+    config-version)
+        case ${backend} in
+            memfile)
+                memfile_config_version
+                ;;
+            mysql)
+                mysql_config_version
+                ;;
+            pgsql)
+                pgsql_config_version
+                ;;
+            cql)
+                cql_config_version
+                ;;
+        esac
+        ;;
+    # Upgrade the configuration schema
+    config-upgrade)
+        case ${backend} in
+            memfile)
+                memfile_config_upgrade
+                ;;
+            mysql)
+                mysql_config_upgrade
+                ;;
+            pgsql)
+                pgsql_config_upgrade
+                ;;
+            cql)
+                cql_config_upgrade
+                ;;
+        esac
+        ;;
+    # Initialize the master database
+    master-init)
+        case ${backend} in
+            memfile)
+                memfile_master_init
+                ;;
+            mysql)
+                mysql_master_init
+                ;;
+            pgsql)
+                pgsql_master_init
+                ;;
+            cql)
+                cql_master_init
+                ;;
+        esac
+        ;;
+    # Get the master schema's version
+    master-version)
+        case ${backend} in
+            memfile)
+                memfile_master_version
+                ;;
+            mysql)
+                mysql_master_version
+                ;;
+            pgsql)
+                pgsql_master_version
+                ;;
+            cql)
+                cql_master_version
+                ;;
+        esac
+        ;;
+    # Upgrade the schema of the master database
+    master-upgrade)
+        case ${backend} in
+            memfile)
+                memfile_master_upgrade
+                ;;
+            mysql)
+                mysql_master_upgrade
+                ;;
+            pgsql)
+                pgsql_master_upgrade
+                ;;
+            cql)
+                cql_master_upgrade
+                ;;
+        esac
+        ;;
+    # Create keatest database and keatest user
+    create-db-and-users)
+        case ${backend} in
+            memfile)
+                memfile_create_database_and_users
+                ;;
+            mysql)
+                mysql_create_database_and_users
+                ;;
+            pgsql)
+                pgsql_create_database_and_users
+                ;;
+            cql)
+                cql_create_database_and_users
+                ;;
+        esac
+        ;;
+    stats-recount)
+        case ${backend} in
+            memfile)
+                log_info "memfile does not keep lease statistics"
+                ;;
+            mysql)
+                mysql_recount
+                ;;
+            pgsql)
+                pgsql_recount
+                ;;
+            cql)
+                log_info "cql does not keep lease statistics"
+                ;;
+            esac
+        ;;
+esac
+
+exit 0

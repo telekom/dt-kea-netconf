@@ -1,0 +1,3610 @@
+Grammar
+
+    0 $accept: start "end of file"
+
+    1 $@1: %empty
+
+    2 start: START_JSON $@1 json
+
+    3 $@2: %empty
+
+    4 start: START_NETCONF $@2 netconf_syntax_map
+
+    5 $@3: %empty
+
+    6 start: START_SUB_NETCONF $@3 sub_netconf
+
+    7 $@4: %empty
+
+    8 sub_netconf: "{" $@4 global_params "}"
+
+    9 json: value
+
+   10 value: "integer"
+   11      | "floating point"
+   12      | "boolean"
+   13      | "constant string"
+   14      | "null"
+   15      | map
+   16      | list_generic
+
+   17 $@5: %empty
+
+   18 map: "{" $@5 map_content "}"
+
+   19 map_value: map
+
+   20 map_content: %empty
+   21            | not_empty_map
+
+   22 not_empty_map: "constant string" ":" value
+   23              | not_empty_map "," "constant string" ":" value
+
+   24 $@6: %empty
+
+   25 list_generic: "[" $@6 list_content "]"
+
+   26 list_content: %empty
+   27             | not_empty_list
+
+   28 not_empty_list: value
+   29               | not_empty_list "," value
+
+   30 unknown_map_entry: "constant string" ":"
+
+   31 $@7: %empty
+
+   32 netconf_syntax_map: "{" $@7 global_objects "}"
+
+   33 global_objects: global_object
+   34               | global_objects "," global_object
+
+   35 global_object: netconf_object
+
+   36 $@8: %empty
+
+   37 netconf_object: "Netconf" $@8 ":" "{" global_params "}"
+
+   38 global_params: %empty
+   39              | not_empty_global_params
+
+   40 not_empty_global_params: global_param
+   41                        | not_empty_global_params "," global_param
+
+   42 global_param: models
+   43             | hooks_libraries
+   44             | loggers
+   45             | user_context
+   46             | comment
+   47             | unknown_map_entry
+
+   48 $@9: %empty
+
+   49 user_context: "user-context" $@9 ":" map_value
+
+   50 $@10: %empty
+
+   51 comment: "comment" $@10 ":" "constant string"
+
+   52 $@11: %empty
+
+   53 hooks_libraries: "hooks-libraries" $@11 ":" "[" hooks_libraries_list "]"
+
+   54 hooks_libraries_list: %empty
+   55                     | not_empty_hooks_libraries_list
+
+   56 not_empty_hooks_libraries_list: hooks_library
+   57                               | not_empty_hooks_libraries_list "," hooks_library
+
+   58 $@12: %empty
+
+   59 hooks_library: "{" $@12 hooks_params "}"
+
+   60 hooks_params: hooks_param
+   61             | hooks_params "," hooks_param
+   62             | unknown_map_entry
+
+   63 hooks_param: library
+   64            | parameters
+
+   65 $@13: %empty
+
+   66 library: "library" $@13 ":" "constant string"
+
+   67 $@14: %empty
+
+   68 parameters: "parameters" $@14 ":" map_value
+
+   69 $@15: %empty
+
+   70 configuration: "configuration" $@15 ":" "{" configuration_keys "}"
+
+   71 configuration_keys: configuration_key
+   72                   | configuration_keys "," configuration_key
+
+   73 configuration_key: control_socket
+   74                  | on_boot_update_socket
+   75                  | on_boot_update_sysrepo
+   76                  | subscribe
+   77                  | validate
+   78                  | unknown_map_entry
+
+   79 $@16: %empty
+
+   80 control_socket: "control-socket" $@16 ":" "{" control_socket_params "}"
+
+   81 control_socket_params: control_socket_param
+   82                      | control_socket_params "," control_socket_param
+
+   83 control_socket_param: socket_type
+   84                     | socket_name
+   85                     | socket_url
+   86                     | user_context
+   87                     | comment
+   88                     | unknown_map_entry
+
+   89 $@17: %empty
+
+   90 model_entry: "{" $@17 model_params "}"
+
+   91 model_params: model_param
+   92             | model_params "," model_param
+
+   93 model_param: comment
+   94            | configuration
+   95            | model
+   96            | notifications
+   97            | operational
+   98            | rpc
+   99            | user_context
+  100            | unknown_map_entry
+
+  101 $@18: %empty
+
+  102 model: "model" $@18 ":" "constant string"
+
+  103 $@19: %empty
+
+  104 models: "models" $@19 ":" "[" models_entries "]"
+
+  105 models_entries: model_entry
+  106               | models_entries "," model_entry
+
+  107 $@20: %empty
+
+  108 notifications: "notifications" $@20 ":" "{" notifications_keys "}"
+
+  109 notifications_keys: notifications_key
+  110                   | notifications_keys "," notifications_key
+
+  111 notifications_key: control_socket
+  112                  | subscribe
+  113                  | unknown_map_entry
+
+  114 $@21: %empty
+
+  115 operational: "operational" $@21 ":" "{" operational_keys "}"
+
+  116 operational_keys: operational_key
+  117                 | operational_keys "," operational_key
+
+  118 operational_key: control_socket
+  119                | subscribe
+  120                | unknown_map_entry
+
+  121 $@22: %empty
+
+  122 rpc: "rpc" $@22 ":" "{" rpc_keys "}"
+
+  123 rpc_keys: rpc_key
+  124         | rpc_keys "," rpc_key
+
+  125 rpc_key: control_socket
+  126        | subscribe
+  127        | unknown_map_entry
+
+  128 on_boot_update_socket: "on-boot-update-socket" ":" "boolean"
+
+  129 on_boot_update_sysrepo: "on-boot-update-sysrepo" ":" "boolean"
+
+  130 $@23: %empty
+
+  131 socket_type: "socket-type" $@23 ":" socket_type_value
+
+  132 socket_type_value: "unix"
+  133                  | "kea-config-tool"
+  134                  | "http"
+  135                  | "stdout"
+
+  136 $@24: %empty
+
+  137 socket_name: "socket-name" $@24 ":" "constant string"
+
+  138 $@25: %empty
+
+  139 socket_url: "socket-url" $@25 ":" "constant string"
+
+  140 subscribe: "subscribe" ":" "boolean"
+
+  141 validate: "validate" ":" "boolean"
+
+  142 $@26: %empty
+
+  143 loggers: "loggers" $@26 ":" "[" loggers_entries "]"
+
+  144 loggers_entries: logger_entry
+  145                | loggers_entries "," logger_entry
+
+  146 $@27: %empty
+
+  147 logger_entry: "{" $@27 logger_params "}"
+
+  148 logger_params: logger_param
+  149              | logger_params "," logger_param
+
+  150 logger_param: name
+  151             | output_options_list
+  152             | debuglevel
+  153             | severity
+  154             | user_context
+  155             | comment
+  156             | unknown_map_entry
+
+  157 $@28: %empty
+
+  158 name: "name" $@28 ":" "constant string"
+
+  159 debuglevel: "debuglevel" ":" "integer"
+
+  160 $@29: %empty
+
+  161 severity: "severity" $@29 ":" "constant string"
+
+  162 $@30: %empty
+
+  163 output_options_list: "output_options" $@30 ":" "[" output_options_list_content "]"
+
+  164 output_options_list_content: output_entry
+  165                            | output_options_list_content "," output_entry
+
+  166 $@31: %empty
+
+  167 output_entry: "{" $@31 output_params_list "}"
+
+  168 output_params_list: output_params
+  169                   | output_params_list "," output_params
+
+  170 output_params: output
+  171              | flush
+  172              | maxsize
+  173              | maxver
+  174              | pattern
+
+  175 $@32: %empty
+
+  176 output: "output" $@32 ":" "constant string"
+
+  177 flush: "flush" ":" "boolean"
+
+  178 maxsize: "maxsize" ":" "integer"
+
+  179 maxver: "maxver" ":" "integer"
+
+  180 $@33: %empty
+
+  181 pattern: "pattern" $@33 ":" "constant string"
+
+
+Terminals, with rules where they appear
+
+    "end of file" (0) 0
+    error (256)
+    "," (258) 23 29 34 41 57 61 72 82 92 106 110 117 124 145 149 165 169
+    ":" (259) 22 23 30 37 49 51 53 66 68 70 80 102 104 108 115 122 128 129 131 137 139 140 141 143 158 159 161 163 176 177 178 179 181
+    "[" (260) 25 53 104 143 163
+    "]" (261) 25 53 104 143 163
+    "{" (262) 8 18 32 37 59 70 80 90 108 115 122 147 167
+    "}" (263) 8 18 32 37 59 70 80 90 108 115 122 147 167
+    "null" (264) 14
+    "Netconf" (265) 37
+    "user-context" (266) 49
+    "comment" (267) 51
+    "configuration" (268) 70
+    "control-socket" (269) 80
+    "http" (270) 134
+    "kea-config-tool" (271) 133
+    "model" (272) 102
+    "models" (273) 104
+    "notifications" (274) 108
+    "on-boot-update-socket" (275) 128
+    "on-boot-update-sysrepo" (276) 129
+    "operational" (277) 115
+    "rpc" (278) 122
+    "socket-name" (279) 137
+    "socket-type" (280) 131
+    "socket-url" (281) 139
+    "stdout" (282) 135
+    "subscribe" (283) 140
+    "unix" (284) 132
+    "validate" (285) 141
+    "hooks-libraries" (286) 53
+    "library" (287) 66
+    "parameters" (288) 68
+    "loggers" (289) 143
+    "name" (290) 158
+    "output_options" (291) 163
+    "output" (292) 176
+    "debuglevel" (293) 159
+    "severity" (294) 161
+    "flush" (295) 177
+    "maxsize" (296) 178
+    "maxver" (297) 179
+    "pattern" (298) 181
+    START_JSON (299) 2
+    START_NETCONF (300) 4
+    START_SUB_NETCONF (301) 6
+    "constant string" <std::string> (302) 13 22 23 30 51 66 102 137 139 158 161 176 181
+    "integer" <int64_t> (303) 10 159 178 179
+    "floating point" <double> (304) 11
+    "boolean" <bool> (305) 12 128 129 140 141 177
+
+
+Nonterminals, with rules where they appear
+
+    $accept (51)
+        on left: 0
+    start (52)
+        on left: 2 4 6
+        on right: 0
+    $@1 (53)
+        on left: 1
+        on right: 2
+    $@2 (54)
+        on left: 3
+        on right: 4
+    $@3 (55)
+        on left: 5
+        on right: 6
+    sub_netconf (56)
+        on left: 8
+        on right: 6
+    $@4 (57)
+        on left: 7
+        on right: 8
+    json (58)
+        on left: 9
+        on right: 2
+    value <ElementPtr> (59)
+        on left: 10 11 12 13 14 15 16
+        on right: 9 22 23 28 29
+    map (60)
+        on left: 18
+        on right: 15 19
+    $@5 (61)
+        on left: 17
+        on right: 18
+    map_value <ElementPtr> (62)
+        on left: 19
+        on right: 49 68
+    map_content (63)
+        on left: 20 21
+        on right: 18
+    not_empty_map (64)
+        on left: 22 23
+        on right: 21 23
+    list_generic (65)
+        on left: 25
+        on right: 16
+    $@6 (66)
+        on left: 24
+        on right: 25
+    list_content (67)
+        on left: 26 27
+        on right: 25
+    not_empty_list (68)
+        on left: 28 29
+        on right: 27 29
+    unknown_map_entry (69)
+        on left: 30
+        on right: 47 62 78 88 100 113 120 127 156
+    netconf_syntax_map (70)
+        on left: 32
+        on right: 4
+    $@7 (71)
+        on left: 31
+        on right: 32
+    global_objects (72)
+        on left: 33 34
+        on right: 32 34
+    global_object (73)
+        on left: 35
+        on right: 33 34
+    netconf_object (74)
+        on left: 37
+        on right: 35
+    $@8 (75)
+        on left: 36
+        on right: 37
+    global_params (76)
+        on left: 38 39
+        on right: 8 37
+    not_empty_global_params (77)
+        on left: 40 41
+        on right: 39 41
+    global_param (78)
+        on left: 42 43 44 45 46 47
+        on right: 40 41
+    user_context (79)
+        on left: 49
+        on right: 45 86 99 154
+    $@9 (80)
+        on left: 48
+        on right: 49
+    comment (81)
+        on left: 51
+        on right: 46 87 93 155
+    $@10 (82)
+        on left: 50
+        on right: 51
+    hooks_libraries (83)
+        on left: 53
+        on right: 43
+    $@11 (84)
+        on left: 52
+        on right: 53
+    hooks_libraries_list (85)
+        on left: 54 55
+        on right: 53
+    not_empty_hooks_libraries_list (86)
+        on left: 56 57
+        on right: 55 57
+    hooks_library (87)
+        on left: 59
+        on right: 56 57
+    $@12 (88)
+        on left: 58
+        on right: 59
+    hooks_params (89)
+        on left: 60 61 62
+        on right: 59 61
+    hooks_param (90)
+        on left: 63 64
+        on right: 60 61
+    library (91)
+        on left: 66
+        on right: 63
+    $@13 (92)
+        on left: 65
+        on right: 66
+    parameters (93)
+        on left: 68
+        on right: 64
+    $@14 (94)
+        on left: 67
+        on right: 68
+    configuration (95)
+        on left: 70
+        on right: 94
+    $@15 (96)
+        on left: 69
+        on right: 70
+    configuration_keys (97)
+        on left: 71 72
+        on right: 70 72
+    configuration_key (98)
+        on left: 73 74 75 76 77 78
+        on right: 71 72
+    control_socket (99)
+        on left: 80
+        on right: 73 111 118 125
+    $@16 (100)
+        on left: 79
+        on right: 80
+    control_socket_params (101)
+        on left: 81 82
+        on right: 80 82
+    control_socket_param (102)
+        on left: 83 84 85 86 87 88
+        on right: 81 82
+    model_entry (103)
+        on left: 90
+        on right: 105 106
+    $@17 (104)
+        on left: 89
+        on right: 90
+    model_params (105)
+        on left: 91 92
+        on right: 90 92
+    model_param (106)
+        on left: 93 94 95 96 97 98 99 100
+        on right: 91 92
+    model (107)
+        on left: 102
+        on right: 95
+    $@18 (108)
+        on left: 101
+        on right: 102
+    models (109)
+        on left: 104
+        on right: 42
+    $@19 (110)
+        on left: 103
+        on right: 104
+    models_entries (111)
+        on left: 105 106
+        on right: 104 106
+    notifications (112)
+        on left: 108
+        on right: 96
+    $@20 (113)
+        on left: 107
+        on right: 108
+    notifications_keys (114)
+        on left: 109 110
+        on right: 108 110
+    notifications_key (115)
+        on left: 111 112 113
+        on right: 109 110
+    operational (116)
+        on left: 115
+        on right: 97
+    $@21 (117)
+        on left: 114
+        on right: 115
+    operational_keys (118)
+        on left: 116 117
+        on right: 115 117
+    operational_key (119)
+        on left: 118 119 120
+        on right: 116 117
+    rpc (120)
+        on left: 122
+        on right: 98
+    $@22 (121)
+        on left: 121
+        on right: 122
+    rpc_keys (122)
+        on left: 123 124
+        on right: 122 124
+    rpc_key (123)
+        on left: 125 126 127
+        on right: 123 124
+    on_boot_update_socket (124)
+        on left: 128
+        on right: 74
+    on_boot_update_sysrepo (125)
+        on left: 129
+        on right: 75
+    socket_type (126)
+        on left: 131
+        on right: 83
+    $@23 (127)
+        on left: 130
+        on right: 131
+    socket_type_value <ElementPtr> (128)
+        on left: 132 133 134 135
+        on right: 131
+    socket_name (129)
+        on left: 137
+        on right: 84
+    $@24 (130)
+        on left: 136
+        on right: 137
+    socket_url (131)
+        on left: 139
+        on right: 85
+    $@25 (132)
+        on left: 138
+        on right: 139
+    subscribe (133)
+        on left: 140
+        on right: 76 112 119 126
+    validate (134)
+        on left: 141
+        on right: 77
+    loggers (135)
+        on left: 143
+        on right: 44
+    $@26 (136)
+        on left: 142
+        on right: 143
+    loggers_entries (137)
+        on left: 144 145
+        on right: 143 145
+    logger_entry (138)
+        on left: 147
+        on right: 144 145
+    $@27 (139)
+        on left: 146
+        on right: 147
+    logger_params (140)
+        on left: 148 149
+        on right: 147 149
+    logger_param (141)
+        on left: 150 151 152 153 154 155 156
+        on right: 148 149
+    name (142)
+        on left: 158
+        on right: 150
+    $@28 (143)
+        on left: 157
+        on right: 158
+    debuglevel (144)
+        on left: 159
+        on right: 152
+    severity (145)
+        on left: 161
+        on right: 153
+    $@29 (146)
+        on left: 160
+        on right: 161
+    output_options_list (147)
+        on left: 163
+        on right: 151
+    $@30 (148)
+        on left: 162
+        on right: 163
+    output_options_list_content (149)
+        on left: 164 165
+        on right: 163 165
+    output_entry (150)
+        on left: 167
+        on right: 164 165
+    $@31 (151)
+        on left: 166
+        on right: 167
+    output_params_list (152)
+        on left: 168 169
+        on right: 167 169
+    output_params (153)
+        on left: 170 171 172 173 174
+        on right: 168 169
+    output (154)
+        on left: 176
+        on right: 170
+    $@32 (155)
+        on left: 175
+        on right: 176
+    flush (156)
+        on left: 177
+        on right: 171
+    maxsize (157)
+        on left: 178
+        on right: 172
+    maxver (158)
+        on left: 179
+        on right: 173
+    pattern (159)
+        on left: 181
+        on right: 174
+    $@33 (160)
+        on left: 180
+        on right: 181
+
+
+State 0
+
+    0 $accept: . start "end of file"
+    2 start: . START_JSON $@1 json
+    4      | . START_NETCONF $@2 netconf_syntax_map
+    6      | . START_SUB_NETCONF $@3 sub_netconf
+
+    START_JSON         shift, and go to state 1
+    START_NETCONF      shift, and go to state 2
+    START_SUB_NETCONF  shift, and go to state 3
+
+    start  go to state 4
+
+
+State 1
+
+    1 $@1: . %empty
+    2 start: START_JSON . $@1 json
+
+    $default  reduce using rule 1 ($@1)
+
+    $@1  go to state 5
+
+
+State 2
+
+    3 $@2: . %empty
+    4 start: START_NETCONF . $@2 netconf_syntax_map
+
+    $default  reduce using rule 3 ($@2)
+
+    $@2  go to state 6
+
+
+State 3
+
+    5 $@3: . %empty
+    6 start: START_SUB_NETCONF . $@3 sub_netconf
+
+    $default  reduce using rule 5 ($@3)
+
+    $@3  go to state 7
+
+
+State 4
+
+    0 $accept: start . "end of file"
+
+    "end of file"  shift, and go to state 8
+
+
+State 5
+
+    2 start: START_JSON $@1 . json
+    9 json: . value
+   10 value: . "integer"
+   11      | . "floating point"
+   12      | . "boolean"
+   13      | . "constant string"
+   14      | . "null"
+   15      | . map
+   16      | . list_generic
+   18 map: . "{" $@5 map_content "}"
+   25 list_generic: . "[" $@6 list_content "]"
+
+    "["                shift, and go to state 9
+    "{"                shift, and go to state 10
+    "null"             shift, and go to state 11
+    "constant string"  shift, and go to state 12
+    "integer"          shift, and go to state 13
+    "floating point"   shift, and go to state 14
+    "boolean"          shift, and go to state 15
+
+    json          go to state 16
+    value         go to state 17
+    map           go to state 18
+    list_generic  go to state 19
+
+
+State 6
+
+    4 start: START_NETCONF $@2 . netconf_syntax_map
+   32 netconf_syntax_map: . "{" $@7 global_objects "}"
+
+    "{"  shift, and go to state 20
+
+    netconf_syntax_map  go to state 21
+
+
+State 7
+
+    6 start: START_SUB_NETCONF $@3 . sub_netconf
+    8 sub_netconf: . "{" $@4 global_params "}"
+
+    "{"  shift, and go to state 22
+
+    sub_netconf  go to state 23
+
+
+State 8
+
+    0 $accept: start "end of file" .
+
+    $default  accept
+
+
+State 9
+
+   24 $@6: . %empty
+   25 list_generic: "[" . $@6 list_content "]"
+
+    $default  reduce using rule 24 ($@6)
+
+    $@6  go to state 24
+
+
+State 10
+
+   17 $@5: . %empty
+   18 map: "{" . $@5 map_content "}"
+
+    $default  reduce using rule 17 ($@5)
+
+    $@5  go to state 25
+
+
+State 11
+
+   14 value: "null" .
+
+    $default  reduce using rule 14 (value)
+
+
+State 12
+
+   13 value: "constant string" .
+
+    $default  reduce using rule 13 (value)
+
+
+State 13
+
+   10 value: "integer" .
+
+    $default  reduce using rule 10 (value)
+
+
+State 14
+
+   11 value: "floating point" .
+
+    $default  reduce using rule 11 (value)
+
+
+State 15
+
+   12 value: "boolean" .
+
+    $default  reduce using rule 12 (value)
+
+
+State 16
+
+    2 start: START_JSON $@1 json .
+
+    $default  reduce using rule 2 (start)
+
+
+State 17
+
+    9 json: value .
+
+    $default  reduce using rule 9 (json)
+
+
+State 18
+
+   15 value: map .
+
+    $default  reduce using rule 15 (value)
+
+
+State 19
+
+   16 value: list_generic .
+
+    $default  reduce using rule 16 (value)
+
+
+State 20
+
+   31 $@7: . %empty
+   32 netconf_syntax_map: "{" . $@7 global_objects "}"
+
+    $default  reduce using rule 31 ($@7)
+
+    $@7  go to state 26
+
+
+State 21
+
+    4 start: START_NETCONF $@2 netconf_syntax_map .
+
+    $default  reduce using rule 4 (start)
+
+
+State 22
+
+    7 $@4: . %empty
+    8 sub_netconf: "{" . $@4 global_params "}"
+
+    $default  reduce using rule 7 ($@4)
+
+    $@4  go to state 27
+
+
+State 23
+
+    6 start: START_SUB_NETCONF $@3 sub_netconf .
+
+    $default  reduce using rule 6 (start)
+
+
+State 24
+
+   10 value: . "integer"
+   11      | . "floating point"
+   12      | . "boolean"
+   13      | . "constant string"
+   14      | . "null"
+   15      | . map
+   16      | . list_generic
+   18 map: . "{" $@5 map_content "}"
+   25 list_generic: . "[" $@6 list_content "]"
+   25             | "[" $@6 . list_content "]"
+   26 list_content: . %empty  ["]"]
+   27             | . not_empty_list
+   28 not_empty_list: . value
+   29               | . not_empty_list "," value
+
+    "["                shift, and go to state 9
+    "{"                shift, and go to state 10
+    "null"             shift, and go to state 11
+    "constant string"  shift, and go to state 12
+    "integer"          shift, and go to state 13
+    "floating point"   shift, and go to state 14
+    "boolean"          shift, and go to state 15
+
+    $default  reduce using rule 26 (list_content)
+
+    value           go to state 28
+    map             go to state 18
+    list_generic    go to state 19
+    list_content    go to state 29
+    not_empty_list  go to state 30
+
+
+State 25
+
+   18 map: "{" $@5 . map_content "}"
+   20 map_content: . %empty  ["}"]
+   21            | . not_empty_map
+   22 not_empty_map: . "constant string" ":" value
+   23              | . not_empty_map "," "constant string" ":" value
+
+    "constant string"  shift, and go to state 31
+
+    $default  reduce using rule 20 (map_content)
+
+    map_content    go to state 32
+    not_empty_map  go to state 33
+
+
+State 26
+
+   32 netconf_syntax_map: "{" $@7 . global_objects "}"
+   33 global_objects: . global_object
+   34               | . global_objects "," global_object
+   35 global_object: . netconf_object
+   37 netconf_object: . "Netconf" $@8 ":" "{" global_params "}"
+
+    "Netconf"  shift, and go to state 34
+
+    global_objects  go to state 35
+    global_object   go to state 36
+    netconf_object  go to state 37
+
+
+State 27
+
+    8 sub_netconf: "{" $@4 . global_params "}"
+   30 unknown_map_entry: . "constant string" ":"
+   38 global_params: . %empty  ["}"]
+   39              | . not_empty_global_params
+   40 not_empty_global_params: . global_param
+   41                        | . not_empty_global_params "," global_param
+   42 global_param: . models
+   43             | . hooks_libraries
+   44             | . loggers
+   45             | . user_context
+   46             | . comment
+   47             | . unknown_map_entry
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   53 hooks_libraries: . "hooks-libraries" $@11 ":" "[" hooks_libraries_list "]"
+  104 models: . "models" $@19 ":" "[" models_entries "]"
+  143 loggers: . "loggers" $@26 ":" "[" loggers_entries "]"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "models"           shift, and go to state 40
+    "hooks-libraries"  shift, and go to state 41
+    "loggers"          shift, and go to state 42
+    "constant string"  shift, and go to state 43
+
+    $default  reduce using rule 38 (global_params)
+
+    unknown_map_entry        go to state 44
+    global_params            go to state 45
+    not_empty_global_params  go to state 46
+    global_param             go to state 47
+    user_context             go to state 48
+    comment                  go to state 49
+    hooks_libraries          go to state 50
+    models                   go to state 51
+    loggers                  go to state 52
+
+
+State 28
+
+   28 not_empty_list: value .
+
+    $default  reduce using rule 28 (not_empty_list)
+
+
+State 29
+
+   25 list_generic: "[" $@6 list_content . "]"
+
+    "]"  shift, and go to state 53
+
+
+State 30
+
+   27 list_content: not_empty_list .  ["]"]
+   29 not_empty_list: not_empty_list . "," value
+
+    ","  shift, and go to state 54
+
+    $default  reduce using rule 27 (list_content)
+
+
+State 31
+
+   22 not_empty_map: "constant string" . ":" value
+
+    ":"  shift, and go to state 55
+
+
+State 32
+
+   18 map: "{" $@5 map_content . "}"
+
+    "}"  shift, and go to state 56
+
+
+State 33
+
+   21 map_content: not_empty_map .  ["}"]
+   23 not_empty_map: not_empty_map . "," "constant string" ":" value
+
+    ","  shift, and go to state 57
+
+    $default  reduce using rule 21 (map_content)
+
+
+State 34
+
+   36 $@8: . %empty
+   37 netconf_object: "Netconf" . $@8 ":" "{" global_params "}"
+
+    $default  reduce using rule 36 ($@8)
+
+    $@8  go to state 58
+
+
+State 35
+
+   32 netconf_syntax_map: "{" $@7 global_objects . "}"
+   34 global_objects: global_objects . "," global_object
+
+    ","  shift, and go to state 59
+    "}"  shift, and go to state 60
+
+
+State 36
+
+   33 global_objects: global_object .
+
+    $default  reduce using rule 33 (global_objects)
+
+
+State 37
+
+   35 global_object: netconf_object .
+
+    $default  reduce using rule 35 (global_object)
+
+
+State 38
+
+   48 $@9: . %empty
+   49 user_context: "user-context" . $@9 ":" map_value
+
+    $default  reduce using rule 48 ($@9)
+
+    $@9  go to state 61
+
+
+State 39
+
+   50 $@10: . %empty
+   51 comment: "comment" . $@10 ":" "constant string"
+
+    $default  reduce using rule 50 ($@10)
+
+    $@10  go to state 62
+
+
+State 40
+
+  103 $@19: . %empty
+  104 models: "models" . $@19 ":" "[" models_entries "]"
+
+    $default  reduce using rule 103 ($@19)
+
+    $@19  go to state 63
+
+
+State 41
+
+   52 $@11: . %empty
+   53 hooks_libraries: "hooks-libraries" . $@11 ":" "[" hooks_libraries_list "]"
+
+    $default  reduce using rule 52 ($@11)
+
+    $@11  go to state 64
+
+
+State 42
+
+  142 $@26: . %empty
+  143 loggers: "loggers" . $@26 ":" "[" loggers_entries "]"
+
+    $default  reduce using rule 142 ($@26)
+
+    $@26  go to state 65
+
+
+State 43
+
+   30 unknown_map_entry: "constant string" . ":"
+
+    ":"  shift, and go to state 66
+
+
+State 44
+
+   47 global_param: unknown_map_entry .
+
+    $default  reduce using rule 47 (global_param)
+
+
+State 45
+
+    8 sub_netconf: "{" $@4 global_params . "}"
+
+    "}"  shift, and go to state 67
+
+
+State 46
+
+   39 global_params: not_empty_global_params .  ["}"]
+   41 not_empty_global_params: not_empty_global_params . "," global_param
+
+    ","  shift, and go to state 68
+
+    $default  reduce using rule 39 (global_params)
+
+
+State 47
+
+   40 not_empty_global_params: global_param .
+
+    $default  reduce using rule 40 (not_empty_global_params)
+
+
+State 48
+
+   45 global_param: user_context .
+
+    $default  reduce using rule 45 (global_param)
+
+
+State 49
+
+   46 global_param: comment .
+
+    $default  reduce using rule 46 (global_param)
+
+
+State 50
+
+   43 global_param: hooks_libraries .
+
+    $default  reduce using rule 43 (global_param)
+
+
+State 51
+
+   42 global_param: models .
+
+    $default  reduce using rule 42 (global_param)
+
+
+State 52
+
+   44 global_param: loggers .
+
+    $default  reduce using rule 44 (global_param)
+
+
+State 53
+
+   25 list_generic: "[" $@6 list_content "]" .
+
+    $default  reduce using rule 25 (list_generic)
+
+
+State 54
+
+   10 value: . "integer"
+   11      | . "floating point"
+   12      | . "boolean"
+   13      | . "constant string"
+   14      | . "null"
+   15      | . map
+   16      | . list_generic
+   18 map: . "{" $@5 map_content "}"
+   25 list_generic: . "[" $@6 list_content "]"
+   29 not_empty_list: not_empty_list "," . value
+
+    "["                shift, and go to state 9
+    "{"                shift, and go to state 10
+    "null"             shift, and go to state 11
+    "constant string"  shift, and go to state 12
+    "integer"          shift, and go to state 13
+    "floating point"   shift, and go to state 14
+    "boolean"          shift, and go to state 15
+
+    value         go to state 69
+    map           go to state 18
+    list_generic  go to state 19
+
+
+State 55
+
+   10 value: . "integer"
+   11      | . "floating point"
+   12      | . "boolean"
+   13      | . "constant string"
+   14      | . "null"
+   15      | . map
+   16      | . list_generic
+   18 map: . "{" $@5 map_content "}"
+   22 not_empty_map: "constant string" ":" . value
+   25 list_generic: . "[" $@6 list_content "]"
+
+    "["                shift, and go to state 9
+    "{"                shift, and go to state 10
+    "null"             shift, and go to state 11
+    "constant string"  shift, and go to state 12
+    "integer"          shift, and go to state 13
+    "floating point"   shift, and go to state 14
+    "boolean"          shift, and go to state 15
+
+    value         go to state 70
+    map           go to state 18
+    list_generic  go to state 19
+
+
+State 56
+
+   18 map: "{" $@5 map_content "}" .
+
+    $default  reduce using rule 18 (map)
+
+
+State 57
+
+   23 not_empty_map: not_empty_map "," . "constant string" ":" value
+
+    "constant string"  shift, and go to state 71
+
+
+State 58
+
+   37 netconf_object: "Netconf" $@8 . ":" "{" global_params "}"
+
+    ":"  shift, and go to state 72
+
+
+State 59
+
+   34 global_objects: global_objects "," . global_object
+   35 global_object: . netconf_object
+   37 netconf_object: . "Netconf" $@8 ":" "{" global_params "}"
+
+    "Netconf"  shift, and go to state 34
+
+    global_object   go to state 73
+    netconf_object  go to state 37
+
+
+State 60
+
+   32 netconf_syntax_map: "{" $@7 global_objects "}" .
+
+    $default  reduce using rule 32 (netconf_syntax_map)
+
+
+State 61
+
+   49 user_context: "user-context" $@9 . ":" map_value
+
+    ":"  shift, and go to state 74
+
+
+State 62
+
+   51 comment: "comment" $@10 . ":" "constant string"
+
+    ":"  shift, and go to state 75
+
+
+State 63
+
+  104 models: "models" $@19 . ":" "[" models_entries "]"
+
+    ":"  shift, and go to state 76
+
+
+State 64
+
+   53 hooks_libraries: "hooks-libraries" $@11 . ":" "[" hooks_libraries_list "]"
+
+    ":"  shift, and go to state 77
+
+
+State 65
+
+  143 loggers: "loggers" $@26 . ":" "[" loggers_entries "]"
+
+    ":"  shift, and go to state 78
+
+
+State 66
+
+   30 unknown_map_entry: "constant string" ":" .
+
+    $default  reduce using rule 30 (unknown_map_entry)
+
+
+State 67
+
+    8 sub_netconf: "{" $@4 global_params "}" .
+
+    $default  reduce using rule 8 (sub_netconf)
+
+
+State 68
+
+   30 unknown_map_entry: . "constant string" ":"
+   41 not_empty_global_params: not_empty_global_params "," . global_param
+   42 global_param: . models
+   43             | . hooks_libraries
+   44             | . loggers
+   45             | . user_context
+   46             | . comment
+   47             | . unknown_map_entry
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   53 hooks_libraries: . "hooks-libraries" $@11 ":" "[" hooks_libraries_list "]"
+  104 models: . "models" $@19 ":" "[" models_entries "]"
+  143 loggers: . "loggers" $@26 ":" "[" loggers_entries "]"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "models"           shift, and go to state 40
+    "hooks-libraries"  shift, and go to state 41
+    "loggers"          shift, and go to state 42
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 44
+    global_param       go to state 79
+    user_context       go to state 48
+    comment            go to state 49
+    hooks_libraries    go to state 50
+    models             go to state 51
+    loggers            go to state 52
+
+
+State 69
+
+   29 not_empty_list: not_empty_list "," value .
+
+    $default  reduce using rule 29 (not_empty_list)
+
+
+State 70
+
+   22 not_empty_map: "constant string" ":" value .
+
+    $default  reduce using rule 22 (not_empty_map)
+
+
+State 71
+
+   23 not_empty_map: not_empty_map "," "constant string" . ":" value
+
+    ":"  shift, and go to state 80
+
+
+State 72
+
+   37 netconf_object: "Netconf" $@8 ":" . "{" global_params "}"
+
+    "{"  shift, and go to state 81
+
+
+State 73
+
+   34 global_objects: global_objects "," global_object .
+
+    $default  reduce using rule 34 (global_objects)
+
+
+State 74
+
+   18 map: . "{" $@5 map_content "}"
+   19 map_value: . map
+   49 user_context: "user-context" $@9 ":" . map_value
+
+    "{"  shift, and go to state 10
+
+    map        go to state 82
+    map_value  go to state 83
+
+
+State 75
+
+   51 comment: "comment" $@10 ":" . "constant string"
+
+    "constant string"  shift, and go to state 84
+
+
+State 76
+
+  104 models: "models" $@19 ":" . "[" models_entries "]"
+
+    "["  shift, and go to state 85
+
+
+State 77
+
+   53 hooks_libraries: "hooks-libraries" $@11 ":" . "[" hooks_libraries_list "]"
+
+    "["  shift, and go to state 86
+
+
+State 78
+
+  143 loggers: "loggers" $@26 ":" . "[" loggers_entries "]"
+
+    "["  shift, and go to state 87
+
+
+State 79
+
+   41 not_empty_global_params: not_empty_global_params "," global_param .
+
+    $default  reduce using rule 41 (not_empty_global_params)
+
+
+State 80
+
+   10 value: . "integer"
+   11      | . "floating point"
+   12      | . "boolean"
+   13      | . "constant string"
+   14      | . "null"
+   15      | . map
+   16      | . list_generic
+   18 map: . "{" $@5 map_content "}"
+   23 not_empty_map: not_empty_map "," "constant string" ":" . value
+   25 list_generic: . "[" $@6 list_content "]"
+
+    "["                shift, and go to state 9
+    "{"                shift, and go to state 10
+    "null"             shift, and go to state 11
+    "constant string"  shift, and go to state 12
+    "integer"          shift, and go to state 13
+    "floating point"   shift, and go to state 14
+    "boolean"          shift, and go to state 15
+
+    value         go to state 88
+    map           go to state 18
+    list_generic  go to state 19
+
+
+State 81
+
+   30 unknown_map_entry: . "constant string" ":"
+   37 netconf_object: "Netconf" $@8 ":" "{" . global_params "}"
+   38 global_params: . %empty  ["}"]
+   39              | . not_empty_global_params
+   40 not_empty_global_params: . global_param
+   41                        | . not_empty_global_params "," global_param
+   42 global_param: . models
+   43             | . hooks_libraries
+   44             | . loggers
+   45             | . user_context
+   46             | . comment
+   47             | . unknown_map_entry
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   53 hooks_libraries: . "hooks-libraries" $@11 ":" "[" hooks_libraries_list "]"
+  104 models: . "models" $@19 ":" "[" models_entries "]"
+  143 loggers: . "loggers" $@26 ":" "[" loggers_entries "]"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "models"           shift, and go to state 40
+    "hooks-libraries"  shift, and go to state 41
+    "loggers"          shift, and go to state 42
+    "constant string"  shift, and go to state 43
+
+    $default  reduce using rule 38 (global_params)
+
+    unknown_map_entry        go to state 44
+    global_params            go to state 89
+    not_empty_global_params  go to state 46
+    global_param             go to state 47
+    user_context             go to state 48
+    comment                  go to state 49
+    hooks_libraries          go to state 50
+    models                   go to state 51
+    loggers                  go to state 52
+
+
+State 82
+
+   19 map_value: map .
+
+    $default  reduce using rule 19 (map_value)
+
+
+State 83
+
+   49 user_context: "user-context" $@9 ":" map_value .
+
+    $default  reduce using rule 49 (user_context)
+
+
+State 84
+
+   51 comment: "comment" $@10 ":" "constant string" .
+
+    $default  reduce using rule 51 (comment)
+
+
+State 85
+
+   90 model_entry: . "{" $@17 model_params "}"
+  104 models: "models" $@19 ":" "[" . models_entries "]"
+  105 models_entries: . model_entry
+  106               | . models_entries "," model_entry
+
+    "{"  shift, and go to state 90
+
+    model_entry     go to state 91
+    models_entries  go to state 92
+
+
+State 86
+
+   53 hooks_libraries: "hooks-libraries" $@11 ":" "[" . hooks_libraries_list "]"
+   54 hooks_libraries_list: . %empty  ["]"]
+   55                     | . not_empty_hooks_libraries_list
+   56 not_empty_hooks_libraries_list: . hooks_library
+   57                               | . not_empty_hooks_libraries_list "," hooks_library
+   59 hooks_library: . "{" $@12 hooks_params "}"
+
+    "{"  shift, and go to state 93
+
+    $default  reduce using rule 54 (hooks_libraries_list)
+
+    hooks_libraries_list            go to state 94
+    not_empty_hooks_libraries_list  go to state 95
+    hooks_library                   go to state 96
+
+
+State 87
+
+  143 loggers: "loggers" $@26 ":" "[" . loggers_entries "]"
+  144 loggers_entries: . logger_entry
+  145                | . loggers_entries "," logger_entry
+  147 logger_entry: . "{" $@27 logger_params "}"
+
+    "{"  shift, and go to state 97
+
+    loggers_entries  go to state 98
+    logger_entry     go to state 99
+
+
+State 88
+
+   23 not_empty_map: not_empty_map "," "constant string" ":" value .
+
+    $default  reduce using rule 23 (not_empty_map)
+
+
+State 89
+
+   37 netconf_object: "Netconf" $@8 ":" "{" global_params . "}"
+
+    "}"  shift, and go to state 100
+
+
+State 90
+
+   89 $@17: . %empty
+   90 model_entry: "{" . $@17 model_params "}"
+
+    $default  reduce using rule 89 ($@17)
+
+    $@17  go to state 101
+
+
+State 91
+
+  105 models_entries: model_entry .
+
+    $default  reduce using rule 105 (models_entries)
+
+
+State 92
+
+  104 models: "models" $@19 ":" "[" models_entries . "]"
+  106 models_entries: models_entries . "," model_entry
+
+    ","  shift, and go to state 102
+    "]"  shift, and go to state 103
+
+
+State 93
+
+   58 $@12: . %empty
+   59 hooks_library: "{" . $@12 hooks_params "}"
+
+    $default  reduce using rule 58 ($@12)
+
+    $@12  go to state 104
+
+
+State 94
+
+   53 hooks_libraries: "hooks-libraries" $@11 ":" "[" hooks_libraries_list . "]"
+
+    "]"  shift, and go to state 105
+
+
+State 95
+
+   55 hooks_libraries_list: not_empty_hooks_libraries_list .  ["]"]
+   57 not_empty_hooks_libraries_list: not_empty_hooks_libraries_list . "," hooks_library
+
+    ","  shift, and go to state 106
+
+    $default  reduce using rule 55 (hooks_libraries_list)
+
+
+State 96
+
+   56 not_empty_hooks_libraries_list: hooks_library .
+
+    $default  reduce using rule 56 (not_empty_hooks_libraries_list)
+
+
+State 97
+
+  146 $@27: . %empty
+  147 logger_entry: "{" . $@27 logger_params "}"
+
+    $default  reduce using rule 146 ($@27)
+
+    $@27  go to state 107
+
+
+State 98
+
+  143 loggers: "loggers" $@26 ":" "[" loggers_entries . "]"
+  145 loggers_entries: loggers_entries . "," logger_entry
+
+    ","  shift, and go to state 108
+    "]"  shift, and go to state 109
+
+
+State 99
+
+  144 loggers_entries: logger_entry .
+
+    $default  reduce using rule 144 (loggers_entries)
+
+
+State 100
+
+   37 netconf_object: "Netconf" $@8 ":" "{" global_params "}" .
+
+    $default  reduce using rule 37 (netconf_object)
+
+
+State 101
+
+   30 unknown_map_entry: . "constant string" ":"
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   70 configuration: . "configuration" $@15 ":" "{" configuration_keys "}"
+   90 model_entry: "{" $@17 . model_params "}"
+   91 model_params: . model_param
+   92             | . model_params "," model_param
+   93 model_param: . comment
+   94            | . configuration
+   95            | . model
+   96            | . notifications
+   97            | . operational
+   98            | . rpc
+   99            | . user_context
+  100            | . unknown_map_entry
+  102 model: . "model" $@18 ":" "constant string"
+  108 notifications: . "notifications" $@20 ":" "{" notifications_keys "}"
+  115 operational: . "operational" $@21 ":" "{" operational_keys "}"
+  122 rpc: . "rpc" $@22 ":" "{" rpc_keys "}"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "configuration"    shift, and go to state 110
+    "model"            shift, and go to state 111
+    "notifications"    shift, and go to state 112
+    "operational"      shift, and go to state 113
+    "rpc"              shift, and go to state 114
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 115
+    user_context       go to state 116
+    comment            go to state 117
+    configuration      go to state 118
+    model_params       go to state 119
+    model_param        go to state 120
+    model              go to state 121
+    notifications      go to state 122
+    operational        go to state 123
+    rpc                go to state 124
+
+
+State 102
+
+   90 model_entry: . "{" $@17 model_params "}"
+  106 models_entries: models_entries "," . model_entry
+
+    "{"  shift, and go to state 90
+
+    model_entry  go to state 125
+
+
+State 103
+
+  104 models: "models" $@19 ":" "[" models_entries "]" .
+
+    $default  reduce using rule 104 (models)
+
+
+State 104
+
+   30 unknown_map_entry: . "constant string" ":"
+   59 hooks_library: "{" $@12 . hooks_params "}"
+   60 hooks_params: . hooks_param
+   61             | . hooks_params "," hooks_param
+   62             | . unknown_map_entry
+   63 hooks_param: . library
+   64            | . parameters
+   66 library: . "library" $@13 ":" "constant string"
+   68 parameters: . "parameters" $@14 ":" map_value
+
+    "library"          shift, and go to state 126
+    "parameters"       shift, and go to state 127
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 128
+    hooks_params       go to state 129
+    hooks_param        go to state 130
+    library            go to state 131
+    parameters         go to state 132
+
+
+State 105
+
+   53 hooks_libraries: "hooks-libraries" $@11 ":" "[" hooks_libraries_list "]" .
+
+    $default  reduce using rule 53 (hooks_libraries)
+
+
+State 106
+
+   57 not_empty_hooks_libraries_list: not_empty_hooks_libraries_list "," . hooks_library
+   59 hooks_library: . "{" $@12 hooks_params "}"
+
+    "{"  shift, and go to state 93
+
+    hooks_library  go to state 133
+
+
+State 107
+
+   30 unknown_map_entry: . "constant string" ":"
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+  147 logger_entry: "{" $@27 . logger_params "}"
+  148 logger_params: . logger_param
+  149              | . logger_params "," logger_param
+  150 logger_param: . name
+  151             | . output_options_list
+  152             | . debuglevel
+  153             | . severity
+  154             | . user_context
+  155             | . comment
+  156             | . unknown_map_entry
+  158 name: . "name" $@28 ":" "constant string"
+  159 debuglevel: . "debuglevel" ":" "integer"
+  161 severity: . "severity" $@29 ":" "constant string"
+  163 output_options_list: . "output_options" $@30 ":" "[" output_options_list_content "]"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "name"             shift, and go to state 134
+    "output_options"   shift, and go to state 135
+    "debuglevel"       shift, and go to state 136
+    "severity"         shift, and go to state 137
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry    go to state 138
+    user_context         go to state 139
+    comment              go to state 140
+    logger_params        go to state 141
+    logger_param         go to state 142
+    name                 go to state 143
+    debuglevel           go to state 144
+    severity             go to state 145
+    output_options_list  go to state 146
+
+
+State 108
+
+  145 loggers_entries: loggers_entries "," . logger_entry
+  147 logger_entry: . "{" $@27 logger_params "}"
+
+    "{"  shift, and go to state 97
+
+    logger_entry  go to state 147
+
+
+State 109
+
+  143 loggers: "loggers" $@26 ":" "[" loggers_entries "]" .
+
+    $default  reduce using rule 143 (loggers)
+
+
+State 110
+
+   69 $@15: . %empty
+   70 configuration: "configuration" . $@15 ":" "{" configuration_keys "}"
+
+    $default  reduce using rule 69 ($@15)
+
+    $@15  go to state 148
+
+
+State 111
+
+  101 $@18: . %empty
+  102 model: "model" . $@18 ":" "constant string"
+
+    $default  reduce using rule 101 ($@18)
+
+    $@18  go to state 149
+
+
+State 112
+
+  107 $@20: . %empty
+  108 notifications: "notifications" . $@20 ":" "{" notifications_keys "}"
+
+    $default  reduce using rule 107 ($@20)
+
+    $@20  go to state 150
+
+
+State 113
+
+  114 $@21: . %empty
+  115 operational: "operational" . $@21 ":" "{" operational_keys "}"
+
+    $default  reduce using rule 114 ($@21)
+
+    $@21  go to state 151
+
+
+State 114
+
+  121 $@22: . %empty
+  122 rpc: "rpc" . $@22 ":" "{" rpc_keys "}"
+
+    $default  reduce using rule 121 ($@22)
+
+    $@22  go to state 152
+
+
+State 115
+
+  100 model_param: unknown_map_entry .
+
+    $default  reduce using rule 100 (model_param)
+
+
+State 116
+
+   99 model_param: user_context .
+
+    $default  reduce using rule 99 (model_param)
+
+
+State 117
+
+   93 model_param: comment .
+
+    $default  reduce using rule 93 (model_param)
+
+
+State 118
+
+   94 model_param: configuration .
+
+    $default  reduce using rule 94 (model_param)
+
+
+State 119
+
+   90 model_entry: "{" $@17 model_params . "}"
+   92 model_params: model_params . "," model_param
+
+    ","  shift, and go to state 153
+    "}"  shift, and go to state 154
+
+
+State 120
+
+   91 model_params: model_param .
+
+    $default  reduce using rule 91 (model_params)
+
+
+State 121
+
+   95 model_param: model .
+
+    $default  reduce using rule 95 (model_param)
+
+
+State 122
+
+   96 model_param: notifications .
+
+    $default  reduce using rule 96 (model_param)
+
+
+State 123
+
+   97 model_param: operational .
+
+    $default  reduce using rule 97 (model_param)
+
+
+State 124
+
+   98 model_param: rpc .
+
+    $default  reduce using rule 98 (model_param)
+
+
+State 125
+
+  106 models_entries: models_entries "," model_entry .
+
+    $default  reduce using rule 106 (models_entries)
+
+
+State 126
+
+   65 $@13: . %empty
+   66 library: "library" . $@13 ":" "constant string"
+
+    $default  reduce using rule 65 ($@13)
+
+    $@13  go to state 155
+
+
+State 127
+
+   67 $@14: . %empty
+   68 parameters: "parameters" . $@14 ":" map_value
+
+    $default  reduce using rule 67 ($@14)
+
+    $@14  go to state 156
+
+
+State 128
+
+   62 hooks_params: unknown_map_entry .
+
+    $default  reduce using rule 62 (hooks_params)
+
+
+State 129
+
+   59 hooks_library: "{" $@12 hooks_params . "}"
+   61 hooks_params: hooks_params . "," hooks_param
+
+    ","  shift, and go to state 157
+    "}"  shift, and go to state 158
+
+
+State 130
+
+   60 hooks_params: hooks_param .
+
+    $default  reduce using rule 60 (hooks_params)
+
+
+State 131
+
+   63 hooks_param: library .
+
+    $default  reduce using rule 63 (hooks_param)
+
+
+State 132
+
+   64 hooks_param: parameters .
+
+    $default  reduce using rule 64 (hooks_param)
+
+
+State 133
+
+   57 not_empty_hooks_libraries_list: not_empty_hooks_libraries_list "," hooks_library .
+
+    $default  reduce using rule 57 (not_empty_hooks_libraries_list)
+
+
+State 134
+
+  157 $@28: . %empty
+  158 name: "name" . $@28 ":" "constant string"
+
+    $default  reduce using rule 157 ($@28)
+
+    $@28  go to state 159
+
+
+State 135
+
+  162 $@30: . %empty
+  163 output_options_list: "output_options" . $@30 ":" "[" output_options_list_content "]"
+
+    $default  reduce using rule 162 ($@30)
+
+    $@30  go to state 160
+
+
+State 136
+
+  159 debuglevel: "debuglevel" . ":" "integer"
+
+    ":"  shift, and go to state 161
+
+
+State 137
+
+  160 $@29: . %empty
+  161 severity: "severity" . $@29 ":" "constant string"
+
+    $default  reduce using rule 160 ($@29)
+
+    $@29  go to state 162
+
+
+State 138
+
+  156 logger_param: unknown_map_entry .
+
+    $default  reduce using rule 156 (logger_param)
+
+
+State 139
+
+  154 logger_param: user_context .
+
+    $default  reduce using rule 154 (logger_param)
+
+
+State 140
+
+  155 logger_param: comment .
+
+    $default  reduce using rule 155 (logger_param)
+
+
+State 141
+
+  147 logger_entry: "{" $@27 logger_params . "}"
+  149 logger_params: logger_params . "," logger_param
+
+    ","  shift, and go to state 163
+    "}"  shift, and go to state 164
+
+
+State 142
+
+  148 logger_params: logger_param .
+
+    $default  reduce using rule 148 (logger_params)
+
+
+State 143
+
+  150 logger_param: name .
+
+    $default  reduce using rule 150 (logger_param)
+
+
+State 144
+
+  152 logger_param: debuglevel .
+
+    $default  reduce using rule 152 (logger_param)
+
+
+State 145
+
+  153 logger_param: severity .
+
+    $default  reduce using rule 153 (logger_param)
+
+
+State 146
+
+  151 logger_param: output_options_list .
+
+    $default  reduce using rule 151 (logger_param)
+
+
+State 147
+
+  145 loggers_entries: loggers_entries "," logger_entry .
+
+    $default  reduce using rule 145 (loggers_entries)
+
+
+State 148
+
+   70 configuration: "configuration" $@15 . ":" "{" configuration_keys "}"
+
+    ":"  shift, and go to state 165
+
+
+State 149
+
+  102 model: "model" $@18 . ":" "constant string"
+
+    ":"  shift, and go to state 166
+
+
+State 150
+
+  108 notifications: "notifications" $@20 . ":" "{" notifications_keys "}"
+
+    ":"  shift, and go to state 167
+
+
+State 151
+
+  115 operational: "operational" $@21 . ":" "{" operational_keys "}"
+
+    ":"  shift, and go to state 168
+
+
+State 152
+
+  122 rpc: "rpc" $@22 . ":" "{" rpc_keys "}"
+
+    ":"  shift, and go to state 169
+
+
+State 153
+
+   30 unknown_map_entry: . "constant string" ":"
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   70 configuration: . "configuration" $@15 ":" "{" configuration_keys "}"
+   92 model_params: model_params "," . model_param
+   93 model_param: . comment
+   94            | . configuration
+   95            | . model
+   96            | . notifications
+   97            | . operational
+   98            | . rpc
+   99            | . user_context
+  100            | . unknown_map_entry
+  102 model: . "model" $@18 ":" "constant string"
+  108 notifications: . "notifications" $@20 ":" "{" notifications_keys "}"
+  115 operational: . "operational" $@21 ":" "{" operational_keys "}"
+  122 rpc: . "rpc" $@22 ":" "{" rpc_keys "}"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "configuration"    shift, and go to state 110
+    "model"            shift, and go to state 111
+    "notifications"    shift, and go to state 112
+    "operational"      shift, and go to state 113
+    "rpc"              shift, and go to state 114
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 115
+    user_context       go to state 116
+    comment            go to state 117
+    configuration      go to state 118
+    model_param        go to state 170
+    model              go to state 121
+    notifications      go to state 122
+    operational        go to state 123
+    rpc                go to state 124
+
+
+State 154
+
+   90 model_entry: "{" $@17 model_params "}" .
+
+    $default  reduce using rule 90 (model_entry)
+
+
+State 155
+
+   66 library: "library" $@13 . ":" "constant string"
+
+    ":"  shift, and go to state 171
+
+
+State 156
+
+   68 parameters: "parameters" $@14 . ":" map_value
+
+    ":"  shift, and go to state 172
+
+
+State 157
+
+   61 hooks_params: hooks_params "," . hooks_param
+   63 hooks_param: . library
+   64            | . parameters
+   66 library: . "library" $@13 ":" "constant string"
+   68 parameters: . "parameters" $@14 ":" map_value
+
+    "library"     shift, and go to state 126
+    "parameters"  shift, and go to state 127
+
+    hooks_param  go to state 173
+    library      go to state 131
+    parameters   go to state 132
+
+
+State 158
+
+   59 hooks_library: "{" $@12 hooks_params "}" .
+
+    $default  reduce using rule 59 (hooks_library)
+
+
+State 159
+
+  158 name: "name" $@28 . ":" "constant string"
+
+    ":"  shift, and go to state 174
+
+
+State 160
+
+  163 output_options_list: "output_options" $@30 . ":" "[" output_options_list_content "]"
+
+    ":"  shift, and go to state 175
+
+
+State 161
+
+  159 debuglevel: "debuglevel" ":" . "integer"
+
+    "integer"  shift, and go to state 176
+
+
+State 162
+
+  161 severity: "severity" $@29 . ":" "constant string"
+
+    ":"  shift, and go to state 177
+
+
+State 163
+
+   30 unknown_map_entry: . "constant string" ":"
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+  149 logger_params: logger_params "," . logger_param
+  150 logger_param: . name
+  151             | . output_options_list
+  152             | . debuglevel
+  153             | . severity
+  154             | . user_context
+  155             | . comment
+  156             | . unknown_map_entry
+  158 name: . "name" $@28 ":" "constant string"
+  159 debuglevel: . "debuglevel" ":" "integer"
+  161 severity: . "severity" $@29 ":" "constant string"
+  163 output_options_list: . "output_options" $@30 ":" "[" output_options_list_content "]"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "name"             shift, and go to state 134
+    "output_options"   shift, and go to state 135
+    "debuglevel"       shift, and go to state 136
+    "severity"         shift, and go to state 137
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry    go to state 138
+    user_context         go to state 139
+    comment              go to state 140
+    logger_param         go to state 178
+    name                 go to state 143
+    debuglevel           go to state 144
+    severity             go to state 145
+    output_options_list  go to state 146
+
+
+State 164
+
+  147 logger_entry: "{" $@27 logger_params "}" .
+
+    $default  reduce using rule 147 (logger_entry)
+
+
+State 165
+
+   70 configuration: "configuration" $@15 ":" . "{" configuration_keys "}"
+
+    "{"  shift, and go to state 179
+
+
+State 166
+
+  102 model: "model" $@18 ":" . "constant string"
+
+    "constant string"  shift, and go to state 180
+
+
+State 167
+
+  108 notifications: "notifications" $@20 ":" . "{" notifications_keys "}"
+
+    "{"  shift, and go to state 181
+
+
+State 168
+
+  115 operational: "operational" $@21 ":" . "{" operational_keys "}"
+
+    "{"  shift, and go to state 182
+
+
+State 169
+
+  122 rpc: "rpc" $@22 ":" . "{" rpc_keys "}"
+
+    "{"  shift, and go to state 183
+
+
+State 170
+
+   92 model_params: model_params "," model_param .
+
+    $default  reduce using rule 92 (model_params)
+
+
+State 171
+
+   66 library: "library" $@13 ":" . "constant string"
+
+    "constant string"  shift, and go to state 184
+
+
+State 172
+
+   18 map: . "{" $@5 map_content "}"
+   19 map_value: . map
+   68 parameters: "parameters" $@14 ":" . map_value
+
+    "{"  shift, and go to state 10
+
+    map        go to state 82
+    map_value  go to state 185
+
+
+State 173
+
+   61 hooks_params: hooks_params "," hooks_param .
+
+    $default  reduce using rule 61 (hooks_params)
+
+
+State 174
+
+  158 name: "name" $@28 ":" . "constant string"
+
+    "constant string"  shift, and go to state 186
+
+
+State 175
+
+  163 output_options_list: "output_options" $@30 ":" . "[" output_options_list_content "]"
+
+    "["  shift, and go to state 187
+
+
+State 176
+
+  159 debuglevel: "debuglevel" ":" "integer" .
+
+    $default  reduce using rule 159 (debuglevel)
+
+
+State 177
+
+  161 severity: "severity" $@29 ":" . "constant string"
+
+    "constant string"  shift, and go to state 188
+
+
+State 178
+
+  149 logger_params: logger_params "," logger_param .
+
+    $default  reduce using rule 149 (logger_params)
+
+
+State 179
+
+   30 unknown_map_entry: . "constant string" ":"
+   70 configuration: "configuration" $@15 ":" "{" . configuration_keys "}"
+   71 configuration_keys: . configuration_key
+   72                   | . configuration_keys "," configuration_key
+   73 configuration_key: . control_socket
+   74                  | . on_boot_update_socket
+   75                  | . on_boot_update_sysrepo
+   76                  | . subscribe
+   77                  | . validate
+   78                  | . unknown_map_entry
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  128 on_boot_update_socket: . "on-boot-update-socket" ":" "boolean"
+  129 on_boot_update_sysrepo: . "on-boot-update-sysrepo" ":" "boolean"
+  140 subscribe: . "subscribe" ":" "boolean"
+  141 validate: . "validate" ":" "boolean"
+
+    "control-socket"          shift, and go to state 189
+    "on-boot-update-socket"   shift, and go to state 190
+    "on-boot-update-sysrepo"  shift, and go to state 191
+    "subscribe"               shift, and go to state 192
+    "validate"                shift, and go to state 193
+    "constant string"         shift, and go to state 43
+
+    unknown_map_entry       go to state 194
+    configuration_keys      go to state 195
+    configuration_key       go to state 196
+    control_socket          go to state 197
+    on_boot_update_socket   go to state 198
+    on_boot_update_sysrepo  go to state 199
+    subscribe               go to state 200
+    validate                go to state 201
+
+
+State 180
+
+  102 model: "model" $@18 ":" "constant string" .
+
+    $default  reduce using rule 102 (model)
+
+
+State 181
+
+   30 unknown_map_entry: . "constant string" ":"
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  108 notifications: "notifications" $@20 ":" "{" . notifications_keys "}"
+  109 notifications_keys: . notifications_key
+  110                   | . notifications_keys "," notifications_key
+  111 notifications_key: . control_socket
+  112                  | . subscribe
+  113                  | . unknown_map_entry
+  140 subscribe: . "subscribe" ":" "boolean"
+
+    "control-socket"   shift, and go to state 189
+    "subscribe"        shift, and go to state 192
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry   go to state 202
+    control_socket      go to state 203
+    notifications_keys  go to state 204
+    notifications_key   go to state 205
+    subscribe           go to state 206
+
+
+State 182
+
+   30 unknown_map_entry: . "constant string" ":"
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  115 operational: "operational" $@21 ":" "{" . operational_keys "}"
+  116 operational_keys: . operational_key
+  117                 | . operational_keys "," operational_key
+  118 operational_key: . control_socket
+  119                | . subscribe
+  120                | . unknown_map_entry
+  140 subscribe: . "subscribe" ":" "boolean"
+
+    "control-socket"   shift, and go to state 189
+    "subscribe"        shift, and go to state 192
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 207
+    control_socket     go to state 208
+    operational_keys   go to state 209
+    operational_key    go to state 210
+    subscribe          go to state 211
+
+
+State 183
+
+   30 unknown_map_entry: . "constant string" ":"
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  122 rpc: "rpc" $@22 ":" "{" . rpc_keys "}"
+  123 rpc_keys: . rpc_key
+  124         | . rpc_keys "," rpc_key
+  125 rpc_key: . control_socket
+  126        | . subscribe
+  127        | . unknown_map_entry
+  140 subscribe: . "subscribe" ":" "boolean"
+
+    "control-socket"   shift, and go to state 189
+    "subscribe"        shift, and go to state 192
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 212
+    control_socket     go to state 213
+    rpc_keys           go to state 214
+    rpc_key            go to state 215
+    subscribe          go to state 216
+
+
+State 184
+
+   66 library: "library" $@13 ":" "constant string" .
+
+    $default  reduce using rule 66 (library)
+
+
+State 185
+
+   68 parameters: "parameters" $@14 ":" map_value .
+
+    $default  reduce using rule 68 (parameters)
+
+
+State 186
+
+  158 name: "name" $@28 ":" "constant string" .
+
+    $default  reduce using rule 158 (name)
+
+
+State 187
+
+  163 output_options_list: "output_options" $@30 ":" "[" . output_options_list_content "]"
+  164 output_options_list_content: . output_entry
+  165                            | . output_options_list_content "," output_entry
+  167 output_entry: . "{" $@31 output_params_list "}"
+
+    "{"  shift, and go to state 217
+
+    output_options_list_content  go to state 218
+    output_entry                 go to state 219
+
+
+State 188
+
+  161 severity: "severity" $@29 ":" "constant string" .
+
+    $default  reduce using rule 161 (severity)
+
+
+State 189
+
+   79 $@16: . %empty
+   80 control_socket: "control-socket" . $@16 ":" "{" control_socket_params "}"
+
+    $default  reduce using rule 79 ($@16)
+
+    $@16  go to state 220
+
+
+State 190
+
+  128 on_boot_update_socket: "on-boot-update-socket" . ":" "boolean"
+
+    ":"  shift, and go to state 221
+
+
+State 191
+
+  129 on_boot_update_sysrepo: "on-boot-update-sysrepo" . ":" "boolean"
+
+    ":"  shift, and go to state 222
+
+
+State 192
+
+  140 subscribe: "subscribe" . ":" "boolean"
+
+    ":"  shift, and go to state 223
+
+
+State 193
+
+  141 validate: "validate" . ":" "boolean"
+
+    ":"  shift, and go to state 224
+
+
+State 194
+
+   78 configuration_key: unknown_map_entry .
+
+    $default  reduce using rule 78 (configuration_key)
+
+
+State 195
+
+   70 configuration: "configuration" $@15 ":" "{" configuration_keys . "}"
+   72 configuration_keys: configuration_keys . "," configuration_key
+
+    ","  shift, and go to state 225
+    "}"  shift, and go to state 226
+
+
+State 196
+
+   71 configuration_keys: configuration_key .
+
+    $default  reduce using rule 71 (configuration_keys)
+
+
+State 197
+
+   73 configuration_key: control_socket .
+
+    $default  reduce using rule 73 (configuration_key)
+
+
+State 198
+
+   74 configuration_key: on_boot_update_socket .
+
+    $default  reduce using rule 74 (configuration_key)
+
+
+State 199
+
+   75 configuration_key: on_boot_update_sysrepo .
+
+    $default  reduce using rule 75 (configuration_key)
+
+
+State 200
+
+   76 configuration_key: subscribe .
+
+    $default  reduce using rule 76 (configuration_key)
+
+
+State 201
+
+   77 configuration_key: validate .
+
+    $default  reduce using rule 77 (configuration_key)
+
+
+State 202
+
+  113 notifications_key: unknown_map_entry .
+
+    $default  reduce using rule 113 (notifications_key)
+
+
+State 203
+
+  111 notifications_key: control_socket .
+
+    $default  reduce using rule 111 (notifications_key)
+
+
+State 204
+
+  108 notifications: "notifications" $@20 ":" "{" notifications_keys . "}"
+  110 notifications_keys: notifications_keys . "," notifications_key
+
+    ","  shift, and go to state 227
+    "}"  shift, and go to state 228
+
+
+State 205
+
+  109 notifications_keys: notifications_key .
+
+    $default  reduce using rule 109 (notifications_keys)
+
+
+State 206
+
+  112 notifications_key: subscribe .
+
+    $default  reduce using rule 112 (notifications_key)
+
+
+State 207
+
+  120 operational_key: unknown_map_entry .
+
+    $default  reduce using rule 120 (operational_key)
+
+
+State 208
+
+  118 operational_key: control_socket .
+
+    $default  reduce using rule 118 (operational_key)
+
+
+State 209
+
+  115 operational: "operational" $@21 ":" "{" operational_keys . "}"
+  117 operational_keys: operational_keys . "," operational_key
+
+    ","  shift, and go to state 229
+    "}"  shift, and go to state 230
+
+
+State 210
+
+  116 operational_keys: operational_key .
+
+    $default  reduce using rule 116 (operational_keys)
+
+
+State 211
+
+  119 operational_key: subscribe .
+
+    $default  reduce using rule 119 (operational_key)
+
+
+State 212
+
+  127 rpc_key: unknown_map_entry .
+
+    $default  reduce using rule 127 (rpc_key)
+
+
+State 213
+
+  125 rpc_key: control_socket .
+
+    $default  reduce using rule 125 (rpc_key)
+
+
+State 214
+
+  122 rpc: "rpc" $@22 ":" "{" rpc_keys . "}"
+  124 rpc_keys: rpc_keys . "," rpc_key
+
+    ","  shift, and go to state 231
+    "}"  shift, and go to state 232
+
+
+State 215
+
+  123 rpc_keys: rpc_key .
+
+    $default  reduce using rule 123 (rpc_keys)
+
+
+State 216
+
+  126 rpc_key: subscribe .
+
+    $default  reduce using rule 126 (rpc_key)
+
+
+State 217
+
+  166 $@31: . %empty
+  167 output_entry: "{" . $@31 output_params_list "}"
+
+    $default  reduce using rule 166 ($@31)
+
+    $@31  go to state 233
+
+
+State 218
+
+  163 output_options_list: "output_options" $@30 ":" "[" output_options_list_content . "]"
+  165 output_options_list_content: output_options_list_content . "," output_entry
+
+    ","  shift, and go to state 234
+    "]"  shift, and go to state 235
+
+
+State 219
+
+  164 output_options_list_content: output_entry .
+
+    $default  reduce using rule 164 (output_options_list_content)
+
+
+State 220
+
+   80 control_socket: "control-socket" $@16 . ":" "{" control_socket_params "}"
+
+    ":"  shift, and go to state 236
+
+
+State 221
+
+  128 on_boot_update_socket: "on-boot-update-socket" ":" . "boolean"
+
+    "boolean"  shift, and go to state 237
+
+
+State 222
+
+  129 on_boot_update_sysrepo: "on-boot-update-sysrepo" ":" . "boolean"
+
+    "boolean"  shift, and go to state 238
+
+
+State 223
+
+  140 subscribe: "subscribe" ":" . "boolean"
+
+    "boolean"  shift, and go to state 239
+
+
+State 224
+
+  141 validate: "validate" ":" . "boolean"
+
+    "boolean"  shift, and go to state 240
+
+
+State 225
+
+   30 unknown_map_entry: . "constant string" ":"
+   72 configuration_keys: configuration_keys "," . configuration_key
+   73 configuration_key: . control_socket
+   74                  | . on_boot_update_socket
+   75                  | . on_boot_update_sysrepo
+   76                  | . subscribe
+   77                  | . validate
+   78                  | . unknown_map_entry
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  128 on_boot_update_socket: . "on-boot-update-socket" ":" "boolean"
+  129 on_boot_update_sysrepo: . "on-boot-update-sysrepo" ":" "boolean"
+  140 subscribe: . "subscribe" ":" "boolean"
+  141 validate: . "validate" ":" "boolean"
+
+    "control-socket"          shift, and go to state 189
+    "on-boot-update-socket"   shift, and go to state 190
+    "on-boot-update-sysrepo"  shift, and go to state 191
+    "subscribe"               shift, and go to state 192
+    "validate"                shift, and go to state 193
+    "constant string"         shift, and go to state 43
+
+    unknown_map_entry       go to state 194
+    configuration_key       go to state 241
+    control_socket          go to state 197
+    on_boot_update_socket   go to state 198
+    on_boot_update_sysrepo  go to state 199
+    subscribe               go to state 200
+    validate                go to state 201
+
+
+State 226
+
+   70 configuration: "configuration" $@15 ":" "{" configuration_keys "}" .
+
+    $default  reduce using rule 70 (configuration)
+
+
+State 227
+
+   30 unknown_map_entry: . "constant string" ":"
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  110 notifications_keys: notifications_keys "," . notifications_key
+  111 notifications_key: . control_socket
+  112                  | . subscribe
+  113                  | . unknown_map_entry
+  140 subscribe: . "subscribe" ":" "boolean"
+
+    "control-socket"   shift, and go to state 189
+    "subscribe"        shift, and go to state 192
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 202
+    control_socket     go to state 203
+    notifications_key  go to state 242
+    subscribe          go to state 206
+
+
+State 228
+
+  108 notifications: "notifications" $@20 ":" "{" notifications_keys "}" .
+
+    $default  reduce using rule 108 (notifications)
+
+
+State 229
+
+   30 unknown_map_entry: . "constant string" ":"
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  117 operational_keys: operational_keys "," . operational_key
+  118 operational_key: . control_socket
+  119                | . subscribe
+  120                | . unknown_map_entry
+  140 subscribe: . "subscribe" ":" "boolean"
+
+    "control-socket"   shift, and go to state 189
+    "subscribe"        shift, and go to state 192
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 207
+    control_socket     go to state 208
+    operational_key    go to state 243
+    subscribe          go to state 211
+
+
+State 230
+
+  115 operational: "operational" $@21 ":" "{" operational_keys "}" .
+
+    $default  reduce using rule 115 (operational)
+
+
+State 231
+
+   30 unknown_map_entry: . "constant string" ":"
+   80 control_socket: . "control-socket" $@16 ":" "{" control_socket_params "}"
+  124 rpc_keys: rpc_keys "," . rpc_key
+  125 rpc_key: . control_socket
+  126        | . subscribe
+  127        | . unknown_map_entry
+  140 subscribe: . "subscribe" ":" "boolean"
+
+    "control-socket"   shift, and go to state 189
+    "subscribe"        shift, and go to state 192
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry  go to state 212
+    control_socket     go to state 213
+    rpc_key            go to state 244
+    subscribe          go to state 216
+
+
+State 232
+
+  122 rpc: "rpc" $@22 ":" "{" rpc_keys "}" .
+
+    $default  reduce using rule 122 (rpc)
+
+
+State 233
+
+  167 output_entry: "{" $@31 . output_params_list "}"
+  168 output_params_list: . output_params
+  169                   | . output_params_list "," output_params
+  170 output_params: . output
+  171              | . flush
+  172              | . maxsize
+  173              | . maxver
+  174              | . pattern
+  176 output: . "output" $@32 ":" "constant string"
+  177 flush: . "flush" ":" "boolean"
+  178 maxsize: . "maxsize" ":" "integer"
+  179 maxver: . "maxver" ":" "integer"
+  181 pattern: . "pattern" $@33 ":" "constant string"
+
+    "output"   shift, and go to state 245
+    "flush"    shift, and go to state 246
+    "maxsize"  shift, and go to state 247
+    "maxver"   shift, and go to state 248
+    "pattern"  shift, and go to state 249
+
+    output_params_list  go to state 250
+    output_params       go to state 251
+    output              go to state 252
+    flush               go to state 253
+    maxsize             go to state 254
+    maxver              go to state 255
+    pattern             go to state 256
+
+
+State 234
+
+  165 output_options_list_content: output_options_list_content "," . output_entry
+  167 output_entry: . "{" $@31 output_params_list "}"
+
+    "{"  shift, and go to state 217
+
+    output_entry  go to state 257
+
+
+State 235
+
+  163 output_options_list: "output_options" $@30 ":" "[" output_options_list_content "]" .
+
+    $default  reduce using rule 163 (output_options_list)
+
+
+State 236
+
+   80 control_socket: "control-socket" $@16 ":" . "{" control_socket_params "}"
+
+    "{"  shift, and go to state 258
+
+
+State 237
+
+  128 on_boot_update_socket: "on-boot-update-socket" ":" "boolean" .
+
+    $default  reduce using rule 128 (on_boot_update_socket)
+
+
+State 238
+
+  129 on_boot_update_sysrepo: "on-boot-update-sysrepo" ":" "boolean" .
+
+    $default  reduce using rule 129 (on_boot_update_sysrepo)
+
+
+State 239
+
+  140 subscribe: "subscribe" ":" "boolean" .
+
+    $default  reduce using rule 140 (subscribe)
+
+
+State 240
+
+  141 validate: "validate" ":" "boolean" .
+
+    $default  reduce using rule 141 (validate)
+
+
+State 241
+
+   72 configuration_keys: configuration_keys "," configuration_key .
+
+    $default  reduce using rule 72 (configuration_keys)
+
+
+State 242
+
+  110 notifications_keys: notifications_keys "," notifications_key .
+
+    $default  reduce using rule 110 (notifications_keys)
+
+
+State 243
+
+  117 operational_keys: operational_keys "," operational_key .
+
+    $default  reduce using rule 117 (operational_keys)
+
+
+State 244
+
+  124 rpc_keys: rpc_keys "," rpc_key .
+
+    $default  reduce using rule 124 (rpc_keys)
+
+
+State 245
+
+  175 $@32: . %empty
+  176 output: "output" . $@32 ":" "constant string"
+
+    $default  reduce using rule 175 ($@32)
+
+    $@32  go to state 259
+
+
+State 246
+
+  177 flush: "flush" . ":" "boolean"
+
+    ":"  shift, and go to state 260
+
+
+State 247
+
+  178 maxsize: "maxsize" . ":" "integer"
+
+    ":"  shift, and go to state 261
+
+
+State 248
+
+  179 maxver: "maxver" . ":" "integer"
+
+    ":"  shift, and go to state 262
+
+
+State 249
+
+  180 $@33: . %empty
+  181 pattern: "pattern" . $@33 ":" "constant string"
+
+    $default  reduce using rule 180 ($@33)
+
+    $@33  go to state 263
+
+
+State 250
+
+  167 output_entry: "{" $@31 output_params_list . "}"
+  169 output_params_list: output_params_list . "," output_params
+
+    ","  shift, and go to state 264
+    "}"  shift, and go to state 265
+
+
+State 251
+
+  168 output_params_list: output_params .
+
+    $default  reduce using rule 168 (output_params_list)
+
+
+State 252
+
+  170 output_params: output .
+
+    $default  reduce using rule 170 (output_params)
+
+
+State 253
+
+  171 output_params: flush .
+
+    $default  reduce using rule 171 (output_params)
+
+
+State 254
+
+  172 output_params: maxsize .
+
+    $default  reduce using rule 172 (output_params)
+
+
+State 255
+
+  173 output_params: maxver .
+
+    $default  reduce using rule 173 (output_params)
+
+
+State 256
+
+  174 output_params: pattern .
+
+    $default  reduce using rule 174 (output_params)
+
+
+State 257
+
+  165 output_options_list_content: output_options_list_content "," output_entry .
+
+    $default  reduce using rule 165 (output_options_list_content)
+
+
+State 258
+
+   30 unknown_map_entry: . "constant string" ":"
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   80 control_socket: "control-socket" $@16 ":" "{" . control_socket_params "}"
+   81 control_socket_params: . control_socket_param
+   82                      | . control_socket_params "," control_socket_param
+   83 control_socket_param: . socket_type
+   84                     | . socket_name
+   85                     | . socket_url
+   86                     | . user_context
+   87                     | . comment
+   88                     | . unknown_map_entry
+  131 socket_type: . "socket-type" $@23 ":" socket_type_value
+  137 socket_name: . "socket-name" $@24 ":" "constant string"
+  139 socket_url: . "socket-url" $@25 ":" "constant string"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "socket-name"      shift, and go to state 266
+    "socket-type"      shift, and go to state 267
+    "socket-url"       shift, and go to state 268
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry      go to state 269
+    user_context           go to state 270
+    comment                go to state 271
+    control_socket_params  go to state 272
+    control_socket_param   go to state 273
+    socket_type            go to state 274
+    socket_name            go to state 275
+    socket_url             go to state 276
+
+
+State 259
+
+  176 output: "output" $@32 . ":" "constant string"
+
+    ":"  shift, and go to state 277
+
+
+State 260
+
+  177 flush: "flush" ":" . "boolean"
+
+    "boolean"  shift, and go to state 278
+
+
+State 261
+
+  178 maxsize: "maxsize" ":" . "integer"
+
+    "integer"  shift, and go to state 279
+
+
+State 262
+
+  179 maxver: "maxver" ":" . "integer"
+
+    "integer"  shift, and go to state 280
+
+
+State 263
+
+  181 pattern: "pattern" $@33 . ":" "constant string"
+
+    ":"  shift, and go to state 281
+
+
+State 264
+
+  169 output_params_list: output_params_list "," . output_params
+  170 output_params: . output
+  171              | . flush
+  172              | . maxsize
+  173              | . maxver
+  174              | . pattern
+  176 output: . "output" $@32 ":" "constant string"
+  177 flush: . "flush" ":" "boolean"
+  178 maxsize: . "maxsize" ":" "integer"
+  179 maxver: . "maxver" ":" "integer"
+  181 pattern: . "pattern" $@33 ":" "constant string"
+
+    "output"   shift, and go to state 245
+    "flush"    shift, and go to state 246
+    "maxsize"  shift, and go to state 247
+    "maxver"   shift, and go to state 248
+    "pattern"  shift, and go to state 249
+
+    output_params  go to state 282
+    output         go to state 252
+    flush          go to state 253
+    maxsize        go to state 254
+    maxver         go to state 255
+    pattern        go to state 256
+
+
+State 265
+
+  167 output_entry: "{" $@31 output_params_list "}" .
+
+    $default  reduce using rule 167 (output_entry)
+
+
+State 266
+
+  136 $@24: . %empty
+  137 socket_name: "socket-name" . $@24 ":" "constant string"
+
+    $default  reduce using rule 136 ($@24)
+
+    $@24  go to state 283
+
+
+State 267
+
+  130 $@23: . %empty
+  131 socket_type: "socket-type" . $@23 ":" socket_type_value
+
+    $default  reduce using rule 130 ($@23)
+
+    $@23  go to state 284
+
+
+State 268
+
+  138 $@25: . %empty
+  139 socket_url: "socket-url" . $@25 ":" "constant string"
+
+    $default  reduce using rule 138 ($@25)
+
+    $@25  go to state 285
+
+
+State 269
+
+   88 control_socket_param: unknown_map_entry .
+
+    $default  reduce using rule 88 (control_socket_param)
+
+
+State 270
+
+   86 control_socket_param: user_context .
+
+    $default  reduce using rule 86 (control_socket_param)
+
+
+State 271
+
+   87 control_socket_param: comment .
+
+    $default  reduce using rule 87 (control_socket_param)
+
+
+State 272
+
+   80 control_socket: "control-socket" $@16 ":" "{" control_socket_params . "}"
+   82 control_socket_params: control_socket_params . "," control_socket_param
+
+    ","  shift, and go to state 286
+    "}"  shift, and go to state 287
+
+
+State 273
+
+   81 control_socket_params: control_socket_param .
+
+    $default  reduce using rule 81 (control_socket_params)
+
+
+State 274
+
+   83 control_socket_param: socket_type .
+
+    $default  reduce using rule 83 (control_socket_param)
+
+
+State 275
+
+   84 control_socket_param: socket_name .
+
+    $default  reduce using rule 84 (control_socket_param)
+
+
+State 276
+
+   85 control_socket_param: socket_url .
+
+    $default  reduce using rule 85 (control_socket_param)
+
+
+State 277
+
+  176 output: "output" $@32 ":" . "constant string"
+
+    "constant string"  shift, and go to state 288
+
+
+State 278
+
+  177 flush: "flush" ":" "boolean" .
+
+    $default  reduce using rule 177 (flush)
+
+
+State 279
+
+  178 maxsize: "maxsize" ":" "integer" .
+
+    $default  reduce using rule 178 (maxsize)
+
+
+State 280
+
+  179 maxver: "maxver" ":" "integer" .
+
+    $default  reduce using rule 179 (maxver)
+
+
+State 281
+
+  181 pattern: "pattern" $@33 ":" . "constant string"
+
+    "constant string"  shift, and go to state 289
+
+
+State 282
+
+  169 output_params_list: output_params_list "," output_params .
+
+    $default  reduce using rule 169 (output_params_list)
+
+
+State 283
+
+  137 socket_name: "socket-name" $@24 . ":" "constant string"
+
+    ":"  shift, and go to state 290
+
+
+State 284
+
+  131 socket_type: "socket-type" $@23 . ":" socket_type_value
+
+    ":"  shift, and go to state 291
+
+
+State 285
+
+  139 socket_url: "socket-url" $@25 . ":" "constant string"
+
+    ":"  shift, and go to state 292
+
+
+State 286
+
+   30 unknown_map_entry: . "constant string" ":"
+   49 user_context: . "user-context" $@9 ":" map_value
+   51 comment: . "comment" $@10 ":" "constant string"
+   82 control_socket_params: control_socket_params "," . control_socket_param
+   83 control_socket_param: . socket_type
+   84                     | . socket_name
+   85                     | . socket_url
+   86                     | . user_context
+   87                     | . comment
+   88                     | . unknown_map_entry
+  131 socket_type: . "socket-type" $@23 ":" socket_type_value
+  137 socket_name: . "socket-name" $@24 ":" "constant string"
+  139 socket_url: . "socket-url" $@25 ":" "constant string"
+
+    "user-context"     shift, and go to state 38
+    "comment"          shift, and go to state 39
+    "socket-name"      shift, and go to state 266
+    "socket-type"      shift, and go to state 267
+    "socket-url"       shift, and go to state 268
+    "constant string"  shift, and go to state 43
+
+    unknown_map_entry     go to state 269
+    user_context          go to state 270
+    comment               go to state 271
+    control_socket_param  go to state 293
+    socket_type           go to state 274
+    socket_name           go to state 275
+    socket_url            go to state 276
+
+
+State 287
+
+   80 control_socket: "control-socket" $@16 ":" "{" control_socket_params "}" .
+
+    $default  reduce using rule 80 (control_socket)
+
+
+State 288
+
+  176 output: "output" $@32 ":" "constant string" .
+
+    $default  reduce using rule 176 (output)
+
+
+State 289
+
+  181 pattern: "pattern" $@33 ":" "constant string" .
+
+    $default  reduce using rule 181 (pattern)
+
+
+State 290
+
+  137 socket_name: "socket-name" $@24 ":" . "constant string"
+
+    "constant string"  shift, and go to state 294
+
+
+State 291
+
+  131 socket_type: "socket-type" $@23 ":" . socket_type_value
+  132 socket_type_value: . "unix"
+  133                  | . "kea-config-tool"
+  134                  | . "http"
+  135                  | . "stdout"
+
+    "http"             shift, and go to state 295
+    "kea-config-tool"  shift, and go to state 296
+    "stdout"           shift, and go to state 297
+    "unix"             shift, and go to state 298
+
+    socket_type_value  go to state 299
+
+
+State 292
+
+  139 socket_url: "socket-url" $@25 ":" . "constant string"
+
+    "constant string"  shift, and go to state 300
+
+
+State 293
+
+   82 control_socket_params: control_socket_params "," control_socket_param .
+
+    $default  reduce using rule 82 (control_socket_params)
+
+
+State 294
+
+  137 socket_name: "socket-name" $@24 ":" "constant string" .
+
+    $default  reduce using rule 137 (socket_name)
+
+
+State 295
+
+  134 socket_type_value: "http" .
+
+    $default  reduce using rule 134 (socket_type_value)
+
+
+State 296
+
+  133 socket_type_value: "kea-config-tool" .
+
+    $default  reduce using rule 133 (socket_type_value)
+
+
+State 297
+
+  135 socket_type_value: "stdout" .
+
+    $default  reduce using rule 135 (socket_type_value)
+
+
+State 298
+
+  132 socket_type_value: "unix" .
+
+    $default  reduce using rule 132 (socket_type_value)
+
+
+State 299
+
+  131 socket_type: "socket-type" $@23 ":" socket_type_value .
+
+    $default  reduce using rule 131 (socket_type)
+
+
+State 300
+
+  139 socket_url: "socket-url" $@25 ":" "constant string" .
+
+    $default  reduce using rule 139 (socket_url)

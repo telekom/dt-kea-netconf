@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# Copyright (C) 2016-2020 Internet Systems Consortium, Inc. ("ISC")
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Fail script if any command fails.
+set -e
+
+# Get script path.
+if test "$(uname -s)" = 'Darwin'; then
+    script_path="$(stat -f '%N' "${0}" | xargs dirname)"
+else
+    script_path="$(readlink -f "${0}" | xargs dirname)"
+fi
+
+# Source defines file.
+defines_file="${script_path}/cql_config_defines.sh"
+if test ! -f "${defines_file}"; then
+    printf 'ERROR: %s is missing' "${defines_file}" >&2
+    exit 1
+fi
+# Can't follow non-constant source. Use a directive to specify location.
+# shellcheck disable=SC1090
+. "${defines_file}"
+
+function print-help() {
+  printf "\
+%s {{argument}} {{library}}
+arguments:
+  [-h|--help]                           display usage
+  --cflags-only-I                       get include path
+  --cflags-only-other                   get cpp compilation flags
+  --libs                                get lib path
+  --modversion                          get version
+libraries:
+  cassandra
+  cassandra_static
+" "$(basename "${0}")"
+}
+# supported_libraries appears unused. Verify it or export it.
+# shellcheck disable=SC2034
+supported_libraries=('cassandra' 'cassandra_static')
+library="${2-}"
+
+# Can't follow non-constant source. Use a directive to specify location.
+# shellcheck disable=SC1090
+. "${script_path}/config_utils.sh"
+
+# Parse arguments.
+while test ${#} -gt 0; do
+  case "${1}" in
+  # [-h|--help]                           display usage
+  '-h'|'--help')
+    print-help
+    exit 0
+    ;;
+  # --cflags-only-I                       get include path
+  '--cflags-only-I')
+    check-if-library-is-supported
+    printf '%s' "-I${CPP_DRIVER_PATH}/include"
+    ;;
+  # --cflags-only-other                   get cpp compilation flags
+  '--cflags-only-other')
+    check-if-library-is-supported
+    ;;
+  # --libs                                get lib path
+  '--libs')
+    check-if-library-is-supported
+    printf '%s' "-L${CPP_DRIVER_PATH}/build -L${CPP_DRIVER_PATH}/lib -l${library} -lssl -lcrypto -luv -lz"
+    ;;
+  # --modversion                          get version
+  '--modversion')
+    check-if-library-is-supported
+    major="$(grep VERSION_MAJOR "${CPP_DRIVER_PATH}/include/cassandra.h" | cut -d " " -f 3)"
+    minor="$(grep VERSION_MINOR "${CPP_DRIVER_PATH}/include/cassandra.h" | cut -d " " -f 3)"
+    patch="$(grep VERSION_PATCH "${CPP_DRIVER_PATH}/include/cassandra.h" | cut -d " " -f 3)"
+    printf '%s' "${major}.${minor}.${patch}"
+    ;;
+  # Unrecognized argument
+  *)
+    printf 'ERROR: Unrecognized argument ''%s''\n' "${1}" 1>&2
+    print-help
+    exit 5
+    ;;
+  esac; shift; shift
+done

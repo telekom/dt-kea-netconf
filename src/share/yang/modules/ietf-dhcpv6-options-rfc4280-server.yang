@@ -1,0 +1,72 @@
+module ietf-dhcpv6-options-rfc4280 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc4280-server";
+  prefix rfc4280-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC4280 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping bcms-server-d-option-group {
+    container bcmcs-server-d {
+      description
+        "OPTION_BCMCS_SERVER_D (33) Broadcast and Multicast
+         Service Controller Domain Name List Option for DHCPv6";
+      reference
+        "RFC4280: Dynamic Host Configuration Protocol (DHCP)
+         Options for Broadcast and Multicast Control Servers";
+      list bcmcs-control-server-domain-names {
+        key "bcmcs-control-server-domain-name";
+        leaf bcmcs-control-server-domain-name {
+          type inet:domain-name;
+          description
+            "Domain name of BCMCS control server.";
+        }
+      }
+    }
+  }
+
+  grouping bcms-server-a-option-group {
+    container bcmcs-server-a {
+      description
+        "OPTION_BCMCS_SERVER_A (34) Broadcast and Multicast
+         Service Controller IPv6 Address Option for DHCPv6";
+      reference
+        "RFC4280: Dynamic Host Configuration Protocol (DHCP)
+         Options for Broadcast and Multicast Control Servers";
+      list bcmcs-control-server-addressess {
+        key "bcmcs-control-server-address";
+        leaf bcmcs-control-server-address {
+          type inet:ipv6-address;
+          description
+            "IPv6 address of BCMCS control server.";
+        }
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses bcms-server-d-option-group;
+
+    uses bcms-server-a-option-group;
+  }
+}

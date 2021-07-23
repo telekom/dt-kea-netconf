@@ -1,0 +1,444 @@
+// Copyright (C) 2013-2020 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/**
+ @page dhcpv4Hooks The Hooks API for the DHCPv4 Server
+
+ @section dhcpv4HooksIntroduction Introduction
+ Kea features an API (the "Hooks" API) that allows user-written code to
+ be integrated into Kea and called at specific points in its processing.
+ An overview of the API and a tutorial for writing such code can be found in
+ the @ref hooksdgDevelopersGuide. It also includes information how hooks
+ framework can be used to implement additional control commands for the
+ DHCPv4 server. Information for Kea maintainers can be found in the
+ @ref hooksComponentDeveloperGuide.
+
+ This manual is more specialized and is aimed at developers of hook
+ code for the DHCPv4 server. It describes each hook point, what the callouts
+ attached to the hook are able to do, and the arguments passed to the
+ callouts.  Each entry in this manual has the following information:
+
+ - Name of the hook point.
+ - Arguments for the callout.  As well as the argument name and data type, the
+   information includes the direction, which can be one of:
+   - @b in - the server passes values to the callout but ignored any data
+     returned.
+   - @b out - the callout is expected to set this value.
+   - <b>in/out</b> - the server passes a value to the callout and uses whatever
+     value the callout sends back.  Note that the callout may choose not to
+     do any modification, in which case the server will use whatever value
+     it sent to the callout.
+ - Description of the hook. This explains where in the processing the hook
+   is located, the possible actions a callout attached to this hook could take,
+   and a description of the data passed to the callouts.
+ - Next step status: the action taken by the server when a callout chooses to set
+    status to specified value. Actions not listed explicitly are not supported.
+   If a callout sets status to unsupported value, this specific value will be
+   ignored and treated as if the status was CONTINUE.
+
+@section dhcpv4HooksHookPoints Hooks in the DHCPv4 Server
+
+The following list is roughly ordered by appearance of specific hook points during
+packet processing, but the exact order depends on the actual processing. Hook points
+that are not specific to packet processing (e.g. lease expiration) will be added
+to the end of this list.
+
+ @subsection dhcp4HooksDhcpv4SrvConfigured dhcp4_srv_configured
+ - @b Arguments:
+   - name: @b io_context, type: isc::asiolink::IOServicePtr, direction: <b>in</b>
+   - name: @b network_state, type: isc::dhcp::NetworkStatePtr, direction: <b>in</b>
+   - name: @b json_config, type: isc::data::ElementPtr, direction: <b>in</b>
+   - name: @b server_config, type: isc::dhcp::SrvConfigPtr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server has completed
+   its (re)configuration. The server provides received and parsed configuration
+   structures to the hook library. It also provides a pointer to the IOService
+   object which is used by the server to run asynchronous operations. The hooks
+   libraries can use this IOService object to schedule asynchronous tasks which
+   are triggered by the DHCP server's main loop. The hook library should hold the
+   provided pointer until the library is unloaded. The NetworkState object
+   provides access to the DHCP service state of the server and allows for
+   enabling and disabling the DHCP service from the hooks libraries.
+
+ - <b>Next step status</b>: Status codes retured by the callouts installed on
+   this hook point are ignored.
+
+ @subsection dhcpv4HooksCb4Update cb4_updated
+ - @b Arguments:
+   - name: audit_entries, type isc::db::AuditEntryCollectionPtr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server has completed
+   a configuration update using the Config Backend. The server provides
+   the audit entries as a never null pointer to a not empty collection
+   copied from the update apply method argument.
+
+ - <b>Next step status</b>: Status codes retured by the callouts installed on
+   this hook point are ignored.
+
+ @subsection dhcpv4HooksBuffer4Receive buffer4_receive
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed when the server has received a
+   buffer containing a DHCPv4 message, but the message hasn't yet been parsed.
+   The sole argument "query4" contains a pointer to the isc::dhcp::Pkt4
+   object, which contains the source and destination address of the
+   received packet, the interface over which the packet has been received, and
+   a raw buffer, stored in the data_ field, containing the DHCPv4 message
+   in the wire format. None of the packet fields (op_, hlen_, chaddr_, etc.)
+   are set yet. Callouts installed on this hook point can modify the data
+    in the received buffer. The server will parse the buffer afterwards.
+
+ - <b>Next step status</b>: If any callout sets the status to DROP, the server
+   will drop the packet and start processing the next one.
+   If any callout sets the status to SKIP, the server will
+   skip the buffer parsing. In this case there is an expectation that
+   the callout will parse the options carried in the buffer, create
+   @c isc::dhcp::Option objects (or derived) and add them to the "query4"
+   object using the @c isc::dhcp::Pkt4::addOption.
+   Otherwise the server will find out that some mandatory options are
+   missing (e.g. DHCP Message Type) and will drop the message.
+
+ @subsection dhcpv4HooksPkt4Receive pkt4_receive
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed when an incoming DHCPv4
+   packet is received and its content has been parsed. The sole
+   argument "query4" contains a pointer to an isc::dhcp::Pkt4 object
+   that contains all information regarding incoming packet, including
+   its source and destination addresses, interface over which it was
+   received, a list of all options present within and the relay
+   information.  All fields of the Pkt4 object can be modified at this
+   time. By the time this hook is reached, the contents of the data_
+   field has been already parsed and stored in other fields. Therefore,
+   the modification in the data_ field has no effect.
+
+ - <b>Next step status</b>: If any callout sets the status to SKIP or DROP, the server will
+   drop the packet and start processing the next one.  The reason for the drop
+   will be logged if logging is set to the appropriate debug level.
+
+@subsection dhcpv4HooksSubnet4Select subnet4_select
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b subnet4, type: isc::dhcp::Subnet4Ptr, direction: <b>in/out</b>
+   - name: @b subnet4collection, type: const isc::dhcp::Subnet4Collection *,
+     direction: <b>in</b>
+
+ - @b Description: this callout is executed when a subnet is being
+   selected for the incoming packet. All parameters and addresses
+   will be assigned from that subnet. A callout can select a
+   different subnet if it wishes so. The list of all subnets currently
+   configured are provided as "subnet4collection". The list itself must
+   not be modified.
+
+ - <b>Next step status</b>: If any callout installed on the "subnet4_select" hook
+   sets the next step status to DROP, the server cancels current processing,
+   drop the packet and start processing the next one.
+   If any callout sets the status to SKIP, the server will not select any subnet.
+   Packet processing will continue, but will be severely limited.
+
+@subsection dhcpv4HooksHost4Identifier host4_identifier
+
+ - @b Arguments:
+   - name: @b query4, type isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b id_type, type isc::dhcp::Host::IdentifierType, direction: <b>in/out</b>
+   - name: @b id_value, type std::vector<uint8_t>, direction: <b>out</b>
+
+ - @b Description: this callout is executed only if flexible identifiers are
+   enabled, i.e. host-reservation-identifiers contain 'flex-id' value. This
+   callout enables external library to provide values for flexible identifiers.
+   To be able to use this feature, flex_id hook library is required.
+
+ - <b>Next step status</b>: If a callout installed on the "host4_identifier" hook
+   point sets the next step status to value other than NEXT_STEP_CONTINUE, the
+   identifier will not be used.
+
+@subsection dhcpv4HooksLeaseSelect lease4_select
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b subnet4, type: isc::dhcp::Subnet4Ptr, direction: <b>in</b>
+   - name: @b fake_allocation, type: bool, direction: <b>in</b>
+   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed after the server engine
+   has selected a lease for the client's request, but before the lease has
+   been inserted into the database. Any modifications made to the
+   "lease4" object will affect the lease's record in the database.
+   The callout should sanity check all modifications as the server will
+   use that data as is, with no further checking.\n\n
+   The server processes lease requests for DHCPDISCOVER and DHCPREQUEST in a
+   very similar way. The only major difference is that for DHCPDISCOVER
+   the lease is only selected, but not inserted into the database. The callouts
+   may distinguish between DHCPDISCOVER and DHCPREQUEST by checking the
+   value of the "fake_allocation" flag: a value of true indicates that the
+   lease won't be inserted into the database (DHCPDISCOVER case), a value of
+   false indicates that it will (DHCPREQUEST case).
+
+ - <b>Next step status</b>: If any callout installed on the "lease4_select" hook
+   sets the next step action to SKIP, the server will not assign any lease and
+   the callouts become responsible for the lease assignment. If the callouts
+   fail to provide a lease, the packet processing will continue, but client
+   will not get an address.
+
+@subsection dhcpv4HooksLeaseRenew lease4_renew
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b subnet4, type: isc::dhcp::Subnet4Ptr, direction: <b>in</b>
+   - name: @b clientid, type: isc::dhcp::ClientId, direction: <b>in</b>
+   - name: @b hwaddr, type: isc::dhcp::HWAddr, direction: <b>in</b>
+   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed when the server engine
+   is about to renew a lease, as a result of receiving DHCPREQUEST/Renewing
+   packet. The "lease4" argument points to @c isc::dhcp::Lease4 object that
+   contains the updated values. Callout can modify those values. Care should
+   be taken as the server will attempt to update the lease in the database
+   without any additional checks.
+
+ - <b>Next step status</b>: If any callout installed on the "lease4_renew" hook
+   sets the next step action to SKIP, the server will not update the lease in the
+   database and will continue using the old values instead.
+
+@subsection dhcpv4HooksLeaseRelease lease4_release
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server engine
+   is about to release a lease, as a result of receiving DHCPRELEASE packet.
+   The "lease4" argument points to @c Lease4 object that contains the lease to
+   be released. It doesn't make sense to modify it at this time.
+
+ - <b>Next step status</b>: If any callout installed on the "lease4_release" hook
+   sets the next step action to SKIP or DROP, the server will not delete the lease.
+   It will be kept in the database and will go through the regular expiration/reuse
+   process.
+
+@subsection dhcpv4HooksLeaseDecline lease4_decline
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server engine
+   is about to decline a lease, as a result of receiving DHCPDECLINE packet.
+   The server already sanity checked it (the packet is sane, attempts to decline
+   a lease that is valid and belongs to the client that requests its decline).
+   The "lease4" argument points to @c Lease4 object that contains the lease to
+   be released. Note this lease still contains client identifying information.
+   That data is provided for informational purposes and it doesn't make sense to
+   modify it at this time. All the information will be removed from the lease
+   before it is updated in the database.
+
+ - <b>Next step status</b>: If any callout installed on the "lease4_decline" hook
+   sets the next step action to SKIP or DROP, the server will not decline the lease.
+   Care should be taken when setting this status.  The lease will be kept in
+   the database as it is and the client will incorrectly assume that the server
+   marked this lease as unavailable. If the client restarts its configuration,
+   it will get the same (not declined) lease as a result.
+
+@subsection dhcpv4Leases4Committed leases4_committed
+
+ - @b Arguments:
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+   - name: @b leases4, type: isc::dhcp::Leases4CollectionPtr, direction: <b>in</b>
+   - name: @b deleted_leases4, type: isc::dhcp::Leases4CollectionPtr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when the server has applied all
+   lease changes as a result of DHCP message processing. This includes
+   writing new lease into the database, releasing an old lease for this
+   client or declining a lease. This callout is executed only for the
+   DHCP client messages which may cause lease changes, i.e. DHCPREQUEST,
+   DHCPRELEASE and DHCPDECLINE. This callout is not executed for DHCPDISCOVER
+   and DHCPINFORM. If the callouts are executed as a result of DHCPREQUEST
+   message, it is possible that both leases collections hold leases to be
+   handled. This is the case when the new lease allocation replaces an existing
+   lease for the client. The "deleted_leases4" object will hold a previous
+   lease instance and the "leases4" object will hold the new lease for this
+   client. The callouts should be prepared to handle such situation. When
+   the callout is executed as a result DHCPRELEASE, the callout will typically
+   receive only one lease (being released) in the "deleted_leases4" object.
+   Both leases collections are always provided to the callouts,
+   even though they may sometimes be empty.
+
+ - <b>Next step status</b>: If any callout installed on the "leases4_committed"
+   sets the next step action to DROP the server will drop the processed query.
+   If it sets the next step action to PARK, the server will park the processed
+   packet (hold packet processing) until the hook libraries explicitly unpark
+   the packet after they are done performing asynchronous operations.
+
+
+@subsection dhcpv4HooksPkt4Send pkt4_send
+
+ - @b Arguments:
+   - name: @b response4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+   - name: @b query4, type: isc::dhcp::Pkt4Ptr, direction: <b>in</b>
+
+ - @b Description: this callout is executed when server's response
+   is about to be sent back to the client. The sole argument "response4"
+   contains a pointer to an isc::dhcp::Pkt4 object carrying the
+   packet, with source and destination addresses set, interface over which
+   it will be sent, and a list of all options and relay information.  All fields
+   of the @c Pkt4 object can be modified at this time, except @c buffer_out_.
+   (This is scratch space used for constructing the packet after all
+   pkt4_send callouts are complete, so any changes to that field will
+   be overwritten.)\n\n
+   The argument query4 contains a pointer to the corresponding query packet
+   (allowing to perform correlation between response and query). This object
+   cannot be modified.
+
+ - <b>Next step action</b>: if any callout installed on the "pkt4_send" hook
+   sets the next step action to SKIP, the server will not construct the raw
+   buffer. The expectation is that if the callout set skip flag, it is
+   responsible for constructing raw form on its own. Otherwise the output
+   packet will be sent with zero length. If any callout set the next step action
+   to DROP, the server will drop the packet.
+
+@subsection dhcpv4HooksBuffer4Send buffer4_send
+
+ - @b Arguments:
+   - name: @b response4, type: isc::dhcp::Pkt4Ptr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed when server's response
+   is about to be sent back to the client. The sole argument "response4"
+   contains a pointer to an @c isc::dhcp::Pkt4 object that contains the
+   packet, with source and destination addresses set, interface over which
+   it will be sent, and a list of all options and relay information. The raw
+   on-wire form is already prepared in @c buffer_out_ (see
+   @c isc::dhcp::Pkt4::getBuffer())
+   Callouts should not modify the packet fields or options contents at this
+   time, because they were already used to construct on-wire buffer. Their
+   modification would have no effect.
+
+ - <b>Next step status</b>: if any callout sets the next step action to SKIP or DROP,
+   the server will drop this response packet. However, the original request
+   packet from a client was processed, so server's state most likely has changed
+   (e.g. lease was allocated). Setting this flag merely stops the change
+   being communicated to the client.
+
+@subsection dhcpv4HooksLease4Expire lease4_expire
+
+- @b Arguments:
+  - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in/out</b>
+  - name: @b remove_lease, type: bool, direction: <b>in</b>
+
+- @b Description: this callout is executed for each expired lease when
+  the server performs reclamation of the expired leases. During this
+  process the server executes "lease4_expire" callout, removes the DNS
+  records associated with this lease and finally removes the lease from
+  the database or updates its status to "expired-reclaimed". The "lease4"
+  argument contains the pointer to the lease being reclaimed. The second
+  argument "remove_lease" indicates if the reclaimed leases should be
+  removed from the lease database (if true), or their state should be
+  set to "expired-reclaimed" in the lease database. This argument
+  is only used by the callout if it takes responsibility for the lease
+  reclamation, i.e. it sets the "skip" flag to "true". The "remove_lease"
+  argument is set to "true" if the "flush-reclaimed-timer-wait-time" is
+  set to 0 in the server configuration file.
+
+- <b>Next step status</b>: if the callout sets the next step action to SKIP,
+  the server will assume that the callout has fully reclaimed the lease, i.e.
+  performed the DNS update and updated the lease in the database. The
+  server will not perform any further actions on the lease for which the
+  skip flag has been set. It is important to note that if the callout
+  sets this flag but fails to reclaim the lease in the database, the
+  reclamation routine will repeatedly process this lease in subsequent
+  runs. Therefore, the implementors of this callout must make sure that
+  skip flag is only set when the lease has been actually reclaimed in the
+  database by the callout.
+
+@subsection dhcpv4HooksLease4Recover lease4_recover
+
+- @b Arguments:
+  - name: @b lease4, type: isc::dhcp::Lease4Ptr, direction: <b>in</b>
+
+- @b Description: this callout is executed for each declined lease that
+  has expired (was put aside for the duration of decline-probation-period)
+  and is being recovered. The lease has already been stripped
+  from any client identifying information when it was put into declined
+  state. In principle the callouts can modify the lease in this hook,
+  but it makes little sense. There's no useful data in the lease, except
+  the IPv4 address (which must not be modified).
+
+- <b>Next step status</b>: if the callout sets the next step action to SKIP,
+  the server will skip the lease recovery. In other words, it will keep
+  the lease as is. This is not recommended in general, as the declined
+  expired leases will remain in the database and their recovery will
+  be attempted during the next reclaim cycle.
+
+@subsection dhcpv4HooksCommandProcessed command_processed
+
+ - @b Arguments:
+   - name: @b name, type: std::string, direction: <b>in</b>
+   - name: @b arguments type: isc::data::ElementPtr, direction: <b>in</b>
+   - name: @b response, type: isc::data::ElementPtr, direction: <b>in/out</b>
+
+ - @b Description: this callout is executed after the DHCPv4 server receives
+   and processes a control command over the command channel (typically unix domain socket).
+   The "name" argument is the name of the command processed.
+   The "arguments" argument is a pointer to the parsed JSON structure
+   containing the command's input arguments.  The "response" argument
+   is the parsed JSON stucture containing the response generated by
+   the command processing.
+
+ - <b>Next step status</b>: Not applicable, it's value will be ignored.
+
+@section dhcpv4HooksOptionsAccess Accessing DHCPv4 Options within a Packet
+When the server constructs a response message to a client it includes
+DHCP options configured for this client in a response message. Apart
+from the dynamically created options, such as Client FQDN option, it
+typically includes many options specified in the server configuration
+and held within the configuration structures by @c CfgMgr. Option
+instances are created once, during server configuration, and the
+@c CfgMgr holds pointers to those instances until the next server
+reconfiguration.
+
+When the server includes an option in a response message it copies
+a pointer to the instance of this option, rather than entire option.
+This ensures the good performance of response message creation. However,
+it also implies that any modification to the option carried in the
+DHCP response will affect an instance of this option in the server
+configuration structures. This is obviously not desired as it would
+affect all subsequent DHCP transactions involving this option. The
+DHCP server code avoids modifying the options included in the messages
+so it is possible to ensure good performance without a risk of
+accidentally modifying server configuration. The situation is
+different with hooks libraries which purpose is, in many cases,
+to modify values of options inserted by the server.
+
+Thus, @c Pkt class provides a mechanism to return a copy of an
+option to a caller (e.g. a callout), rather than an instance
+shared with the @c CfgMgr. This mechanism is enabled for all instances
+of @c Pkt4 passed to the callouts, i.e. "query4" and "response4"
+arguments. It is also automatically disabled when the callout
+returns the control back to the server.
+
+At every hook point, where the server passes an instance of a packet
+to the callouts, the server calls
+@c isc::dhcp::Pkt4::setCopyRetrievedOptions (true)
+to force copying options retrieved by @c isc::dhcp::Pkt4::getOption
+within callouts. The copied option replaces an original option within a
+packet and any modification to the option content by the callout
+would only affect the option instance associated with the packet.
+
+On the other hand, copying each retrieved option may be expensive.
+If performance of a hook library is a concern, it is possible for the
+hook library to disable copying retrieved options by calling
+@c isc::dhcp::Pkt4::setCopyRetrievedOptions (false) within a callout.
+In this case however, the hook library implementer must be aware that any
+modification of the option instance would affect the server configuration
+and may disrupt server's operation. Thus, disabling copying of retrieved
+options is not recommended unless the hook library is not intended
+to modify configured options carried within a packet.
+
+*/

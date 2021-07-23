@@ -1,0 +1,103 @@
+module ietf-dhcpv6-distributed {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-distributed";
+  prefix ietf-dhcpv6-distributed;
+
+  import ietf-dhcpv6-server-for-distributed {
+    prefix ietf-dhcpv6-server;
+  }
+
+  import kea-augments-to-ietf-dhcpv6-server {
+    prefix kea-augments-to-ietf-dhcpv6-server;
+  }
+
+  import kea-dhcp-types {
+    prefix kea-dhcp-types;
+  }
+
+  organization
+    "Deutsche Telekom AG.";
+  contact
+    "andrei.pavel@qualitance.com";
+  description
+    "Can be used to configure and manage multiple Kea DHCPv6 servers via the master-shards paradigm.";
+
+  revision 2020-01-30;
+
+  container config {
+    description
+      "Contains DHCPv6 master configuration.";
+    leaf skip-validation {
+      type boolean;
+      description
+        "used internally to differentiate external client commands from self issued commands";
+    }
+
+    list masters {
+      key "name";
+      leaf name {
+        type string;
+        mandatory true;
+        description
+          "master's name : keyspace";
+      }
+
+      container admin-credentials {
+        description
+          "master.ini";
+        uses kea-dhcp-types:database;
+      }
+
+      list shards {
+        key "name";
+        leaf name {
+          type string;
+          mandatory true;
+          description
+            "shard's name";
+        }
+
+        container admin-credentials {
+          description
+            "credentials.json";
+          uses kea-dhcp-types:database;
+        }
+
+        container config-database {
+          description
+            "config-database in servers.json";
+          uses kea-dhcp-types:database;
+        }
+
+        list master-config {
+          key "instance-id";
+          description
+            "master-config in servers.json";
+          uses kea-dhcp-types:instance-id;
+
+          container server-config {
+            container dhcpv6-server {
+              uses ietf-dhcpv6-server:dhcpv6-server {
+                augment "vendor-config" {
+                  uses kea-augments-to-ietf-dhcpv6-server:server-augmentations;
+                }
+              }
+            }
+          }
+        }
+
+        container shard-config {
+          description
+            "config.json";
+          container dhcpv6-server {
+            uses ietf-dhcpv6-server:dhcpv6-server {
+              augment "vendor-config" {
+                uses kea-augments-to-ietf-dhcpv6-server:server-augmentations;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

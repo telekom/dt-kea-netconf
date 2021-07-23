@@ -1,0 +1,66 @@
+AM_CPPFLAGS  =
+AM_CPPFLAGS += -I$(top_builddir)/src/lib
+AM_CPPFLAGS += -I$(top_srcdir)/src/lib_LTLIBRARIES
+
+AM_CPPFLAGS += $(BOOST_INCLUDES)
+if HAVE_MYSQL
+AM_CPPFLAGS += $(MYSQL_CPPFLAGS)
+endif
+if HAVE_PGSQL
+AM_CPPFLAGS += $(PGSQL_CPPFLAGS)
+endif
+if HAVE_CQL
+AM_CPPFLAGS += $(CQL_CPPFLAGS)
+endif
+
+AM_CXXFLAGS = $(KEA_CXXFLAGS)
+
+CLEANFILES = *.gcno *.gcda
+
+bin_PROGRAMS = kea-gist
+kea_gist_SOURCES = kea-gist.cc
+
+kea_gist_CXXFLAGS = $(AM_CXXFLAGS)
+kea_gist_CPPFLAGS = $(AM_CPPFLAGS)
+
+kea_gist_LDADD  =
+kea_gist_LDADD += $(top_builddir)/src/lib/eval/libkea-eval.la
+kea_gist_LDADD += $(top_builddir)/src/lib/dhcp_ddns/libkea-dhcp_ddns.la
+kea_gist_LDADD += $(top_builddir)/src/lib/process/libkea-process.la
+kea_gist_LDADD += $(top_builddir)/src/lib/stats/libkea-stats.la
+kea_gist_LDADD += $(top_builddir)/src/lib/config/libkea-cfgclient.la
+kea_gist_LDADD += $(top_builddir)/src/lib/dhcp/libkea-dhcp++.la
+
+if HAVE_MYSQL
+kea_gist_LDADD += $(top_builddir)/src/lib/mysql/libkea-mysql.la
+endif
+if HAVE_PGSQL
+kea_gist_LDADD += $(top_builddir)/src/lib/pgsql/libkea-pgsql.la
+endif
+if HAVE_CQL
+kea_gist_LDADD += $(top_builddir)/src/lib/cql/libkea-cql.la
+endif
+
+kea_gist_LDADD += $(top_builddir)/src/lib/database/libkea-database.la
+kea_gist_LDADD += $(top_builddir)/src/lib/asiolink/libkea-asiolink.la
+kea_gist_LDADD += $(top_builddir)/src/lib/cc/libkea-cc.la
+kea_gist_LDADD += $(top_builddir)/src/lib/dns/libkea-dns++.la
+kea_gist_LDADD += $(top_builddir)/src/lib/cryptolink/libkea-cryptolink.la
+kea_gist_LDADD += $(top_builddir)/src/lib/hooks/libkea-hooks.la
+kea_gist_LDADD += $(top_builddir)/src/lib/log/libkea-log.la
+kea_gist_LDADD += $(top_builddir)/src/lib/util/threads/libkea-threads.la
+kea_gist_LDADD += $(top_builddir)/src/lib/util/libkea-util.la
+kea_gist_LDADD += $(top_builddir)/src/lib/exceptions/libkea-exceptions.la
+kea_gist_LDADD += $(LOG4CPLUS_LIBS) $(CRYPTO_LIBS) $(BOOST_LIBS)
+
+kea_gist_LDFLAGS  =
+kea_gist_LDFLAGS += $(CRYPTO_LDFLAGS)
+if HAVE_MYSQL
+kea_gist_LDFLAGS += $(MYSQL_LIBS)
+endif
+if HAVE_PGSQL
+kea_gist_LDFLAGS += $(PGSQL_LIBS)
+endif
+if HAVE_CQL
+kea_gist_LDFLAGS += $(CQL_LIBS)
+endif

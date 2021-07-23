@@ -1,0 +1,8 @@
+/netconf_lexer.cc       diff=nodiff merge=ours
+/netconf_messages.cc    merge=ours
+/netconf_messages.h     merge=ours
+/netconf_parser.cc      diff=nodiff merge=ours
+/netconf_parser.h       diff=nodiff merge=ours
+/location.hh            diff=nodiff merge=ours
+/position.hh            diff=nodiff merge=ours
+/stack.hh               diff=nodiff merge=ours

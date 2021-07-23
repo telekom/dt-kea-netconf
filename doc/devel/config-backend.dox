@@ -1,0 +1,121 @@
+// Copyright (C) 2014-2020 Internet Systems Consortium, Inc. ("ISC")
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/**
+
+ @page configBackend Kea Configuration Backends
+
+@section configBackendIntro Introduction
+
+Kea started as a sub-project in BIND10 that used a program (called
+bindctl) to deliver configuration information to its modules. This
+potentially allowed for modules to get their configuration information
+in a variety of ways using what were known as configuration backends.
+After BIND10 was cancelled, the Kea project briefly tried to maintain
+backward compatibility with the BIND10 framework, but the effort
+was discontinued due to lack of interest.
+
+Currently the Kea team does not plan to develop any additional
+configuration backends. Instead, effort is being focused on enhancing
+the current control channel (see @ref ctrlSocket) to be as flexible
+as possible. If you are thinking about developing new ways to
+configure Kea, the recommendation is to write an external piece of
+software that will communicate with Kea using this channel.
+
+@section configBackendHistoric Alternate Configuration Backends
+
+While this section currently has no practical value, it may become useful
+one day to develop a minimalistic, stripped down Kea version that does
+not have any command interface at all. This could prove useful for running
+Kea in embedded regime.
+
+The following steps are needed for the DHCPv4 server to be able to
+process a new method of configuration. (It is assumed that the
+modified component is DHCPv4. Similar approach applies to the other
+components: DHCPv6 or DHCP-DDNS):
+
+-# Write your own implementation of isc::dhcp::ControlledDhcpv4Srv::init(),
+   isc::dhcp::ControlledDhcpv4Srv::init() and isc::dhcp::ControlledDhcpv4Srv::cleanup(),
+   and put it in the src/bin/dhcp4 directory (e.g. as foo_controller.cc).
+-# Modify src/bin/dhcp4/Makefile.am to include your file (e.g. foo_controller.cc) in
+   the build.
+-# Modify the AC_ARG_WITH(kea-config,...) macro in configure.ac to include an
+   entry for your configuration backend.
+-# Add your own AM_CONDITIONAL(CONFIG_BACKEND_FOO, ...) and
+   AC_DEFINE(CONFIG_BACKEND_FOO, ...) macros to configure.ac (following the
+   above-mentioned AC_ARG_WITH macro) to set the C++ macro for your backend.
+-# Modify the sanity check in configure.ac to allow your configuration backend name.
+
+Optionally you can also:
+
+-# Implement unit tests for your backend in the src/bin/dhcp4/tests directory.
+-# Modify src/bin/dhcp4/tests/Makefile.am to include the file(s) containing the
+   unit tests.
+
+@section configBackendJSONDesign The JSON Configuration Backend
+
+The following are some details of the JSON backend framework.
+
+-# Each backend uses the common code for configuration and command
+   processing callbacks. They all assume that JSON formatted parameters are sent
+   and they are expected to return well formatted JSON responses. The exact
+   format of configuration and commands is module-specific.<br/><br/>
+-# A command handler handles the reading the configuration from a
+   file. Its main responsibility is to load the configuration and process
+   it. The JSON backend must call that handler when starting up the server.
+   This is implemented in configure() in the kea_controller.cc files
+   in src/bin/dhcp4 and src/bin/dhcp6 directories.<br/><br/>
+-# The current JSON parser in @ref
+   isc::data::Element::fromJSON() has been extended to allow optional
+   preprocessing.  For now, that capability simply removes  whole-line
+   comments starting with the hash character, but it is expected to grow over
+   time (in-line comments and file inclusions are the obvious envisaged
+   additions). This is implemented in @ref isc::data::Element::fromJSONFile.<br/><br/>
+-# The current format of the BIND10 configuration file (BIND 10 stored its
+   configuration in (installation directory) /var/bind10/b10-config.db) has been
+   retained as the configuration file format. Its actual naming is now arbitrary
+   and left up to the user (it is passed as a parameter to the -c command line
+   option). From the implementation perspective, this is slight change
+   from the BIND10 days, as back then a subset of the configuration was received by
+   the daemon processes. Nowadays the whole configuration is passed. To take a
+   specific example, the following is how b10-config.db looked many years ago:
+   @code
+   {
+     "Init": { ... }
+     "Dhcp4": {
+       "subnet4" { subnet definitions here },
+       "option-data" { option data here },
+       "interfaces": [ "eth0" ],
+       ...
+    },
+     "Dhcp6": {
+       "subnet6" { subnet definitions here },
+       "option-data" { option data here },
+       "interfaces": [ "eth0" ],
+       ...
+     },
+     "Logging": {
+       "Loggers": [{"name": *, "severity": "DEBUG" }]
+      }
+   }
+   @endcode
+   The Kea components used to receive only relevant parts of it (e.g. Kea4
+   received configuration data that only contained the content of the Dhcp4 element).
+   Now each component receives all of it: the code
+   iterates over the top level elements and picks the appropriate
+   tree (or get the element by name). That approach makes the common configuration
+   (such as the logging initialization code) very easy to share among Kea4, Kea6 and
+   DHCP-DDNS.<br/><br/>
+-# The .spec files used in BIND 10 by the control program to validate commands
+   have been removed in 1.4.<br/><br/>
+-# A shell script has been added (as src/bin/keactrl/keactrl) to
+   start, stop and reconfigure the daemons. Its only
+   job is to pass the configuration file to each daemon and remember its PID file, so
+   that sending signals is possible (for configuration reload or shutdown). It is also
+   able to print out a status.<br/><br/>
+-# The capability to share the same configuration file between servers and
+   agents, and the Logging toplevel entry, were removed in 1.7.10.
+*/

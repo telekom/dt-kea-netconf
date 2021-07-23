@@ -1,0 +1,97 @@
+module ietf-dhcpv6-options-rfc4776 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc4776-server";
+  prefix rfc4776-srv;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization
+    "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+  description
+    "This YANG module contains DHCPv6 options defined
+     in RFC4776 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description
+      "Initial version.";
+    reference
+      "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  grouping geoconf-civic-option-group {
+    container geoconf-civic-option {
+      description
+        "OPTION_GEOCONF_CIVIC (36) Civic Addresses
+         Configuration Information option.";
+      reference
+        "Dynamic Host Configuration Protocol (DHCPv4 and
+         DHCPv6) Option for Civic Addresses Configuration Information";
+      leaf what {
+        type uint8 {
+          range "0..2";
+        }
+        description
+          "The 'what' element describes to which location
+           the DHCP entry refers.  Currently, three options are defined:
+           the location of the DHCP server (a value of 0), the location
+           of the network element believed to be closest to the client
+           (a value of 1), or the location of the client (a value of 2).
+           Option (2) SHOULD be used, but may not be known.  Options (0)
+           and (1) SHOULD NOT be used unless it is known that the DHCP
+           client is in close physical proximity to the server or
+           network element.";
+      }
+
+      leaf country-code {
+        type string {
+          length "2";
+        }
+        description
+          "The two-letter ISO 3166 country code in capital
+           ASCII letters, e.g., DE or US.  (Civic addresses always
+           contain country designations, suggesting the use of a
+           fixed-format field to save space.)";
+      }
+
+      list civic-address-elements {
+        key "element-id";
+        description
+          "Zero or more elements comprising the civic and/or
+           postal address.";
+        leaf element-id {
+          type uint8;
+          description
+            "Unique identifier for the element.";
+        }
+
+        leaf catype {
+          type uint8;
+          description
+            "A one-octet descriptor of the data civic address
+             value.";
+        }
+
+        leaf cavalue {
+          type string;
+          description
+            "The civic address value, constructed according
+             to Section 3.4 of RFC4776. Note that the value for the
+             'calength' field is calculated from the length of the
+             'cavalue'.";
+        }
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:option-sets/dhcpv6-server:option-set" {
+    uses geoconf-civic-option-group;
+  }
+}

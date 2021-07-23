@@ -1,0 +1,47 @@
+module ietf-dhcpv6-options-rfc8572 {
+  yang-version 1.1;
+  namespace "urn:ietf:params:xml:ns:yang:ietf-dhcpv6-options-rfc8572-server";
+  prefix "rfc8572-srv";
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  import ietf-dhcpv6-server {
+    prefix dhcpv6-server;
+  }
+
+  organization "DHC WG";
+  contact
+    "ian.farrer@telekom.de";
+
+  description "This YANG module contains the DHCPv6 option
+    defined in RFC8572 that can be used by DHCPv6 servers.";
+
+  revision 2020-02-21 {
+    description "Initial version.";
+    reference "I-D: draft-ietf-dhc-dhcpv6-yang";
+  }
+
+  /*
+   * Groupings
+   */
+
+  grouping pd-exclude-option-group {
+    container bootstrap-server-list {
+      if-feature dhcpv6-server:prefix-delegation;
+      description "OPTION_V6_SZTP_REDIRECT (136) DHCPv6 SZTP Redirect Option.";
+      reference "RFC8572: Secure Zero Touch Provisioning (SZTP)";
+      leaf-list bootstrap-server {
+        description "The IPv6 Subnet ID and prefix-len that the
+          delegating router includes in the OPTION_PD_EXCLUDE
+          option that is excluded from the delegated prefix set.";
+        type inet:uri;
+      }
+    }
+  }
+
+  augment "/dhcpv6-server:dhcpv6-server/dhcpv6-server:network-ranges/dhcpv6-server:network-range/dhcpv6-server:prefix-pools/dhcpv6-server:prefix-pool" {
+    uses pd-exclude-option-group;
+  }
+}
